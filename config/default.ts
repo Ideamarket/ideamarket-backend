@@ -2,7 +2,7 @@ import mongoUriBuilder from "mongo-uri-builder";
 
 export default {
   server: {
-    port: 3300,
+    port: process.env.PORT || 3300,
   },
   mongodb: {
     uri:
