@@ -128,7 +128,7 @@
 
 "@types/mongoose-paginate@^5.0.10":
   version "5.0.10"
-  resolved "https://registry.yarnpkg.com/@types/mongoose-paginate/-/mongoose-paginate-5.0.10.tgz#c8980cb199b5144b7babb2ff5a4c3b1f7a8d60af"
+  resolved "https://registry.npmjs.org/@types/mongoose-paginate/-/mongoose-paginate-5.0.10.tgz"
   integrity sha512-aTbcCQZkdBNAu1e9P0rChBMDoIC592xu+rTIWzGn8gRq7xWOnJfG3hADiCfhXvqyNzXRVMw2UsDN7UtNiktzFA==
   dependencies:
     "@types/mongoose" "^5.10.5"
@@ -246,6 +246,13 @@ async@^3.1.0:
   resolved "https://registry.npmjs.org/async/-/async-3.2.2.tgz"
   integrity sha512-H0E+qZaDEfx/FY4t7iLRv1W2fFI6+pyCeTw1uN20AQPiwqwM6ojPxHxdLv4z8hi2DtnW9BOckSspLucW7pIE5g==
 
+axios@^0.24.0:
+  version "0.24.0"
+  resolved "https://registry.yarnpkg.com/axios/-/axios-0.24.0.tgz#804e6fa1e4b9c5288501dd9dff56a7a0940d20d6"
+  integrity sha512-Q6cWsys88HoPgAaFAVUb0WpPk0O8iTeisR9IMqy9G8AbO4NlpVknrnQS03zzF9PGAWgO3cgletO3VjV/P7VztA==
+  dependencies:
+    follow-redirects "^1.14.4"
+
 balanced-match@^1.0.0:
   version "1.0.2"
   resolved "https://registry.npmjs.org/balanced-match/-/balanced-match-1.0.2.tgz"
@@ -273,7 +280,7 @@ bcrypt@^5.0.1:
 
 bluebird@3.0.5:
   version "3.0.5"
-  resolved "https://registry.yarnpkg.com/bluebird/-/bluebird-3.0.5.tgz#2ff9d07c9b3edb29d6d280fe07528365e7ecd392"
+  resolved "https://registry.npmjs.org/bluebird/-/bluebird-3.0.5.tgz"
   integrity sha1-L/nQfJs+2ynW0oD+B1KDZefs05I=
 
 body-parser@1.19.0:
@@ -536,7 +543,7 @@ etag@~1.8.1:
 
 express-validator@^6.14.0:
   version "6.14.0"
-  resolved "https://registry.yarnpkg.com/express-validator/-/express-validator-6.14.0.tgz#8ee7a32bf1ffcf2573db5f17c9cad279698e5d41"
+  resolved "https://registry.npmjs.org/express-validator/-/express-validator-6.14.0.tgz"
   integrity sha512-ZWHJfnRgePp3FKRSKMtnZVnD1s8ZchWD+jSl7UMseGIqhweCo1Z9916/xXBbJAa6PrA3pUZfkOvIsHZG4ZtIMw==
   dependencies:
     lodash "^4.17.21"
@@ -600,6 +607,11 @@ fn.name@1.x.x:
   version "1.1.0"
   resolved "https://registry.npmjs.org/fn.name/-/fn.name-1.1.0.tgz"
   integrity sha512-GRnmB5gPyJpAhTQdSZTSp9uaPSvl09KoYcMQtsB9rQoOmzs9dH6ffeccH+Z+cv6P68Hu5bC6JjRh4Ah/mHSNRw==
+
+follow-redirects@^1.14.4:
+  version "1.14.6"
+  resolved "https://registry.npmjs.org/follow-redirects/-/follow-redirects-1.14.6.tgz"
+  integrity sha512-fhUl5EwSJbbl8AR+uYL2KQDxLkdSjZGR36xy46AO7cOMTrCMON6Sa28FmAnC2tRTDbd/Uuzz3aJBv7EBN7JH8A==
 
 forwarded@0.2.0:
   version "0.2.0"
@@ -955,7 +967,7 @@ mongodb@4.2.1:
 
 mongoose-paginate@^5.0.3:
   version "5.0.3"
-  resolved "https://registry.yarnpkg.com/mongoose-paginate/-/mongoose-paginate-5.0.3.tgz#d7ae49ed5bf64f1f7af7620ea865b67058c55371"
+  resolved "https://registry.npmjs.org/mongoose-paginate/-/mongoose-paginate-5.0.3.tgz"
   integrity sha1-165J7Vv2Tx9692IOqGW2cFjFU3E=
   dependencies:
     bluebird "3.0.5"
@@ -1411,7 +1423,7 @@ utils-merge@1.0.1:
 
 validator@^13.7.0:
   version "13.7.0"
-  resolved "https://registry.yarnpkg.com/validator/-/validator-13.7.0.tgz#4f9658ba13ba8f3d82ee881d3516489ea85c0857"
+  resolved "https://registry.npmjs.org/validator/-/validator-13.7.0.tgz"
   integrity sha512-nYXQLCBkpJ8X6ltALua9dRrZDHVYxjJ1wgskNt1lH9fzGjs3tgojGSCBjmEPwkWS1y29+DrizMTW19Pr9uB2nw==
 
 vary@^1, vary@~1.1.2:

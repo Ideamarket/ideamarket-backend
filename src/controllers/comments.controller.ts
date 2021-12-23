@@ -1,6 +1,12 @@
 import { Request, Response } from "express";
 import { handleError, handleSuccess, handlePagingSuccess } from "../lib/base";
-import { getComments, createComment } from "../services/comments.service";
+import {
+  getComments,
+  createComment,
+  moderateById,
+  deleteById,
+  updateCommentById,
+} from "../services/comments.service";
 
 // Get comments by filter or latest
 export async function getAllComments(req: Request, res: Response, next: any) {
@@ -35,8 +41,35 @@ export async function newComment(req: Request, res: Response, next: any) {
       holders: req.body.holders,
       supply: req.body.supply,
     };
-
     const newComment = await createComment(comment);
+    moderateById(newComment.id);
+
+    return handleSuccess(res, newComment);
+  } catch (error) {
+    handleError(error, `Unable to handle create comment`, next);
+  }
+}
+
+export async function updateComment(req: Request, res: Response, next: any) {
+  try {
+    await updateCommentById(req.params.id, req.body.value, "TODO: userId");
+    return handleSuccess(res, newComment);
+  } catch (error) {
+    handleError(error, `Unable to handle create comment`, next);
+  }
+}
+
+export async function deleteCommentById(
+  req: Request,
+  res: Response,
+  next: any
+) {
+  console.log(req.params);
+  try {
+    if (!req.params.id) {
+      handleError(null, `Invalid or no comment identifier provided`, next);
+    }
+    await deleteById(req.params.id, "TODO: userId");
     return handleSuccess(res, newComment);
   } catch (error) {
     handleError(error, `Unable to handle create comment`, next);

@@ -1,4 +1,4 @@
-import { body } from "express-validator";
+import { body, param } from "express-validator";
 
 export const createCommentValidation = [
   body("userId").notEmpty().withMessage("UserId is required"),
@@ -9,4 +9,8 @@ export const createCommentValidation = [
   body("holders").isNumeric().optional(),
   body("supply").isNumeric().optional(),
   body("deposits").isNumeric().optional(),
+];
+
+export const updateCommentValidation = [
+  body("value").notEmpty().withMessage("Comment text is required"),
 ];
