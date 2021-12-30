@@ -1,29 +1,36 @@
-import { Request, Response } from "express";
-import { handleError, handleSuccess, handlePagingSuccess } from "../lib/base";
-import { getComments, createComment } from "../services/comments.service";
+import type { Request, Response } from 'express'
 
-// Get comments by filter or latest
-export async function getAllComments(req: Request, res: Response, next: any) {
-  const listing = req.query.listing as string;
-  const market = req.query.market as string;
-  const page = parseInt(req.query.page as string) || 0;
-  const count = parseInt(req.query.count as string) || 50;
+import { handleSuccess, handlePagingSuccess, handleError } from '../lib/base'
+import {
+  addCommentService,
+  fetchAllCommentsService,
+} from '../services/comments.service'
+
+export async function fetchAllComments(req: Request, res: Response) {
+  const listing = req.query.listing as string
+  const market = req.query.market as string
+  const page = Number.parseInt(req.query.page as string) || 0
+  const count = Number.parseInt(req.query.count as string) || 50
 
   try {
-    let filter: any = {};
+    const filter: any = {}
 
-    if (listing) filter["listing"] = listing;
-    if (market) filter["market"] = market;
+    if (listing) {
+      filter.listing = listing
+    }
+    if (market) {
+      filter.market = market
+    }
 
-    const result = await getComments(filter, page, count);
-    return handlePagingSuccess(res, result);
+    const result = await fetchAllCommentsService(filter, page, count)
+    return handlePagingSuccess(res, result)
   } catch (error) {
-    handleError(error, `Unable to handle fetching comments`, next);
+    return handleError(res, error, 'Unable to handle fetching comments')
   }
 }
 
-export async function newComment(req: Request, res: Response, next: any) {
-  console.log(req.body);
+export async function addComment(req: Request, res: Response) {
+  console.log(req.body)
   try {
     const comment = {
       listing: req.body.listing,
@@ -34,11 +41,11 @@ export async function newComment(req: Request, res: Response, next: any) {
       deposits: req.body.deposits,
       holders: req.body.holders,
       supply: req.body.supply,
-    };
+    }
 
-    const newComment = await createComment(comment);
-    return handleSuccess(res, newComment);
+    const addedComment = await addCommentService(comment)
+    return handleSuccess(res, addedComment)
   } catch (error) {
-    handleError(error, `Unable to handle create comment`, next);
+    return handleError(res, error, 'Unable to handle create comment')
   }
 }

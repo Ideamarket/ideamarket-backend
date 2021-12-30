@@ -1,23 +1,26 @@
-import { validationResult } from "express-validator";
-import { Request, Response, NextFunction } from "express";
+import type { Request, Response, NextFunction } from 'express'
+import { validationResult } from 'express-validator'
 
 /**
  * Checks if request has any validation errors and if it does,
  * then replies with error response and list of errors
  */
-export default function validateRequest(
+export function validateRequest(
   req: Request,
   res: Response,
   next: NextFunction
 ) {
-  const errors = validationResult(req);
+  const errors = validationResult(req)
   if (errors.isEmpty()) {
     // no validation errors found, continuing
-    return next();
+    next()
+    return
   }
 
-  const extractedErrors: { [key: string]: any } = [];
-  errors.array().map((err) => extractedErrors.push({ [err.param]: err.msg }));
+  const extractedErrors: { [key: string]: any } = []
+  for (const err of errors.array()) {
+    extractedErrors.push({ [err.param]: err.msg })
+  }
 
-  return res.status(400).json({ errors: extractedErrors });
+  return res.status(400).json({ errors: extractedErrors })
 }

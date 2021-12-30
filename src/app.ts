@@ -1,25 +1,28 @@
-import express from "express";
-import config from "config";
-import mongdbConnect from "./db/mongodb";
-import routes from "./routes";
-import * as dotenv from "dotenv";
-import cors from "cors";
+/* eslint-disable @typescript-eslint/no-floating-promises */
+import config from 'config'
+import cors from 'cors'
+import dotenv from 'dotenv'
+import express from 'express'
 
-const port = config.get("server.port") as number;
+import { connectMongoDB } from './db/mongodb'
+import { commentsRouter } from './routes'
 
-const app = express();
+const app = express()
 
-app.use(cors());
+dotenv.config()
 
-dotenv.config();
+// Middlewares
+app.use(cors())
+app.use(express.json())
+app.use(express.urlencoded({ extended: false }))
 
-// initialize mongo db
-mongdbConnect();
+// MongoDB
+connectMongoDB()
 
-app.use(express.json());
-app.use(express.urlencoded({ extended: false }));
+// Routers
+app.use('/comments', commentsRouter)
 
+const port: number = config.get('server.port')
 app.listen(port, () => {
-  console.log(`Server listing at port ${port}`);
-  routes(app);
-});
+  console.log(`Server listing at port ${port}`)
+})

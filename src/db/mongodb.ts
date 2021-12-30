@@ -1,23 +1,23 @@
-import mongoose from "mongoose";
-import config from "config";
-import logger from "../lib/logger";
+/* eslint-disable unicorn/no-process-exit */
+import config from 'config'
+import { connect } from 'mongoose'
 
-import "../models/comment.model";
+import { logger } from '../lib/logger'
 
-function connect() {
-  const dbUri = config.get("mongodb.uri") as string;
+import '../models/comment.model'
 
-  return mongoose
-    .connect(dbUri)
-    .then(() => {
-      logger.info(`Database connected # ${dbUri}`);
-      console.log(`Database connected # ${dbUri}`);
-    })
-    .catch((error) => {
-      logger.error("db error", error);
-      console.log(error);
-      process.exit(1);
-    });
+async function connectMongoDB() {
+  const mongoURI: string = config.get('mongodb.uri')
+
+  try {
+    await connect(mongoURI)
+    logger.info('Database connected...')
+    console.log('Database connected...')
+  } catch (error) {
+    logger.error('DB connection error', error)
+    console.log(error)
+    process.exit(1)
+  }
 }
 
-export default connect;
+export { connectMongoDB }
