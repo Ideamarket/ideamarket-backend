@@ -1,18 +1,27 @@
-import { CommentModel } from "../models/comment.model";
-import axios from "axios";
-import { PermissionAccessViolation } from "./errors";
+/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable no-negated-condition */
+/* eslint-disable promise/prefer-await-to-callbacks */
+/* eslint-disable promise/prefer-await-to-then */
+/* eslint-disable unicorn/no-unsafe-regex */
+/* eslint-disable unicorn/better-regex */
+/* eslint-disable require-unicode-regexp */
+/* eslint-disable prefer-regex-literals */
+import axios from 'axios'
 
-export async function fetchAllComments(filter: any, page: number, count: number) {
-  filter["isDeleted"] = false; // retrieve all non-deleted records
+import { CommentModel } from '../models/comment.model'
+import { PermissionAccessViolationError } from './errors'
 
-  const results = await CommentModel.paginate(filter, {
+export async function getAllComments(filter: any, page: number, count: number) {
+  filter.isDeleted = false // retrieve all non-deleted records
+
+  return CommentModel.paginate(filter, {
     limit: count,
     offset: page * count,
     sort: { createdAt: -1 },
   })
 }
 
-export async function addComment(comment: any) {
+export async function addNewComment(comment: any) {
   return CommentModel.create(comment)
 }
 
@@ -21,34 +30,30 @@ export async function updateCommentById(
   value: string,
   userId: string
 ) {
-  return await CommentModel.findByIdAndUpdate(commentId, {
-    value: value,
-  });
+  return CommentModel.findByIdAndUpdate(commentId, { value })
 }
 
 export async function deleteById(commentId: string, userId: string) {
-  return await CommentModel.findByIdAndUpdate(commentId, {
-    isDeleted: true,
-  });
+  return CommentModel.findByIdAndUpdate(commentId, { isDeleted: true })
 }
 
 const containsFinancial = (value: string) => {
-  const words = value.split(" ");
+  const words = value.split(' ')
 
-  let amex = new RegExp("^3[47][0-9]{13}$");
-  let visa = new RegExp("^4[0-9]{12}(?:[0-9]{3})?$");
-  let cup1 = new RegExp("^62[0-9]{14}[0-9]*$");
-  let cup2 = new RegExp("^81[0-9]{14}[0-9]*$");
+  const amex = new RegExp('^3[47][0-9]{13}$')
+  const visa = new RegExp('^4[0-9]{12}(?:[0-9]{3})?$')
+  const cup1 = new RegExp('^62[0-9]{14}[0-9]*$')
+  const cup2 = new RegExp('^81[0-9]{14}[0-9]*$')
 
-  let mastercard = new RegExp("^5[1-5][0-9]{14}$");
-  let mastercard2 = new RegExp("^2[2-7][0-9]{14}$");
+  const mastercard = new RegExp('^5[1-5][0-9]{14}$')
+  const mastercard2 = new RegExp('^2[2-7][0-9]{14}$')
 
-  let disco1 = new RegExp("^6011[0-9]{12}[0-9]*$");
-  let disco2 = new RegExp("^62[24568][0-9]{13}[0-9]*$");
-  let disco3 = new RegExp("^6[45][0-9]{14}[0-9]*$");
+  const disco1 = new RegExp('^6011[0-9]{12}[0-9]*$')
+  const disco2 = new RegExp('^62[24568][0-9]{13}[0-9]*$')
+  const disco3 = new RegExp('^6[45][0-9]{14}[0-9]*$')
 
-  let diners = new RegExp("^3[0689][0-9]{12}[0-9]*$");
-  let jcb = new RegExp("^35[0-9]{14}[0-9]*$");
+  const diners = new RegExp('^3[0689][0-9]{12}[0-9]*$')
+  const jcb = new RegExp('^35[0-9]{14}[0-9]*$')
 
   return words.some(
     (value) =>
@@ -63,53 +68,55 @@ const containsFinancial = (value: string) => {
       disco3.test(value) ||
       diners.test(value) ||
       jcb.test(value)
-  );
-};
+  )
+}
 
 export async function moderateById(commentId: string) {
-  const comment = await CommentModel.findById(commentId);
-  console.log("Comment found by id " + commentId);
-  if (!comment) return;
+  const comment = await CommentModel.findById(commentId)
+  console.log(`Comment found by id ${commentId}`)
+  if (!comment) {
+    return
+  }
 
   try {
-    const defaultLanguage = "eng";
-    const baseUrl = process.env.AZURE_MODERATION_ENDPOINT as string;
-    const azureModeraionKey = process.env.AZURE_MODERATION_KEY as string;
-    const detectTextLanguageModerationUrl = `${baseUrl}/contentmoderator/moderate/v1.0/ProcessText/DetectLanguage`;
+    const defaultLanguage = 'eng'
+    const baseUrl = process.env.AZURE_MODERATION_ENDPOINT as string
+    const azureModeraionKey = process.env.AZURE_MODERATION_KEY as string
+    const detectTextLanguageModerationUrl = `${baseUrl}/contentmoderator/moderate/v1.0/ProcessText/DetectLanguage`
 
     const detectLanguageResult = await axios.post(
       detectTextLanguageModerationUrl,
       comment.value,
       {
         headers: {
-          "Ocp-Apim-Subscription-Key": azureModeraionKey,
-          "Content-Type": "text/plain",
+          'Ocp-Apim-Subscription-Key': azureModeraionKey,
+          'Content-Type': 'text/plain',
         },
       }
-    );
+    )
 
     // set default language to 'eng' if unable to detect
-    const language =
-      detectLanguageResult.data?.DetectedLanguage || defaultLanguage;
+    const language: string =
+      detectLanguageResult.data?.DetectedLanguage || defaultLanguage
 
     // screen text now
-    const screenTextModerationUrl = `${baseUrl}/contentmoderator/moderate/v1.0/ProcessText/Screen/?language=${language}&classify=true&PII=true`;
+    const screenTextModerationUrl = `${baseUrl}/contentmoderator/moderate/v1.0/ProcessText/Screen/?language=${language}&classify=true&PII=true`
 
     const screenResponse = await axios.post(
       screenTextModerationUrl,
       comment.value,
       {
         headers: {
-          "Ocp-Apim-Subscription-Key": azureModeraionKey,
-          "Content-Type": "text/plain",
+          'Ocp-Apim-Subscription-Key': azureModeraionKey,
+          'Content-Type': 'text/plain',
         },
       }
-    );
+    )
 
     if (screenResponse.status === 200) {
-      const screenResult = screenResponse.data;
+      const screenResult = screenResponse.data
       if (language === defaultLanguage) {
-        const textContainsFinancials = containsFinancial(comment.value);
+        const textContainsFinancials = containsFinancial(comment.value)
         // const response = {
         //   explicit: screenResult.Classification.Category1.Score,
         //   mature: screenResult.Classification.Category2.Score,
@@ -129,21 +136,19 @@ export async function moderateById(commentId: string) {
         await CommentModel.findByIdAndUpdate(commentId, {
           moderatedAt: new Date(),
           isModerated: true,
-        });
-        console.log("updated");
-
-        return true;
-      } else {
-        // TODO: handle non english response
-        return false;
+        })
+        console.log('updated')
+        return true
       }
+      // TODO: handle non english response
+      return false
     }
 
-    return false;
+    return false
   } catch (error) {
-     console.log(error);
+    console.log(error)
   }
-  return false;
+  return false
 }
 
 const validateOwnership = (commentId: string, userId: string) => {
@@ -151,13 +156,13 @@ const validateOwnership = (commentId: string, userId: string) => {
     CommentModel.findById(commentId)
       .then((comment) => {
         if (comment?.userId !== userId) {
-          reject(new PermissionAccessViolation());
+          reject(new PermissionAccessViolationError())
         } else {
-          resolve(comment);
+          resolve(comment)
         }
       })
       .catch((error) => {
-        reject(error);
-      });
-  });
-};
+        reject(error)
+      })
+  })
+}
