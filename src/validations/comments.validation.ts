@@ -1,4 +1,4 @@
-import { body } from "express-validator";
+import { body, param } from "express-validator";
 
 export const createCommentValidation = [
   body("userId").notEmpty().withMessage("UserId is required"),
