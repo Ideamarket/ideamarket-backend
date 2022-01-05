@@ -5,7 +5,7 @@ import dotenv from 'dotenv'
 import express from 'express'
 
 import { connectMongoDB } from './db/mongodb'
-import { commentsRouter } from './routes'
+import routes from './routes';
 
 const app = express()
 
@@ -20,7 +20,7 @@ app.use(express.urlencoded({ extended: false }))
 connectMongoDB()
 
 // Routers
-app.use('/comments', commentsRouter)
+app.use(routes);
 
 const port: number = config.get('server.port')
 app.listen(port, () => {
