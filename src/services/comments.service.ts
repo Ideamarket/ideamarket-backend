@@ -1,21 +1,19 @@
-import CommentModel from "../models/comment.model";
+import { CommentModel } from "../models/comment.model";
 import axios from "axios";
 import { PermissionAccessViolation } from "./errors";
 
-export async function getComments(filter: any, page: number, count: number) {
+export async function fetchAllComments(filter: any, page: number, count: number) {
   filter["isDeleted"] = false; // retrieve all non-deleted records
 
   const results = await CommentModel.paginate(filter, {
     limit: count,
     offset: page * count,
     sort: { createdAt: -1 },
-  });
-
-  return results;
+  })
 }
 
-export async function createComment(comment: any) {
-  return await CommentModel.create(comment);
+export async function addComment(comment: any) {
+  return CommentModel.create(comment)
 }
 
 export async function updateCommentById(
@@ -77,12 +75,8 @@ export async function moderateById(commentId: string) {
     const defaultLanguage = "eng";
     const baseUrl = process.env.AZURE_MODERATION_ENDPOINT as string;
     const azureModeraionKey = process.env.AZURE_MODERATION_KEY as string;
-
-    console.log(baseUrl);
-
-    console.log(azureModeraionKey);
-
     const detectTextLanguageModerationUrl = `${baseUrl}/contentmoderator/moderate/v1.0/ProcessText/DetectLanguage`;
+
     const detectLanguageResult = await axios.post(
       detectTextLanguageModerationUrl,
       comment.value,
@@ -116,35 +110,40 @@ export async function moderateById(commentId: string) {
       const screenResult = screenResponse.data;
       if (language === defaultLanguage) {
         const textContainsFinancials = containsFinancial(comment.value);
-        const response = {
-          explicit: screenResult.Classification.Category1.Score,
-          mature: screenResult.Classification.Category2.Score,
-          offensive: screenResult.Classification.Category3.Score,
-          isSafe: !(
-            screenResult.Classification?.ReviewRecommended ||
-            textContainsFinancials
-          ),
-          address: screenResult.PII?.Address.length > 0,
-          email: screenResult.PII?.Email.length > 0,
-          network: screenResult.PII?.IPA.length > 0,
-          phone: screenResult.PII?.Phone.length > 0,
-          ssn: screenResult.PII?.SSN.length > 0,
-          financial: textContainsFinancials,
-        };
+        // const response = {
+        //   explicit: screenResult.Classification.Category1.Score,
+        //   mature: screenResult.Classification.Category2.Score,
+        //   offensive: screenResult.Classification.Category3.Score,
+        //   isSafe: !(
+        //     screenResult.Classification?.ReviewRecommended ||
+        //     textContainsFinancials
+        //   ),
+        //   address: screenResult.PII?.Address.length > 0,
+        //   email: screenResult.PII?.Email.length > 0,
+        //   network: screenResult.PII?.IPA.length > 0,
+        //   phone: screenResult.PII?.Phone.length > 0,
+        //   ssn: screenResult.PII?.SSN.length > 0,
+        //   financial: textContainsFinancials,
+        // };
 
         await CommentModel.findByIdAndUpdate(commentId, {
           moderatedAt: new Date(),
           isModerated: true,
         });
         console.log("updated");
+
+        return true;
       } else {
         // TODO: handle non english response
-        return null;
+        return false;
       }
     }
+
+    return false;
   } catch (error) {
-    console.log(error);
+     console.log(error);
   }
+  return false;
 }
 
 const validateOwnership = (commentId: string, userId: string) => {

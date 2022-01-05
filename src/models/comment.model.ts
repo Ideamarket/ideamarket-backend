@@ -1,27 +1,29 @@
-import mongoose from "mongoose";
-import mongoosePagination from "mongoose-paginate";
+import type { Document } from 'mongoose'
+import mongoose, { Schema } from 'mongoose'
+import mongoosePagination from 'mongoose-paginate'
 
-export interface CommentDocument extends mongoose.Document {
-  userId: string;
-  userName: string;
-  userPicture: string;
-  listing: string;
-  market: string;
-  price: number;
-  deposits: number;
-  holders: number;
-  supply: number;
-  value: string;
-  sentiment: string;
-  feelings: [string];
-  isDeleted: boolean;
-  isModerated: boolean;
-  moderatedAt?: Date;
-  createdAt: Date;
-  updatedAt: Date;
+// eslint-disable-next-line @typescript-eslint/consistent-type-definitions
+export interface CommentDocument extends Document {
+  userId: string
+  userName: string
+  userPicture: string
+  listing: string
+  market: string
+  price: number
+  deposits: number
+  holders: number
+  supply: number
+  value: string
+  sentiment: string
+  feelings: [string]
+  isDeleted: boolean
+  isModerated: boolean
+  moderatedAt?: Date
+  createdAt: Date
+  updatedAt: Date
 }
 
-let CommentSchema = new mongoose.Schema(
+const CommentSchema = new Schema(
   {
     userId: { type: String, required: true, maxlength: 50, index: true },
     userName: { type: String, maxlength: 50 },
@@ -42,10 +44,11 @@ let CommentSchema = new mongoose.Schema(
   {
     timestamps: true,
   }
-);
+)
 
-CommentSchema.plugin(mongoosePagination);
+CommentSchema.plugin(mongoosePagination)
 
-const model = mongoose.model<CommentDocument>("Comment", CommentSchema);
-
-export default model;
+export const CommentModel = mongoose.model<CommentDocument>(
+  'Comment',
+  CommentSchema
+)

@@ -8,7 +8,16 @@
   "license": "MIT",
   "scripts": {
     "start": "tsc & node dist/app.js",
-    "dev": "nodemon --config nodemon.json src/app.ts"
+    "dev": "nodemon --config nodemon.json src/app.ts",
+    "check-types": "tsc",
+    "check-lint": "eslint . --ignore-path .gitignore",
+    "lint": "eslint --fix --max-warnings=0 --ext .ts,.tsx --ignore-path .gitignore .",
+    "prettier": "prettier --ignore-path .gitignore --write \"**/*.+(js|json|ts|tsx)\"",
+    "format": "yarn prettier -- --write",
+    "check-format": "yarn prettier -- --list-different",
+    "validate": "npm-run-all --parallel check-types check-format lint",
+    "install:clean": "rm -rf node_modules && rm yarn.lock && yarn",
+    "prepare": "husky install"
   },
   "dependencies": {
     "@types/mongoose-paginate": "^5.0.10",
@@ -28,6 +37,8 @@
     "winston": "^3.3.3"
   },
   "devDependencies": {
+    "@commitlint/cli": "16.0.1",
+    "@commitlint/config-conventional": "16.0.0",
     "@types/bcrypt": "^5.0.0",
     "@types/body-parser": "^1.19.2",
     "@types/config": "^0.0.40",
@@ -38,7 +49,21 @@
     "@types/mongoose": "^5.11.97",
     "@types/morgan": "^1.9.3",
     "@types/node": "^16.11.12",
+    "eslint": "8.5.0",
+    "eslint-config-galex": "3.5.3",
+    "husky": "7.0.4",
+    "lint-staged": "12.1.4",
+    "npm-run-all": "4.1.5",
+    "prettier": "2.5.1",
     "ts-node": "^10.4.0",
     "typescript": "^4.5.2"
+  },
+  "lint-staged": {
+    "*.+(js|ts|tsx)": [
+      "yarn lint"
+    ],
+    "*.+(js|json|ts|tsx)": [
+      "yarn format"
+    ]
   }
 }
