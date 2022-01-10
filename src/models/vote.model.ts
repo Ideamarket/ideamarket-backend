@@ -21,7 +21,7 @@ const VoteSchema = new Schema(
     },
     listing: { type: String, required: true, maxlength: 250, index: true },
     market: { type: String, required: true, maxlength: 250, index: true },
-    value: { type: Number, required: true }, // 1 UPVOTE, 0 DOWNVOTE
+    value: { type: Number, required: true }, // 1 UPVOTE, -1 DOWNVOTE
   },
   {
     timestamps: true,
