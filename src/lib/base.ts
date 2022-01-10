@@ -18,7 +18,7 @@ export const handleError = (res: Response, error: any, message: string) => {
   return res.status(500).json({ success: true, message, error })
 }
 
-export const handleSuccess = (res: Response, data: object | string) => {
+export const handleSuccess = (res: Response, data: any) => {
   return res.status(200).json({
     success: true,
     data,
