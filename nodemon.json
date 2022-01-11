@@ -7,7 +7,7 @@
   },
   "env": {
     "NODE_ENV": "development",
-    "MONGODB_URI": "mongodb+srv://ideamarket:bwRkDrup0Ltbqm80wkrK@ideamarket.l4zj6.mongodb.net/myFirstDatabase?retryWrites=true&w=majority"
+    "MONGODB_URI": "mongodb+srv://ideamarket:bwRkDrup0Ltbqm80wkrK@ideamarket.l4zj6.mongodb.net/ideamarket-dev?retryWrites=true&w=majority"
   },
   "ext": "js,json,ts"
 }
