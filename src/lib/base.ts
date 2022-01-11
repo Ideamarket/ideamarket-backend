@@ -15,7 +15,7 @@ export const handleError = (res: Response, error: any, message: string) => {
     logger.error(`${message}. Cause: ${error.message as string}`)
   }
 
-  return res.status(500).json({ success: true, message, error })
+  return res.status(500).json({ success: false, message, error })
 }
 
 export const handleSuccess = (res: Response, data: any) => {

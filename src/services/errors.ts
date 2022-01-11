@@ -1,11 +1,24 @@
+/* eslint-disable @typescript-eslint/restrict-template-expressions */
 /* eslint-disable @typescript-eslint/explicit-member-accessibility */
+
+export class UnAuthenticatedError extends Error {
+  code: number
+
+  custom: boolean
+
+  constructor() {
+    super(`Request is not authenticated`)
+    this.name = 'UnAuthenticatedError'
+    this.code = 401
+    this.custom = true
+  }
+}
 export class EntityNotFoundError extends Error {
   code: number
 
   custom: boolean
 
   constructor(type: any) {
-    // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
     super(`Object of type ${type} has not been found`)
     this.name = 'EntityNotFoundError'
     this.code = 404
