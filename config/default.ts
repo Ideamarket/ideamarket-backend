@@ -1,3 +1,4 @@
+/* eslint-disable sonarjs/no-duplicate-string */
 /* eslint-disable import/no-default-export */
 import mongoUriBuilder from 'mongo-uri-builder'
 
@@ -17,6 +18,44 @@ const config = {
           : 27_017,
         database: process.env.MONGODB_DATABASE ?? 'ideamarket',
       }),
+  },
+  jwt: {
+    secretKey: process.env.JWT_SECRET_KEY ?? undefined,
+    expiry: process.env.JWT_TOKEN_EXPIRY
+      ? Number.parseInt(process.env.JWT_TOKEN_EXPIRY)
+      : 86_400,
+  },
+  aws: {
+    accessKey: process.env.AWS_ACCESS_KEY ?? '',
+    secretKey: process.env.AWS_SECRET_KEY ?? '',
+    region: process.env.AWS_REGION ?? '',
+  },
+  userAccounts: {
+    s3Bucket: process.env.USER_ACCOUNTS_S3_BUCKET ?? '',
+    cloudFrontDomain: process.env.USER_ACCOUNTS_CLOUDFRONT_DOMAIN ?? '',
+  },
+  web3: {
+    network: process.env.NETWORK ?? 'test-avm-l2',
+    rpcUrls: {
+      avm:
+        process.env.RPC_URL_AVM ??
+        'https://arbitrum-mainnet.infura.io/v3/98ca28d50f234e618a22a8b0d83c40b2',
+      mainnet:
+        process.env.RPC_URL_MAINNET ??
+        'https://mainnet.infura.io/v3/98ca28d50f234e618a22a8b0d83c40b2',
+      rinkeby:
+        process.env.RPC_URL_RINKEBY ??
+        'https://rinkeby.infura.io/v3/98ca28d50f234e618a22a8b0d83c40b2',
+      'test-avm-l1':
+        process.env.RPC_URL_TEST_AVM_L1 ??
+        'https://rinkeby.infura.io/v3/98ca28d50f234e618a22a8b0d83c40b2',
+      'test-avm-l2':
+        process.env.RPC_URL_TEST_AVM_L2 ??
+        'https://arbitrum-rinkeby.infura.io/v3/98ca28d50f234e618a22a8b0d83c40b2',
+      test:
+        process.env.RPC_URL_TEST ??
+        'https://rinkeby.infura.io/v3/98ca28d50f234e618a22a8b0d83c40b2',
+    },
   },
 }
 
