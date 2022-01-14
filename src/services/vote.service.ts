@@ -62,14 +62,9 @@ export async function downVote(
     const query = {
       listing,
       market,
-      userId: new mongoose.Types.ObjectId(userId),
+      user: new mongoose.Types.ObjectId(userId),
     }
-    const update = {
-      listing,
-      market,
-      userId: new mongoose.Types.ObjectId(userId),
-      value: -1,
-    }
+    const update = { ...query, value: -1 }
     const options = { upsert: true, new: true, setDefaultsOnInsert: true }
     await VoteModel.findOneAndUpdate(query, update, options)
 

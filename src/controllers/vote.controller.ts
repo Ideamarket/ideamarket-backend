@@ -1,4 +1,5 @@
 import type { Request, Response } from 'express'
+import type { DECODED_USER } from 'util/jwtTokenUtil'
 
 import { handleSuccess, handleError } from '../lib/base'
 import { getVoteCount, upVote, downVote } from '../services/vote.service'
@@ -16,11 +17,11 @@ export async function fetchVoteCount(req: Request, res: Response) {
 }
 
 export async function upvote(req: Request, res: Response) {
-  // TODO # EXTRACT USERID FROM JWT TOKEN
-  const { listing, market, userId } = req.body
+  const user = (req as any).user as DECODED_USER
+  const { listing, market } = req.body
 
   try {
-    const latestVoteCount = await upVote(listing, market, userId)
+    const latestVoteCount = await upVote(listing, market, user.id)
     return handleSuccess(res, latestVoteCount)
   } catch (error) {
     return handleError(res, error, `Unable to handle create comment`)
@@ -28,11 +29,11 @@ export async function upvote(req: Request, res: Response) {
 }
 
 export async function downvote(req: Request, res: Response) {
-  // TODO # EXTRACT USERID FROM JWT TOKEN
-  const { listing, market, userId } = req.body
+  const user = (req as any).user as DECODED_USER
+  const { listing, market } = req.body
 
   try {
-    const latestVoteCount = await downVote(listing, market, userId)
+    const latestVoteCount = await downVote(listing, market, user.id)
     return handleSuccess(res, latestVoteCount)
   } catch (error) {
     return handleError(res, error, `Unable to handle create comment`)
