@@ -112,6 +112,3 @@ build
 
 # TernJS port file
 .tern-port
-
-# VS Code IDE
-.vscode
