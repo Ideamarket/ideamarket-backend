@@ -2,6 +2,9 @@
 /* eslint-disable import/no-default-export */
 import mongoUriBuilder from 'mongo-uri-builder'
 
+const HOUR_SECONDS = 3600
+const DAY_SECONDS = 24 * HOUR_SECONDS
+
 const config = {
   server: {
     port: process.env.PORT ? Number.parseInt(process.env.PORT) : 3300,
@@ -23,16 +26,16 @@ const config = {
     secretKey: process.env.JWT_SECRET_KEY ?? undefined,
     expiry: process.env.JWT_TOKEN_EXPIRY
       ? Number.parseInt(process.env.JWT_TOKEN_EXPIRY)
-      : 86_400,
+      : 30 * DAY_SECONDS,
   },
   aws: {
     accessKey: process.env.AWS_ACCESS_KEY ?? '',
     secretKey: process.env.AWS_SECRET_KEY ?? '',
     region: process.env.AWS_REGION ?? '',
   },
-  userAccounts: {
-    s3Bucket: process.env.USER_ACCOUNTS_S3_BUCKET ?? '',
-    cloudFrontDomain: process.env.USER_ACCOUNTS_CLOUDFRONT_DOMAIN ?? '',
+  account: {
+    s3Bucket: process.env.ACCOUNTS_S3_BUCKET ?? '',
+    cloudFrontDomain: process.env.ACCOUNTS_CLOUDFRONT_DOMAIN ?? '',
   },
   web3: {
     network: process.env.NETWORK ?? 'test-avm-l2',

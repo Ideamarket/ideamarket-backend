@@ -1,4 +1,4 @@
-export type UserAccountResponse = {
+export type AccountResponse = {
   name?: string
   username?: string
   email?: string

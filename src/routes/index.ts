@@ -1,7 +1,7 @@
 import { Router } from 'express'
 
+import { accountRouter } from './account'
 import { commentsRouter } from './comments'
-import { userAccountsRouter } from './user-accounts'
 import { versionRouter } from './version'
 import { votesRouter } from './vote'
 
@@ -11,6 +11,6 @@ const routes = Router()
 routes.use('/version', versionRouter)
 routes.use('/comments', commentsRouter)
 routes.use('/votes', votesRouter)
-routes.use('/userAccounts', userAccountsRouter)
+routes.use('/account', accountRouter)
 
 export { routes }

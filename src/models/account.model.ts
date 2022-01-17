@@ -1,15 +1,15 @@
 /* eslint-disable @typescript-eslint/consistent-type-definitions */
 import mongoose from 'mongoose'
 
-import type { VisibilityOptions } from '../types/user-accounts.types'
+import type { VisibilityOptions } from '../types/account.types'
 
-export enum UserRole {
+export enum AccountRole {
   USER = 'USER',
   MODERATOR = 'MODERATOR',
   ADMIN = 'ADMIN',
 }
 
-export interface IUserAccount {
+export interface IAccount {
   name?: string
   username?: string
   email?: string
@@ -18,16 +18,16 @@ export interface IUserAccount {
   emailVerified?: boolean
   walletAddress: string
   visibilityOptions?: VisibilityOptions
-  role?: UserRole
+  role?: AccountRole
   code?: string | null
   resendCodeTimestamp?: Date | null
 }
 
-interface IUserAccountModel extends mongoose.Model<UserAccountDocument> {
-  build(attr: IUserAccount): UserAccountDocument
+interface IAccountModel extends mongoose.Model<AccountDocument> {
+  build(attr: IAccount): AccountDocument
 }
 
-interface UserAccountDocument extends mongoose.Document {
+interface AccountDocument extends mongoose.Document {
   name?: string
   username?: string
   email?: string
@@ -36,7 +36,7 @@ interface UserAccountDocument extends mongoose.Document {
   emailVerified?: boolean
   walletAddress: string
   visibilityOptions?: VisibilityOptions
-  role: UserRole
+  role: AccountRole
   code?: string | null
   resendCodeTimestamp?: Date | null
   createdAt: Date
@@ -49,7 +49,7 @@ const VisibilityOptionsSchema = new mongoose.Schema({
   ethAddress: { type: Boolean, default: true },
 })
 
-const UserAccountSchema = new mongoose.Schema(
+const AccountSchema = new mongoose.Schema(
   {
     name: { type: String },
     username: { type: String, unique: [true, 'Username is not available'] },
@@ -61,8 +61,8 @@ const UserAccountSchema = new mongoose.Schema(
     visibilityOptions: VisibilityOptionsSchema,
     role: {
       type: String,
-      enum: Object.values(UserRole),
-      default: UserRole.USER,
+      enum: Object.values(AccountRole),
+      default: AccountRole.USER,
     },
     code: { type: String, default: null },
     resendCodeTimestamp: { type: Date, default: null },
@@ -72,13 +72,13 @@ const UserAccountSchema = new mongoose.Schema(
   }
 )
 
-UserAccountSchema.statics.build = (attr: IUserAccount) => {
-  return new UserAccountModel(attr)
+AccountSchema.statics.build = (attr: IAccount) => {
+  return new AccountModel(attr)
 }
 
-const UserAccountModel = mongoose.model<UserAccountDocument, IUserAccountModel>(
-  'UserAccount',
-  UserAccountSchema
+const AccountModel = mongoose.model<AccountDocument, IAccountModel>(
+  'Account',
+  AccountSchema
 )
 
-export { UserAccountModel, UserAccountDocument }
+export { AccountModel, AccountDocument }

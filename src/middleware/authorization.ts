@@ -3,15 +3,16 @@
 import type { Request, Response } from 'express'
 
 import { handleError } from '../lib/base'
-import { UserRole } from '../models/user-accounts.model'
+import { AccountRole } from '../models/account.model'
 import {
   PermissionAccessViolationError,
   UnAuthenticatedError,
 } from '../services/errors'
-import type { DECODED_USER } from '../util/jwtTokenUtil'
+import type { DECODED_ACCOUNT } from '../util/jwtTokenUtil'
 
 const REQUEST_NOT_AUTHENTICATED = 'Request is not yet authenticated'
-const REQUEST_UNAUTHORIZED_LOG = 'User is not permitted to perform this action'
+const REQUEST_UNAUTHORIZED_LOG =
+  'Account is not permitted to perform this action'
 const REQUEST_UNAUTHORIZED_MESSAGE =
   'You are not permitted to perform this action'
 
@@ -20,8 +21,8 @@ export async function authorizeModerator(
   res: Response,
   next: () => void
 ) {
-  const decodedUser = (req as any).user
-  if (!decodedUser) {
+  const { decodedAccount } = req as any
+  if (!decodedAccount) {
     console.error(REQUEST_NOT_AUTHENTICATED)
     return handleError(
       res,
@@ -29,8 +30,9 @@ export async function authorizeModerator(
       REQUEST_NOT_AUTHENTICATED
     )
   }
-  const userRole = (decodedUser as DECODED_USER).role
-  if (userRole !== UserRole.MODERATOR) {
+
+  const accountRole = (decodedAccount as DECODED_ACCOUNT).role
+  if (accountRole !== AccountRole.MODERATOR) {
     console.error(REQUEST_UNAUTHORIZED_LOG)
     return handleError(
       res,
@@ -38,6 +40,7 @@ export async function authorizeModerator(
       REQUEST_UNAUTHORIZED_MESSAGE
     )
   }
+
   next()
   return
 }
@@ -47,8 +50,8 @@ export async function authorizeAdmin(
   res: Response,
   next: () => void
 ) {
-  const decodedUser = (req as any).user
-  if (!decodedUser) {
+  const { decodedAccount } = req as any
+  if (!decodedAccount) {
     console.error(REQUEST_NOT_AUTHENTICATED)
     return handleError(
       res,
@@ -56,8 +59,9 @@ export async function authorizeAdmin(
       REQUEST_NOT_AUTHENTICATED
     )
   }
-  const userRole = (decodedUser as DECODED_USER).role
-  if (userRole !== UserRole.ADMIN) {
+
+  const accountRole = (decodedAccount as DECODED_ACCOUNT).role
+  if (accountRole !== AccountRole.ADMIN) {
     console.error(REQUEST_UNAUTHORIZED_LOG)
     return handleError(
       res,
@@ -65,6 +69,7 @@ export async function authorizeAdmin(
       REQUEST_UNAUTHORIZED_MESSAGE
     )
   }
+
   next()
   return
 }
@@ -74,8 +79,8 @@ export async function authorizeModeratorOrAdmin(
   res: Response,
   next: () => void
 ) {
-  const decodedUser = (req as any).user
-  if (!decodedUser) {
+  const { decodedAccount } = req as any
+  if (!decodedAccount) {
     console.error(REQUEST_NOT_AUTHENTICATED)
     return handleError(
       res,
@@ -83,8 +88,12 @@ export async function authorizeModeratorOrAdmin(
       REQUEST_NOT_AUTHENTICATED
     )
   }
-  const userRole = (decodedUser as DECODED_USER).role
-  if (userRole !== UserRole.ADMIN && userRole !== UserRole.MODERATOR) {
+
+  const accountRole = (decodedAccount as DECODED_ACCOUNT).role
+  if (
+    accountRole !== AccountRole.ADMIN &&
+    accountRole !== AccountRole.MODERATOR
+  ) {
     console.error(REQUEST_UNAUTHORIZED_LOG)
     return handleError(
       res,
@@ -92,6 +101,7 @@ export async function authorizeModeratorOrAdmin(
       REQUEST_UNAUTHORIZED_MESSAGE
     )
   }
+
   next()
   return
 }
