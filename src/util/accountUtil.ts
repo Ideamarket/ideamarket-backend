@@ -1,11 +1,8 @@
-import type { UserAccountDocument } from '../models/user-accounts.model'
-import { UserAccountModel } from '../models/user-accounts.model'
-import type {
-  UserAccountResponse,
-  VisibilityOptions,
-} from '../types/user-accounts.types'
-import { getRandomString } from '../util/randomUtil'
+import type { AccountDocument } from '../models/account.model'
+import { AccountModel } from '../models/account.model'
+import type { AccountResponse, VisibilityOptions } from '../types/account.types'
 import { sendMail } from './emailUtil'
+import { getRandomString } from './randomUtil'
 
 /* eslint-disable prefer-promise-reject-errors */
 export function isValidUsername(username: string) {
@@ -15,8 +12,8 @@ export function isValidUsername(username: string) {
 }
 
 export async function isUsernameExists(username: string) {
-  const userAccount = await UserAccountModel.findOne({ username })
-  return !!userAccount
+  const account = await AccountModel.findOne({ username })
+  return !!account
 }
 
 export async function isUsernameAvailable(username: string) {
@@ -56,46 +53,46 @@ export async function checkUsernameCanBeUpdatedOrNot({
   return true
 }
 
-export function mapUserAccount(
-  userAccountDoc: UserAccountDocument | Partial<UserAccountDocument>
-): UserAccountResponse {
-  const userAccount: UserAccountResponse = {}
+export function mapAccount(
+  accountDoc: AccountDocument | Partial<AccountDocument>
+): AccountResponse {
+  const account: AccountResponse = {}
 
-  if (userAccountDoc.name) {
-    userAccount.name = userAccountDoc.name
+  if (accountDoc.name) {
+    account.name = accountDoc.name
   }
 
-  if (userAccountDoc.username) {
-    userAccount.username = userAccountDoc.username
+  if (accountDoc.username) {
+    account.username = accountDoc.username
   }
 
-  if (userAccountDoc.email) {
-    userAccount.email = userAccountDoc.email
+  if (accountDoc.email) {
+    account.email = accountDoc.email
   }
 
-  userAccount.emailVerified = userAccountDoc.emailVerified
+  account.emailVerified = accountDoc.emailVerified
 
-  if (userAccountDoc.bio) {
-    userAccount.bio = userAccountDoc.bio
+  if (accountDoc.bio) {
+    account.bio = accountDoc.bio
   }
 
-  if (userAccountDoc.profilePhoto) {
-    userAccount.profilePhoto = userAccountDoc.profilePhoto
+  if (accountDoc.profilePhoto) {
+    account.profilePhoto = accountDoc.profilePhoto
   }
 
-  if (userAccountDoc.walletAddress) {
-    userAccount.walletAddress = userAccountDoc.walletAddress
+  if (accountDoc.walletAddress) {
+    account.walletAddress = accountDoc.walletAddress
   }
 
-  if (userAccountDoc.visibilityOptions) {
-    userAccount.visibilityOptions = mapVisibilityOptions(
-      userAccountDoc.visibilityOptions
+  if (accountDoc.visibilityOptions) {
+    account.visibilityOptions = mapVisibilityOptions(
+      accountDoc.visibilityOptions
     )
   }
 
-  userAccount.role = userAccountDoc.role
+  account.role = accountDoc.role
 
-  return userAccount
+  return account
 }
 
 function mapVisibilityOptions(

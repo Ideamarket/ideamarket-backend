@@ -2,46 +2,46 @@
 import type { Request, Response } from 'express'
 
 import { handleError, handleSuccess } from '../lib/base'
-import type { IUserAccount } from '../models/user-accounts.model'
+import type { IAccount } from '../models/account.model'
 import {
-  authenticateUserAndReturnToken,
+  authenticateAccountAndReturnToken,
   checkEmailVerificationCode,
-  createUserAccount,
-  fetchPublicUserProfile,
-  fetchUserAccount,
+  createAccountInDB,
+  fetchPublicAccountProfileFromDB,
+  fetchAccountFromDB,
   sendEmailVerificationCode,
-  updateUserAccount,
+  updateAccountInDB,
   uploadProfilePhoto,
-} from '../services/user-accounts.service'
-import type { VisibilityOptions } from '../types/user-accounts.types'
-import type { DECODED_USER } from '../util/jwtTokenUtil'
+} from '../services/account.service'
+import type { VisibilityOptions } from '../types/account.types'
+import type { DECODED_ACCOUNT } from '../util/jwtTokenUtil'
 import type { SignedWalletAddress } from '../util/web3Util'
 import { recoverEthAddresses } from '../util/web3Util'
 
-// Authenticate User
-export async function authenticateUser(req: Request, res: Response) {
+// Authenticate Account
+export async function authenticateAccount(req: Request, res: Response) {
   try {
     const signedWalletAddress: SignedWalletAddress =
       req.body.signedWalletAddress
     const walletAddress = recoverEthAddresses(signedWalletAddress)
 
-    const data = await authenticateUserAndReturnToken(walletAddress)
+    const data = await authenticateAccountAndReturnToken(walletAddress)
 
     return handleSuccess(res, data)
   } catch (error) {
     console.error(error)
-    return handleError(res, error, 'Unable to authenticate the user')
+    return handleError(res, error, 'Unable to authenticate the account')
   }
 }
 
-// Create User Account
-export async function createUser(req: Request, res: Response) {
+// Create Account
+export async function createAccount(req: Request, res: Response) {
   try {
     const reqBody = req.body
     const signedWalletAddress: SignedWalletAddress = reqBody.signedWalletAddress
     const walletAddress = recoverEthAddresses(signedWalletAddress)
 
-    const userAccountRequest: IUserAccount = {
+    const accountRequest: IAccount = {
       walletAddress,
       name: reqBody.name as string,
       username: reqBody.username as string,
@@ -50,23 +50,23 @@ export async function createUser(req: Request, res: Response) {
       profilePhoto: reqBody.profilePhoto as string,
       visibilityOptions: reqBody.visibilityOptions as VisibilityOptions,
     }
-    const createdUserAccount = await createUserAccount(userAccountRequest)
+    const createdAccount = await createAccountInDB(accountRequest)
 
-    return handleSuccess(res, createdUserAccount)
+    return handleSuccess(res, createdAccount)
   } catch (error) {
     console.error(error)
-    return handleError(res, error, 'Unable to create the user account')
+    return handleError(res, error, 'Unable to create the account')
   }
 }
 
-// Update User Account
-export async function updateUser(req: Request, res: Response) {
+// Update Account
+export async function updateAccount(req: Request, res: Response) {
   try {
     const reqBody = req.body
-    const user = (req as any).user as DECODED_USER
+    const decodedAccount = (req as any).decodedAccount as DECODED_ACCOUNT
 
-    const userAccountRequest: IUserAccount = {
-      walletAddress: user.walletAddress,
+    const accountRequest: IAccount = {
+      walletAddress: decodedAccount.walletAddress,
       name: reqBody.name as string,
       username: reqBody.username as string,
       email: reqBody.email as string,
@@ -74,43 +74,43 @@ export async function updateUser(req: Request, res: Response) {
       profilePhoto: reqBody.profilePhoto as string,
       visibilityOptions: reqBody.visibilityOptions as VisibilityOptions,
     }
-    const updatedUserAccount = await updateUserAccount(userAccountRequest)
+    const updatedAccount = await updateAccountInDB(accountRequest)
 
-    return handleSuccess(res, updatedUserAccount)
+    return handleSuccess(res, updatedAccount)
   } catch (error) {
     console.error(error)
-    return handleError(res, error, 'Unable to update the user account')
+    return handleError(res, error, 'Unable to update the account')
   }
 }
 
-// Fetch User Account
-export async function fetchUser(req: Request, res: Response) {
+// Fetch Account
+export async function fetchAccount(req: Request, res: Response) {
   try {
-    const user = (req as any).user as DECODED_USER
-    const userAccount = await fetchUserAccount(user.walletAddress)
+    const decodedAccount = (req as any).decodedAccount as DECODED_ACCOUNT
+    const account = await fetchAccountFromDB(decodedAccount.walletAddress)
 
-    return handleSuccess(res, userAccount)
+    return handleSuccess(res, account)
   } catch (error) {
     console.error(error)
-    return handleError(res, error, 'Unable to fetch the user account')
+    return handleError(res, error, 'Unable to fetch the account')
   }
 }
 
-// Fetch User Public Profile
-export async function fetchUserPublicProfile(req: Request, res: Response) {
+// Fetch Public Account Profile
+export async function fetchPublicAccountProfile(req: Request, res: Response) {
   try {
     const username = req.query.username as string
-    const publicUserProfile = await fetchPublicUserProfile(username)
+    const publicAccountProfile = await fetchPublicAccountProfileFromDB(username)
 
-    return handleSuccess(res, publicUserProfile)
+    return handleSuccess(res, publicAccountProfile)
   } catch (error) {
     console.error(error)
-    return handleError(res, error, "Unable to fetch the user's public profile")
+    return handleError(res, error, 'Unable to fetch the public account profile')
   }
 }
 
-// Upload User Profile Photo
-export async function uploadUserProfilePhoto(req: Request, res: Response) {
+// Upload Account Profile Photo
+export async function uploadAccountProfilePhoto(req: Request, res: Response) {
   try {
     const files = req.files?.profilePhoto
     if (!files) {
@@ -126,14 +126,16 @@ export async function uploadUserProfilePhoto(req: Request, res: Response) {
   }
 }
 
-// Send Email Verification Code
-export async function sendUserEmailVerificationCode(
+// Send Account Email Verification Code
+export async function sendAccountEmailVerificationCode(
   req: Request,
   res: Response
 ) {
   try {
-    const user = (req as any).user as DECODED_USER
-    const sendCodeResponse = await sendEmailVerificationCode(user.walletAddress)
+    const decodedAccount = (req as any).decodedAccount as DECODED_ACCOUNT
+    const sendCodeResponse = await sendEmailVerificationCode(
+      decodedAccount.walletAddress
+    )
 
     if (sendCodeResponse.accountNotFound) {
       return handleSuccess(res, {
@@ -166,17 +168,17 @@ export async function sendUserEmailVerificationCode(
   }
 }
 
-// Check Email Verification COde
-export async function checkUserEmailVerificationCode(
+// Check Account Email Verification COde
+export async function checkAccountEmailVerificationCode(
   req: Request,
   res: Response
 ) {
   try {
     const reqBody = req.body
-    const user = (req as any).user as DECODED_USER
+    const decodedAccount = (req as any).decodedAccount as DECODED_ACCOUNT
 
     const verificationResponse = await checkEmailVerificationCode({
-      walletAddress: user.walletAddress,
+      walletAddress: decodedAccount.walletAddress,
       code: reqBody.code,
     })
 

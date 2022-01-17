@@ -1,7 +1,7 @@
 import config from 'config'
 import jwt from 'jsonwebtoken'
 
-import { UserAccountModel } from '../models/user-accounts.model'
+import { AccountModel } from '../models/account.model'
 
 const jwtSecretKey: string = config.get('jwt.secretKey')
 const jwtExpiry: number = config.get('jwt.expiry')
@@ -67,35 +67,38 @@ function decodeAuthToken(token: string) {
 }
 
 /**
- * Verifies the validity of the auth token and returns the user
+ * Verifies the validity of the auth token and returns the account
  */
-export async function verifyAuthTokenAndReturnUser(
+export async function verifyAuthTokenAndReturnAccount(
   token: string
-): Promise<DECODED_USER | null> {
+): Promise<DECODED_ACCOUNT | null> {
   try {
     const walletAddress = decodeAuthToken(token)
     if (!walletAddress) {
       return null
     }
 
-    const userAccount = await UserAccountModel.findOne({ walletAddress })
-    if (!userAccount) {
+    const account = await AccountModel.findOne({ walletAddress })
+    if (!account) {
       return null
     }
 
     return {
-      id: userAccount._id,
-      username: userAccount.username ?? null,
-      walletAddress: userAccount.walletAddress,
-      role: userAccount.role,
+      id: account._id,
+      username: account.username ?? null,
+      walletAddress: account.walletAddress,
+      role: account.role,
     }
   } catch (error) {
-    console.error('Error occurred while fetching user from auth token', error)
+    console.error(
+      'Error occurred while fetching account from auth token',
+      error
+    )
     return null
   }
 }
 
-export type DECODED_USER = {
+export type DECODED_ACCOUNT = {
   id: bigint
   username: string | null
   walletAddress: string

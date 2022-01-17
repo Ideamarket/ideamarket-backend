@@ -2,7 +2,7 @@
 
 import { body, query } from 'express-validator'
 
-import { isUsernameAvailable, isValidUsername } from '../util/userUtil'
+import { isUsernameAvailable, isValidUsername } from '../util/accountUtil'
 
 // Error Messages
 const SIGNED_WALLET_ADDRESS_REQ = 'Signed Wallet Address is required'
@@ -12,7 +12,7 @@ const SIGNATURE_REQ = 'Signature  is required'
 const SIGNATURE_NOT_VALID = 'Signature is not valid'
 
 // Validators
-export const authenticateUserValidation = [
+export const authenticateAccountValidation = [
   body('signedWalletAddress').notEmpty().withMessage(SIGNED_WALLET_ADDRESS_REQ),
   body('signedWalletAddress.message')
     .notEmpty()
@@ -26,7 +26,7 @@ export const authenticateUserValidation = [
     .withMessage(SIGNATURE_NOT_VALID),
 ]
 
-export const createUserValidation = [
+export const createAccountValidation = [
   body('signedWalletAddress').notEmpty().withMessage(SIGNED_WALLET_ADDRESS_REQ),
   body('signedWalletAddress.message')
     .notEmpty()
@@ -65,7 +65,7 @@ export const createUserValidation = [
     .withMessage('eth address visibility option should be boolean'),
 ]
 
-export const updateUserValidation = [
+export const updateAccountValidation = [
   body('username')
     .optional()
     .custom(isValidUsername)
@@ -91,7 +91,7 @@ export const updateUserValidation = [
     .withMessage('eth address visibility option should be boolean'),
 ]
 
-export const fetchUserPublicProfileValidation = [
+export const fetchPublicAccountProfileValidation = [
   query('username')
     .notEmpty()
     .withMessage('Username is required')
@@ -99,6 +99,6 @@ export const fetchUserPublicProfileValidation = [
     .withMessage('Username is not valid'),
 ]
 
-export const checkUserEmailVerificationCodeValidation = [
+export const checkAccountEmailVerificationCodeValidation = [
   body('code').notEmpty().withMessage('Code is required to verify the email'),
 ]

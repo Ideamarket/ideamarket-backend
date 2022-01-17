@@ -6,7 +6,7 @@ import { handleError } from '../lib/base'
 import { UnAuthenticatedError } from '../services/errors'
 import {
   verifyAuthToken,
-  verifyAuthTokenAndReturnUser,
+  verifyAuthTokenAndReturnAccount,
 } from '../util/jwtTokenUtil'
 
 const AUTHORIZATION_HEADER_MISSING_ERR_LOG =
@@ -41,7 +41,7 @@ export function authenticate(req: Request, res: Response, next: NextFunction) {
   return
 }
 
-export async function authenticateAndSetUser(
+export async function authenticateAndSetAccount(
   req: Request,
   res: Response,
   next: NextFunction
@@ -56,9 +56,9 @@ export async function authenticateAndSetUser(
     )
   }
   const [, authToken] = authorizationHeader.split(' ')
-  const user = await verifyAuthTokenAndReturnUser(authToken)
-  console.info(`User : ${JSON.stringify(user)}`)
-  if (!user) {
+  const decodedAccount = await verifyAuthTokenAndReturnAccount(authToken)
+  console.info(`Account : ${JSON.stringify(decodedAccount)}`)
+  if (!decodedAccount) {
     console.error(INVALID_AUTH_TOKEN_ERR_LOG)
     return handleError(
       res,
@@ -67,7 +67,7 @@ export async function authenticateAndSetUser(
     )
   }
   console.info(AUTHENTICATION_SUCCESS_LOG)
-  ;(req as any).user = user
+  ;(req as any).decodedAccount = decodedAccount
   next()
   return
 }
