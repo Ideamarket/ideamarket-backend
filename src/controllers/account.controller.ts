@@ -13,7 +13,6 @@ import {
   updateAccountInDB,
   uploadProfilePhoto,
 } from '../services/account.service'
-import type { VisibilityOptions } from '../types/account.types'
 import type { DECODED_ACCOUNT } from '../util/jwtTokenUtil'
 import type { SignedWalletAddress } from '../util/web3Util'
 import { recoverEthAddresses } from '../util/web3Util'
@@ -48,7 +47,6 @@ export async function createAccount(req: Request, res: Response) {
       email: reqBody.email as string,
       bio: reqBody.bio as string,
       profilePhoto: reqBody.profilePhoto as string,
-      visibilityOptions: reqBody.visibilityOptions as VisibilityOptions,
     }
     const createdAccount = await createAccountInDB(accountRequest)
 
@@ -72,7 +70,6 @@ export async function updateAccount(req: Request, res: Response) {
       email: reqBody.email as string,
       bio: reqBody.bio as string,
       profilePhoto: reqBody.profilePhoto as string,
-      visibilityOptions: reqBody.visibilityOptions as VisibilityOptions,
     }
     const updatedAccount = await updateAccountInDB(accountRequest)
 

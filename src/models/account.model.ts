@@ -3,6 +3,12 @@ import mongoose from 'mongoose'
 
 import type { VisibilityOptions } from '../types/account.types'
 
+const DefaultVisibilityOptions: VisibilityOptions = {
+  email: false,
+  bio: true,
+  ethAddress: true,
+}
+
 export enum AccountRole {
   USER = 'USER',
   MODERATOR = 'MODERATOR',
@@ -58,7 +64,10 @@ const AccountSchema = new mongoose.Schema(
     profilePhoto: { type: String, default: null },
     emailVerified: { type: Boolean, default: false },
     walletAddress: { type: String, required: true, index: { unique: true } },
-    visibilityOptions: VisibilityOptionsSchema,
+    visibilityOptions: {
+      type: VisibilityOptionsSchema,
+      default: DefaultVisibilityOptions,
+    },
     role: {
       type: String,
       enum: Object.values(AccountRole),
