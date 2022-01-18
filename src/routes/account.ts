@@ -53,7 +53,6 @@ accountRouter.get('', authenticateAndSetAccount, fetchAccount)
 // Fetch Public Account Profile
 accountRouter.get(
   '/publicProfile',
-  authenticate,
   fetchPublicAccountProfileValidation,
   validateRequest,
   fetchPublicAccountProfile
