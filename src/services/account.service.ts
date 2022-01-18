@@ -38,7 +38,6 @@ export async function createAccountInDB(accountRequest: IAccount) {
     bio: accountRequest.bio,
     profilePhoto: accountRequest.profilePhoto,
     walletAddress: accountRequest.walletAddress,
-    visibilityOptions: accountRequest.visibilityOptions,
   })
 
   const createdAccountDoc = await AccountModel.create(accountDoc)
@@ -77,8 +76,6 @@ export async function updateAccountInDB(accountRequest: IAccount) {
   accountDoc.bio = accountRequest.bio ?? accountDoc.bio
   accountDoc.profilePhoto =
     accountRequest.profilePhoto ?? accountDoc.profilePhoto
-  accountDoc.visibilityOptions =
-    accountRequest.visibilityOptions ?? accountDoc.visibilityOptions
 
   const updatedAccountDoc = await accountDoc.save()
   const { profilePhoto } = updatedAccountDoc

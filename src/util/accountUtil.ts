@@ -1,6 +1,6 @@
 import type { AccountDocument } from '../models/account.model'
 import { AccountModel } from '../models/account.model'
-import type { AccountResponse, VisibilityOptions } from '../types/account.types'
+import type { AccountResponse } from '../types/account.types'
 import { sendMail } from './emailUtil'
 import { getRandomString } from './randomUtil'
 
@@ -84,25 +84,9 @@ export function mapAccount(
     account.walletAddress = accountDoc.walletAddress
   }
 
-  if (accountDoc.visibilityOptions) {
-    account.visibilityOptions = mapVisibilityOptions(
-      accountDoc.visibilityOptions
-    )
-  }
-
   account.role = accountDoc.role
 
   return account
-}
-
-function mapVisibilityOptions(
-  visibilityOptionsDoc: VisibilityOptions
-): VisibilityOptions {
-  return {
-    email: visibilityOptionsDoc.email,
-    bio: visibilityOptionsDoc.bio,
-    ethAddress: visibilityOptionsDoc.ethAddress,
-  }
 }
 
 export async function sendMailForEmailVerification({

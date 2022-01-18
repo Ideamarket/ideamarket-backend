@@ -51,18 +51,6 @@ export const createAccountValidation = [
     .optional()
     .isString()
     .withMessage('Profile photo is not valid'),
-  body('visibilityOptions.email')
-    .optional()
-    .isBoolean()
-    .withMessage('email visibility option should be boolean'),
-  body('visibilityOptions.bio')
-    .optional()
-    .isBoolean()
-    .withMessage('bio visibility option should be boolean'),
-  body('visibilityOptions.ethAddress')
-    .optional()
-    .isBoolean()
-    .withMessage('eth address visibility option should be boolean'),
 ]
 
 export const updateAccountValidation = [
@@ -77,18 +65,6 @@ export const updateAccountValidation = [
     .optional()
     .isString()
     .withMessage('Profile photo is not valid'),
-  body('visibilityOptions.email')
-    .optional()
-    .isBoolean()
-    .withMessage('email visibility option should be boolean'),
-  body('visibilityOptions.bio')
-    .optional()
-    .isBoolean()
-    .withMessage('bio visibility option should be boolean'),
-  body('visibilityOptions.ethAddress')
-    .optional()
-    .isBoolean()
-    .withMessage('eth address visibility option should be boolean'),
 ]
 
 export const fetchPublicAccountProfileValidation = [
