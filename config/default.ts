@@ -63,6 +63,8 @@ const config = {
   sendgrid: {
     apiKey: process.env.SENDGRID_API_KEY ?? '',
     fromEmail: 'admin@ideamarket.io',
+    emailVerificationTemplateId:
+      process.env.SENDGRID_EMAIL_VERIFICATION_TEMPLATE_ID ?? '',
   },
 }
 

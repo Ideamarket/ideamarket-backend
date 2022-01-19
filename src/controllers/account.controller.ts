@@ -44,7 +44,6 @@ export async function createAccount(req: Request, res: Response) {
       walletAddress,
       name: reqBody.name as string,
       username: reqBody.username as string,
-      email: reqBody.email as string,
       bio: reqBody.bio as string,
       profilePhoto: reqBody.profilePhoto as string,
     }
@@ -67,7 +66,6 @@ export async function updateAccount(req: Request, res: Response) {
       walletAddress: decodedAccount.walletAddress,
       name: reqBody.name as string,
       username: reqBody.username as string,
-      email: reqBody.email as string,
       bio: reqBody.bio as string,
       profilePhoto: reqBody.profilePhoto as string,
     }
@@ -129,35 +127,12 @@ export async function sendAccountEmailVerificationCode(
   res: Response
 ) {
   try {
-    const decodedAccount = (req as any).decodedAccount as DECODED_ACCOUNT
-    const sendCodeResponse = await sendEmailVerificationCode(
-      decodedAccount.walletAddress
-    )
-
-    if (sendCodeResponse.accountNotFound) {
-      return handleSuccess(res, {
-        messge: 'Your account does not exist',
-        codeSent: sendCodeResponse.codeSent,
-      })
-    }
-
-    if (sendCodeResponse.emailMissing) {
-      return handleSuccess(res, {
-        messge: 'Your email is not connected to your account',
-        codeSent: sendCodeResponse.codeSent,
-      })
-    }
-
-    if (sendCodeResponse.alreadyVerified) {
-      return handleSuccess(res, {
-        messge: 'Your email has already been verified',
-        codeSent: sendCodeResponse.codeSent,
-      })
-    }
+    const email = req.query.email as string
+    await sendEmailVerificationCode(email)
 
     return handleSuccess(res, {
       messge: 'Please check your email for verification code',
-      codeSent: sendCodeResponse.codeSent,
+      codeSent: true,
     })
   } catch (error) {
     console.error(error)
@@ -176,19 +151,13 @@ export async function checkAccountEmailVerificationCode(
 
     const verificationResponse = await checkEmailVerificationCode({
       walletAddress: decodedAccount.walletAddress,
+      email: reqBody.email,
       code: reqBody.code,
     })
 
-    if (verificationResponse.accountNotFound) {
+    if (verificationResponse.codeNotFound) {
       return handleSuccess(res, {
-        messge: 'Your account does not exist',
-        emailVerified: verificationResponse.emailVerified,
-      })
-    }
-
-    if (verificationResponse.emailMissing) {
-      return handleSuccess(res, {
-        messge: 'Your email is not connected to the account',
+        messge: 'Please request the verification code again',
         emailVerified: verificationResponse.emailVerified,
       })
     }

@@ -45,7 +45,6 @@ export const createAccountValidation = [
     .custom(isUsernameAvailable)
     .withMessage('Username is not available'),
   body('name').optional().isString().withMessage('Name is not valid'),
-  body('email').optional().isEmail().withMessage('Email is not valid'),
   body('bio').optional().isString().withMessage('Bio is not valid'),
   body('profilePhoto')
     .optional()
@@ -59,7 +58,6 @@ export const updateAccountValidation = [
     .custom(isValidUsername)
     .withMessage('Username is not valid'),
   body('name').optional().isString().withMessage('Name is not valid'),
-  body('email').optional().isEmail().withMessage('Email is not valid'),
   body('bio').optional().isString().withMessage('Bio is not valid'),
   body('profilePhoto')
     .optional()
@@ -75,6 +73,11 @@ export const fetchPublicAccountProfileValidation = [
     .withMessage('Username is not valid'),
 ]
 
+export const sendAccountEmailVerificationCodeValidation = [
+  query('email').notEmpty().isEmail().withMessage('Email is not valid'),
+]
+
 export const checkAccountEmailVerificationCodeValidation = [
+  body('email').notEmpty().isEmail().withMessage('Email is not valid'),
   body('code').notEmpty().withMessage('Code is required to verify the email'),
 ]

@@ -3,6 +3,7 @@ import type { UploadedFile } from 'express-fileupload'
 
 import type { IAccount, AccountDocument } from '../models/account.model'
 import { AccountModel } from '../models/account.model'
+import { EmailVerificationModel } from '../models/emailVerification.model'
 import {
   checkUsernameCanBeUpdatedOrNot,
   generateRandomUsername,
@@ -34,19 +35,12 @@ export async function authenticateAccountAndReturnToken(walletAddress: string) {
 export async function createAccountInDB(accountRequest: IAccount) {
   const accountDoc = AccountModel.build({
     username: accountRequest.username ?? (await generateRandomUsername()),
-    email: accountRequest.email,
     bio: accountRequest.bio,
     profilePhoto: accountRequest.profilePhoto,
     walletAddress: accountRequest.walletAddress,
   })
 
   const createdAccountDoc = await AccountModel.create(accountDoc)
-  const { profilePhoto } = createdAccountDoc
-  if (profilePhoto) {
-    createdAccountDoc.profilePhoto = profilePhoto
-      ? `${cloudFrontDomain}/${profilePhoto}`
-      : null
-  }
 
   return mapAccount(createdAccountDoc)
 }
@@ -69,21 +63,11 @@ export async function updateAccountInDB(accountRequest: IAccount) {
   ) {
     accountDoc.username = accountRequest.username
   }
-  if (accountRequest.email && accountDoc.email !== accountRequest.email) {
-    accountDoc.email = accountRequest.email
-    accountDoc.emailVerified = false
-  }
   accountDoc.bio = accountRequest.bio ?? accountDoc.bio
   accountDoc.profilePhoto =
     accountRequest.profilePhoto ?? accountDoc.profilePhoto
 
   const updatedAccountDoc = await accountDoc.save()
-  const { profilePhoto } = updatedAccountDoc
-  if (profilePhoto) {
-    updatedAccountDoc.profilePhoto = profilePhoto
-      ? `${cloudFrontDomain}/${profilePhoto}`
-      : null
-  }
 
   return mapAccount(updatedAccountDoc)
 }
@@ -92,13 +76,6 @@ export async function fetchAccountFromDB(walletAddress: string) {
   const accountDoc = await AccountModel.findOne({ walletAddress })
   if (!accountDoc) {
     return null
-  }
-
-  const { profilePhoto } = accountDoc
-  if (profilePhoto) {
-    accountDoc.profilePhoto = profilePhoto
-      ? `${cloudFrontDomain}/${profilePhoto}`
-      : null
   }
 
   return mapAccount(accountDoc)
@@ -117,8 +94,6 @@ export async function fetchPublicAccountProfileFromDB(username: string) {
   publicAccountProfile.name = name
   publicAccountProfile.username = accountDoc.username
   publicAccountProfile.profilePhoto = profilePhoto
-    ? `${cloudFrontDomain}/${profilePhoto}`
-    : null
   if (visibilityOptions?.email) {
     publicAccountProfile.email = email
   }
@@ -141,61 +116,47 @@ export async function uploadProfilePhoto(profilePhoto: UploadedFile) {
   return fileName ? `${cloudFrontDomain}/${fileName}` : null
 }
 
-export async function sendEmailVerificationCode(walletAddress: string) {
-  const response = {
-    accountNotFound: false,
-    emailMissing: false,
-    alreadyVerified: false,
-    codeSent: false,
-  }
-
+export async function sendEmailVerificationCode(email: string) {
   try {
-    const accountDoc = await AccountModel.findOne({ walletAddress })
+    let sendVerificationCode = false
+    const emailVerificationDoc = await EmailVerificationModel.findOne({ email })
 
-    if (!accountDoc) {
-      response.accountNotFound = true
-      return response
+    if (
+      !emailVerificationDoc ||
+      !emailVerificationDoc.code ||
+      !emailVerificationDoc.resendCodeTimestamp ||
+      emailVerificationDoc.resendCodeTimestamp.getTime() < Date.now()
+    ) {
+      sendVerificationCode = true
     }
 
-    if (!accountDoc.email) {
-      response.emailMissing = true
-      return response
-    }
+    if (sendVerificationCode) {
+      const code = emailVerificationDoc?.code
+        ? emailVerificationDoc.code
+        : generateRandomNDigitNumber(6).toString()
+      const latestResendCodeTimestamp = new Date(Date.now() + 60 * 1000)
 
-    if (accountDoc.emailVerified) {
-      response.alreadyVerified = true
-      return response
-    }
-
-    const currentDate = new Date()
-    const updateResendCodeTimestamp =
-      !accountDoc.code ||
-      !accountDoc.resendCodeTimestamp ||
-      accountDoc.resendCodeTimestamp.getTime() < currentDate.getTime()
-    const sendCode = updateResendCodeTimestamp
-
-    if (!accountDoc.code) {
-      const code = generateRandomNDigitNumber(6).toString()
-      accountDoc.code = code
-    }
-    if (updateResendCodeTimestamp) {
-      const latestResendCodeTimestamp = new Date(
-        currentDate.getTime() + 60 * 1000
-      )
-      accountDoc.resendCodeTimestamp = latestResendCodeTimestamp
-    }
-
-    if (sendCode) {
-      const update = accountDoc.save()
-      const sendMail = sendMailForEmailVerification({
-        to: accountDoc.email,
-        code: accountDoc.code,
+      let updateRecord
+      if (emailVerificationDoc) {
+        emailVerificationDoc.code = code
+        emailVerificationDoc.resendCodeTimestamp = latestResendCodeTimestamp
+        updateRecord = emailVerificationDoc.save()
+      }
+      const addEmailVerificationDoc = EmailVerificationModel.build({
+        email,
+        code,
+        resendCodeTimestamp: latestResendCodeTimestamp,
       })
-      await Promise.all([update, sendMail])
+      updateRecord = EmailVerificationModel.create(addEmailVerificationDoc)
+
+      const sendMail = sendMailForEmailVerification({
+        to: email,
+        code,
+      })
+      await Promise.all([updateRecord, sendMail])
     }
 
-    response.codeSent = true
-    return response
+    return
   } catch (error) {
     console.error('Error occurred while sending verification code', error)
     throw new Error('Error occurred while sending verification code')
@@ -204,43 +165,38 @@ export async function sendEmailVerificationCode(walletAddress: string) {
 
 export async function checkEmailVerificationCode({
   walletAddress,
+  email,
   code,
 }: {
   walletAddress: string
+  email: string
   code: string
 }) {
   const response = {
-    accountNotFound: false,
-    emailMissing: false,
-    emailVerified: false,
+    codeNotFound: false,
+    emailVerified: true,
   }
   try {
-    const accountDoc = await AccountModel.findOne({ walletAddress })
+    const emailVerificationDoc = await EmailVerificationModel.findOne({ email })
 
-    if (!accountDoc) {
-      response.accountNotFound = true
+    if (!emailVerificationDoc || !emailVerificationDoc.code) {
+      response.codeNotFound = true
       return response
     }
 
-    if (!accountDoc.email) {
-      response.emailMissing = true
-      return response
-    }
-
-    if (accountDoc.emailVerified) {
-      return response
-    }
-
-    if (code !== accountDoc.code) {
+    if (emailVerificationDoc.code !== code) {
       response.emailVerified = false
       return response
     }
 
-    accountDoc.emailVerified = true
-    accountDoc.code = null
-    accountDoc.resendCodeTimestamp = null
-    await accountDoc.save()
-    response.emailVerified = true
+    const updateAccount = AccountModel.findOneAndUpdate(
+      { walletAddress },
+      { $set: { email } }
+    )
+    const clearEmailVerification = EmailVerificationModel.findOneAndDelete({
+      email,
+    })
+    await Promise.all([updateAccount, clearEmailVerification])
 
     return response
   } catch (error) {

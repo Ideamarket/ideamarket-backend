@@ -21,12 +21,10 @@ export interface IAccount {
   email?: string
   bio?: string
   profilePhoto?: string | null
-  emailVerified?: boolean
   walletAddress: string
   visibilityOptions?: VisibilityOptions
   role?: AccountRole
   code?: string | null
-  resendCodeTimestamp?: Date | null
 }
 
 interface IAccountModel extends mongoose.Model<AccountDocument> {
@@ -39,12 +37,10 @@ interface AccountDocument extends mongoose.Document {
   email?: string
   bio?: string
   profilePhoto?: string | null
-  emailVerified?: boolean
   walletAddress: string
   visibilityOptions?: VisibilityOptions
   role: AccountRole
   code?: string | null
-  resendCodeTimestamp?: Date | null
   createdAt: Date
   updatedAt: Date
 }
@@ -62,7 +58,6 @@ const AccountSchema = new mongoose.Schema(
     email: { type: String },
     bio: { type: String },
     profilePhoto: { type: String, default: null },
-    emailVerified: { type: Boolean, default: false },
     walletAddress: { type: String, required: true, index: { unique: true } },
     visibilityOptions: {
       type: VisibilityOptionsSchema,
@@ -74,7 +69,6 @@ const AccountSchema = new mongoose.Schema(
       default: AccountRole.USER,
     },
     code: { type: String, default: null },
-    resendCodeTimestamp: { type: Date, default: null },
   },
   {
     timestamps: true,

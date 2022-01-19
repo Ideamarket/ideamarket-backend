@@ -24,3 +24,23 @@ export async function sendMail({
     console.error('Error occured while sending email', error)
   }
 }
+
+export async function sendMailWithDynamicTemplate({
+  to,
+  templateId,
+  dynamicTemplateData,
+}: {
+  to: string
+  templateId: string
+  dynamicTemplateData: any
+}) {
+  try {
+    const message = { to, from, templateId, dynamicTemplateData }
+    await sgMail.send(message)
+  } catch (error) {
+    console.error(
+      'Error occured while sending email with dynamic template',
+      error
+    )
+  }
+}
