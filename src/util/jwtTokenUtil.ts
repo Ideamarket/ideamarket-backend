@@ -21,12 +21,12 @@ type DECODED_PAYLOAD = {
  */
 export function generateAuthToken(walletAddress: string) {
   let authToken = null
-  const expiresIn = 0
+  const expiresIn = jwtExpiry
   try {
     const payload: PAYLOAD = { walletAddress }
     authToken = jwt.sign(payload, jwtSecretKey, {
       algorithm: 'HS256',
-      expiresIn: jwtExpiry,
+      expiresIn,
     })
   } catch (error) {
     console.error('Error occurred while generating the auth token', error)
