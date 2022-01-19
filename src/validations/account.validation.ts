@@ -40,6 +40,7 @@ export const createAccountValidation = [
     .withMessage(SIGNATURE_NOT_VALID),
   body('username')
     .optional()
+    .toLowerCase()
     .custom(isValidUsername)
     .withMessage('Username is not valid')
     .custom(isUsernameAvailable)
@@ -55,6 +56,7 @@ export const createAccountValidation = [
 export const updateAccountValidation = [
   body('username')
     .optional()
+    .toLowerCase()
     .custom(isValidUsername)
     .withMessage('Username is not valid'),
   body('name').optional().isString().withMessage('Name is not valid'),
@@ -68,16 +70,25 @@ export const updateAccountValidation = [
 export const fetchPublicAccountProfileValidation = [
   query('username')
     .notEmpty()
+    .toLowerCase()
     .withMessage('Username is required')
     .custom(isValidUsername)
     .withMessage('Username is not valid'),
 ]
 
 export const sendAccountEmailVerificationCodeValidation = [
-  query('email').notEmpty().isEmail().withMessage('Email is not valid'),
+  query('email')
+    .notEmpty()
+    .toLowerCase()
+    .isEmail()
+    .withMessage('Email is not valid'),
 ]
 
 export const checkAccountEmailVerificationCodeValidation = [
-  body('email').notEmpty().isEmail().withMessage('Email is not valid'),
+  body('email')
+    .notEmpty()
+    .toLowerCase()
+    .isEmail()
+    .withMessage('Email is not valid'),
   body('code').notEmpty().withMessage('Code is required to verify the email'),
 ]
