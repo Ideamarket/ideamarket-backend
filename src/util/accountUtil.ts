@@ -1,8 +1,13 @@
+import config from 'config'
+
 import type { AccountDocument } from '../models/account.model'
 import { AccountModel } from '../models/account.model'
 import type { AccountResponse } from '../types/account.types'
-import { sendMail } from './emailUtil'
+import { sendMailWithDynamicTemplate } from './emailUtil'
 import { getRandomString } from './randomUtil'
+
+const templateId: string = config.get('sendgrid.emailVerificationTemplateId')
+const cloudFrontDomain: string = config.get('account.cloudFrontDomain')
 
 /* eslint-disable prefer-promise-reject-errors */
 export function isValidUsername(username: string) {
@@ -70,14 +75,14 @@ export function mapAccount(
     account.email = accountDoc.email
   }
 
-  account.emailVerified = accountDoc.emailVerified
-
   if (accountDoc.bio) {
     account.bio = accountDoc.bio
   }
 
   if (accountDoc.profilePhoto) {
     account.profilePhoto = accountDoc.profilePhoto
+      ? `${cloudFrontDomain}/${accountDoc.profilePhoto}`
+      : null
   }
 
   if (accountDoc.walletAddress) {
@@ -96,25 +101,9 @@ export async function sendMailForEmailVerification({
   to: string
   code: string
 }) {
-  return sendMail({
+  return sendMailWithDynamicTemplate({
     to,
-    subject: 'Ideamarket - Email Verification',
-    text: `Your verification code is ${code}`,
-    html: emailVerificationHtmlContent(code),
+    templateId,
+    dynamicTemplateData: { code },
   })
-}
-
-function emailVerificationHtmlContent(code: string) {
-  return `<div style="font-family: Helvetica,Arial,sans-serif;min-width:1000px;overflow:auto;line-height:2">
-            <div style="margin:50px auto;width:70%;padding:20px 0">
-              <div style="border-bottom:1px solid #eee">
-                <a href="" style="font-size:1.4em;color: #00466a;text-decoration:none;font-weight:600">Ideamarket</a>
-              </div>
-              <p>Please use below verification code to verify your email address.</p>
-              <h2 style="background: #00466a;margin: 0 10;width: max-content;padding: 0 10px;color: #fff;border-radius: 4px;">${code}</h2>
-              <p style="font-size:0.9em;"><br />Regards,<br />Ideamarket</p>
-              <hr style="border:none;border-top:1px solid #eee" />
-              <p style="font-size:0.9em;">Disclaimer: If you have not requested for this, then please ignore or let us know.</p>
-            </div>
-          </div>`
 }

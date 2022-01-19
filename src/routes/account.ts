@@ -21,6 +21,7 @@ import {
   checkAccountEmailVerificationCodeValidation,
   createAccountValidation,
   fetchPublicAccountProfileValidation,
+  sendAccountEmailVerificationCodeValidation,
   updateAccountValidation,
 } from '../validations/account.validation'
 
@@ -65,6 +66,8 @@ accountRouter.post('/profilePhoto', authenticate, uploadAccountProfilePhoto)
 accountRouter.get(
   '/emailVerification',
   authenticateAndSetAccount,
+  sendAccountEmailVerificationCodeValidation,
+  validateRequest,
   sendAccountEmailVerificationCode
 )
 
