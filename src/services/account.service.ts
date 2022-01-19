@@ -24,12 +24,12 @@ export async function authenticateAccountAndReturnToken(walletAddress: string) {
     return null
   }
 
-  const { authToken, expiresIn } = generateAuthToken(walletAddress)
+  const { authToken, validUntil } = generateAuthToken(walletAddress)
   if (!authToken) {
     throw new Error('Error occured while genrating auth token')
   }
 
-  return { tokenValue: authToken, tokenExpiry: expiresIn }
+  return { token: authToken, validUntil }
 }
 
 export async function createAccountInDB(accountRequest: IAccount) {

@@ -8,6 +8,7 @@ const jwtExpiry: number = config.get('jwt.expiry')
 
 export type PAYLOAD = {
   walletAddress: string
+  exp: number
 }
 
 type DECODED_PAYLOAD = {
@@ -21,17 +22,19 @@ type DECODED_PAYLOAD = {
  */
 export function generateAuthToken(walletAddress: string) {
   let authToken = null
-  const expiresIn = jwtExpiry
+  const exp = Math.floor(Date.now() / 1000) + jwtExpiry
+
   try {
-    const payload: PAYLOAD = { walletAddress }
+    const payload: PAYLOAD = { walletAddress, exp }
     authToken = jwt.sign(payload, jwtSecretKey, {
       algorithm: 'HS256',
-      expiresIn,
     })
   } catch (error) {
     console.error('Error occurred while generating the auth token', error)
   }
-  return { authToken, expiresIn }
+
+  const validUntil = new Date(exp * 1000)
+  return { authToken, validUntil }
 }
 
 /**
