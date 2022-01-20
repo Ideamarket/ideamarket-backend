@@ -1,5 +1,5 @@
 import type { Request, Response } from 'express'
-import type { DECODED_USER } from 'util/jwtTokenUtil'
+import type { DECODED_ACCOUNT } from 'util/jwtTokenUtil'
 
 import { handleSuccess, handleError } from '../lib/base'
 import { getVoteCount, upVote, downVote } from '../services/vote.service'
@@ -9,7 +9,6 @@ export async function fetchVoteCount(req: Request, res: Response) {
 
   try {
     const result = await getVoteCount(listing, market)
-    console.log(result)
     return handleSuccess(res, result)
   } catch (error) {
     return handleError(res, error, 'Unable to fetch vote count')
@@ -17,11 +16,11 @@ export async function fetchVoteCount(req: Request, res: Response) {
 }
 
 export async function upvote(req: Request, res: Response) {
-  const user = (req as any).user as DECODED_USER
+  const decodedAccount = (req as any).decodedAccount as DECODED_ACCOUNT
   const { listing, market } = req.body
 
   try {
-    const latestVoteCount = await upVote(listing, market, user.id)
+    const latestVoteCount = await upVote(listing, market, decodedAccount.id)
     return handleSuccess(res, latestVoteCount)
   } catch (error) {
     return handleError(res, error, `Unable to handle create comment`)
@@ -29,11 +28,11 @@ export async function upvote(req: Request, res: Response) {
 }
 
 export async function downvote(req: Request, res: Response) {
-  const user = (req as any).user as DECODED_USER
+  const decodedAccount = (req as any).decodedAccount as DECODED_ACCOUNT
   const { listing, market } = req.body
 
   try {
-    const latestVoteCount = await downVote(listing, market, user.id)
+    const latestVoteCount = await downVote(listing, market, decodedAccount.id)
     return handleSuccess(res, latestVoteCount)
   } catch (error) {
     return handleError(res, error, `Unable to handle create comment`)

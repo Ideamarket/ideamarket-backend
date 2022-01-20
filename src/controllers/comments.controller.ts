@@ -1,5 +1,5 @@
 import type { Request, Response } from 'express'
-import type { DECODED_USER } from 'util/jwtTokenUtil'
+import type { DECODED_ACCOUNT } from 'util/jwtTokenUtil'
 
 import { handleSuccess, handlePagingSuccess, handleError } from '../lib/base'
 import {
@@ -34,14 +34,14 @@ export async function fetchAllComments(req: Request, res: Response) {
 }
 
 export async function addComment(req: Request, res: Response) {
-  const user = (req as any).user as DECODED_USER
+  const decodedAccount = (req as any).decodedAccount as DECODED_ACCOUNT
 
   try {
     const comment = {
       listing: req.body.listing,
       market: req.body.market,
       value: req.body.value,
-      user: user.id,
+      user: decodedAccount.id,
       price: req.body.price,
       deposits: req.body.deposits,
       holders: req.body.holders,
@@ -58,8 +58,8 @@ export async function addComment(req: Request, res: Response) {
 
 export async function updateComment(req: Request, res: Response) {
   try {
-    const user = (req as any).user as DECODED_USER
-    await updateCommentById(req.params.id, req.body.value, user.id)
+    const decodedAccount = (req as any).decodedAccount as DECODED_ACCOUNT
+    await updateCommentById(req.params.id, req.body.value, decodedAccount.id)
     return handleSuccess(res, 'Comment has been updated')
   } catch (error) {
     return handleError(res, error, `Unable to handle create comment`)
@@ -72,8 +72,8 @@ export async function deleteCommentById(req: Request, res: Response) {
     if (!req.params.id) {
       return handleError(res, null, `Invalid or no comment identifier provided`)
     }
-    const user = (req as any).user as DECODED_USER
-    await deleteById(req.params.id, user.id)
+    const decodedAccount = (req as any).decodedAccount as DECODED_ACCOUNT
+    await deleteById(req.params.id, decodedAccount.id)
     return handleSuccess(res, 'Comment has been deleted successfully')
   } catch (error) {
     return handleError(res, error, 'Unable to handle create comment')
