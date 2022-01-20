@@ -29,7 +29,7 @@ const CommentSchema = new Schema(
   {
     user: {
       type: mongoose.Types.ObjectId,
-      ref: 'UserAccount',
+      ref: 'Account',
       required: true,
       index: true,
     },

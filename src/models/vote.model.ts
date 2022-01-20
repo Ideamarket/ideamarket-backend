@@ -19,7 +19,7 @@ const VoteSchema = new Schema(
       type: mongoose.Schema.Types.ObjectId,
       required: true,
       index: true,
-      ref: 'UserAccount',
+      ref: 'Account',
     },
     listing: { type: String, required: true, maxlength: 250, index: true },
     market: { type: String, required: true, maxlength: 250, index: true },
