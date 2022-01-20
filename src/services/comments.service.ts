@@ -11,30 +11,35 @@ import axios from 'axios'
 import { CommentModel } from '../models/comment.model'
 import { PermissionAccessViolationError } from './errors'
 
-export async function getAllComments(filter: any, page: number, count: number) {
+export function getAllComments(filter: any, page: number, count: number) {
   filter.isDeleted = false // retrieve all non-deleted records
 
   return CommentModel.paginate(filter, {
     limit: count,
     offset: page * count,
     sort: { createdAt: -1 },
+    populate: 'user',
   })
 }
 
-export async function addNewComment(comment: any) {
+export function addNewComment(comment: any) {
   return CommentModel.create(comment)
 }
 
-export async function updateCommentById(
+export function updateCommentById(
   commentId: string,
   value: string,
   userId: string
 ) {
-  return CommentModel.findByIdAndUpdate(commentId, { value })
+  return validateOwnership(commentId, userId).then((comment) => {
+    return CommentModel.findByIdAndUpdate(commentId, { value })
+  })
 }
 
-export async function deleteById(commentId: string, userId: string) {
-  return CommentModel.findByIdAndUpdate(commentId, { isDeleted: true })
+export function deleteById(commentId: string, userId: string) {
+  return validateOwnership(commentId, userId).then((comment) => {
+    return CommentModel.findByIdAndUpdate(commentId, { isDeleted: true })
+  })
 }
 
 const containsFinancial = (value: string) => {
@@ -154,8 +159,9 @@ export async function moderateById(commentId: string) {
 const validateOwnership = (commentId: string, userId: string) => {
   return new Promise((resolve, reject) => {
     CommentModel.findById(commentId)
+      .populate('user')
       .then((comment) => {
-        if (comment?.userId !== userId) {
+        if (comment.user.id !== userId) {
           reject(new PermissionAccessViolationError())
         } else {
           resolve(comment)
@@ -166,4 +172,3 @@ const validateOwnership = (commentId: string, userId: string) => {
       })
   })
 }
-

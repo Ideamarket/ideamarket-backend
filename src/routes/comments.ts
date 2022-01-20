@@ -7,6 +7,7 @@ import {
   deleteCommentById,
   updateComment,
 } from '../controllers/comments.controller'
+import { authenticateAndSetAccount } from '../middleware/authentication'
 import { validateRequest } from '../middleware/validateRequest'
 import {
   createCommentValidation,
@@ -15,14 +16,21 @@ import {
 
 const commentsRouter = express.Router()
 
-commentsRouter.post('', createCommentValidation, validateRequest, addComment)
+commentsRouter.post(
+  '',
+  authenticateAndSetAccount,
+  createCommentValidation,
+  validateRequest,
+  addComment
+)
 commentsRouter.get('', fetchAllComments)
 commentsRouter.put(
   '/:id',
+  authenticateAndSetAccount,
   updateCommentValidation,
   validateRequest,
   updateComment
 )
-commentsRouter.delete('/:id', deleteCommentById)
+commentsRouter.delete('/:id', authenticateAndSetAccount, deleteCommentById)
 
 export { commentsRouter }

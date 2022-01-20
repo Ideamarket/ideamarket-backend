@@ -102,7 +102,7 @@ export async function verifyAuthTokenAndReturnAccount(
 }
 
 export type DECODED_ACCOUNT = {
-  id: bigint
+  id: string
   username: string | null
   walletAddress: string
   role: string

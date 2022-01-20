@@ -2,9 +2,11 @@ import type { Document } from 'mongoose'
 import mongoose, { Schema } from 'mongoose'
 import mongoosePagination from 'mongoose-paginate'
 
+import type { AccountDocument } from './account.model'
+
 // eslint-disable-next-line @typescript-eslint/consistent-type-definitions
 export interface CommentDocument extends Document {
-  userId: string
+  user: AccountDocument
   userName: string
   userPicture: string
   listing: string
@@ -25,7 +27,12 @@ export interface CommentDocument extends Document {
 
 const CommentSchema = new Schema(
   {
-    userId: { type: String, required: true, maxlength: 50, index: true },
+    user: {
+      type: mongoose.Types.ObjectId,
+      ref: 'Account',
+      required: true,
+      index: true,
+    },
     userName: { type: String, maxlength: 50 },
     userPicture: { type: String },
     listing: { type: String, required: true, maxlength: 250, index: true },

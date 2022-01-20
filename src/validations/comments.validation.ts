@@ -1,7 +1,6 @@
 import { body } from 'express-validator'
 
 export const createCommentValidation = [
-  body('userId').notEmpty().withMessage('UserId is required'),
   body('market').notEmpty().withMessage('Market field is required'),
   body('listing').notEmpty().withMessage('Listing field is required'),
   body('value').notEmpty().withMessage('Comment text is required'),

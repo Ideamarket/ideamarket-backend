@@ -1,9 +1,11 @@
 import type { Document } from 'mongoose'
 import mongoose, { Schema } from 'mongoose'
 
+import type { AccountDocument } from './account.model'
+
 // eslint-disable-next-line @typescript-eslint/consistent-type-definitions
 export interface VoteDocument extends Document {
-  userId: string
+  user: AccountDocument
   listing: string
   market: string
   value: number
@@ -13,11 +15,11 @@ export interface VoteDocument extends Document {
 
 const VoteSchema = new Schema(
   {
-    userId: {
-      type: mongoose.Types.ObjectId,
+    user: {
+      type: mongoose.Schema.Types.ObjectId,
       required: true,
-      maxlength: 50,
       index: true,
+      ref: 'Account',
     },
     listing: { type: String, required: true, maxlength: 250, index: true },
     market: { type: String, required: true, maxlength: 250, index: true },
