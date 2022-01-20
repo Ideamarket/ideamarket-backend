@@ -1,10 +1,11 @@
-import type { UserAccount } from 'aws-sdk/clients/kendra'
 import type { Document } from 'mongoose'
 import mongoose, { Schema } from 'mongoose'
 
+import type { AccountDocument } from './account.model'
+
 // eslint-disable-next-line @typescript-eslint/consistent-type-definitions
 export interface VoteDocument extends Document {
-  user: UserAccount
+  user: AccountDocument
   listing: string
   market: string
   value: number

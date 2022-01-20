@@ -1,11 +1,12 @@
-import type { UserAccount } from 'aws-sdk/clients/kendra'
 import type { Document } from 'mongoose'
 import mongoose, { Schema } from 'mongoose'
 import mongoosePagination from 'mongoose-paginate'
 
+import type { AccountDocument } from './account.model'
+
 // eslint-disable-next-line @typescript-eslint/consistent-type-definitions
 export interface CommentDocument extends Document {
-  user: UserAccount
+  user: AccountDocument
   userName: string
   userPicture: string
   listing: string

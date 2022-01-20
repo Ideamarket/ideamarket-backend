@@ -159,8 +159,9 @@ export async function moderateById(commentId: string) {
 const validateOwnership = (commentId: string, userId: string) => {
   return new Promise((resolve, reject) => {
     CommentModel.findById(commentId)
+      .populate('user')
       .then((comment) => {
-        if (comment?.user !== userId) {
+        if (comment.user.id !== userId) {
           reject(new PermissionAccessViolationError())
         } else {
           resolve(comment)
