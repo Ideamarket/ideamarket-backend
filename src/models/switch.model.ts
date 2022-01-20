@@ -13,12 +13,19 @@ interface ISwitchModel extends mongoose.Model<SwitchDocument> {
 interface SwitchDocument extends mongoose.Document {
   feature: string
   enabled: boolean
+  createdAt: Date
+  updatedAt: Date
 }
 
-const SwitchSchema = new mongoose.Schema({
-  feature: { type: String, required: true, index: { unique: true } },
-  enabled: { type: Boolean, default: false },
-})
+const SwitchSchema = new mongoose.Schema(
+  {
+    feature: { type: String, required: true, index: { unique: true } },
+    enabled: { type: Boolean, default: false },
+  },
+  {
+    timestamps: true,
+  }
+)
 
 SwitchSchema.statics.build = (attr: ISwitch) => {
   return new SwitchModel(attr)
