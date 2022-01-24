@@ -9,7 +9,7 @@ export type IGhostListing = {
   value: string
   marketId: number
   marketName: string
-  walletAddress: string
+  address: string
 }
 
 // eslint-disable-next-line @typescript-eslint/consistent-type-definitions
@@ -33,7 +33,7 @@ const GhostListingSchema = new Schema(
     },
     value: { type: String, required: true },
     marketName: { type: String, required: true, maxlength: 250, index: true },
-    marketId: { type: Number, default: 0, required: false },
+    marketId: { type: Number, default: 0, required: true },
     address: { type: String },
   },
   {

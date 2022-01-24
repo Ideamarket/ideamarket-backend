@@ -1,5 +1,5 @@
 /* eslint-disable promise/prefer-await-to-then */
- 
+
 import type { IGhostListing } from '../models/ghost-listing.model'
 import { GhostListingModel } from '../models/ghost-listing.model'
 import { ObjectAlreadyExistsError } from './errors'
@@ -20,7 +20,7 @@ async function fetchAllByMarket(marketId: number, page = 0, count = 50) {
   })
 }
 
-function addToListing(model: IGhostListing) {
+function addNewListing(model: IGhostListing) {
   return new Promise((resolve, reject) => {
     // eslint-disable-next-line @typescript-eslint/no-floating-promises
     GhostListingModel.findOne({
@@ -32,7 +32,7 @@ function addToListing(model: IGhostListing) {
           reject(new ObjectAlreadyExistsError(model.value))
         }
 
-        return GhostListingModel.create({ ...model })
+        return GhostListingModel.create(model)
       })
       .then((item) => {
         resolve(item)
@@ -42,7 +42,7 @@ function addToListing(model: IGhostListing) {
 
 const ghost = {
   fetchAllByMarket,
-  addToListing,
+  addNewListing,
 }
 
 export default ghost

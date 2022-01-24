@@ -32,7 +32,7 @@ export async function fetchAllByMarket(req: Request, res: Response) {
   }
 }
 
-export async function addToListing(req: Request, res: Response) {
+export async function addNewListing(req: Request, res: Response) {
   try {
     const { marketType } = req.params
     const reqBody = req.body
@@ -40,13 +40,13 @@ export async function addToListing(req: Request, res: Response) {
 
     if (marketType === 'ghost') {
       const ghostListingRequest: IGhostListing = {
-        walletAddress: decodedAccount.walletAddress,
+        address: decodedAccount.walletAddress,
         marketName: config.get(`markets.${reqBody.marketId as number}`),
         marketId: reqBody.marketId as number,
         user: decodedAccount.id,
         value: req.body.value as string,
       }
-      return handleSuccess(res, await ghost.addToListing(ghostListingRequest))
+      return handleSuccess(res, await ghost.addNewListing(ghostListingRequest))
     }
 
     return handleError(
