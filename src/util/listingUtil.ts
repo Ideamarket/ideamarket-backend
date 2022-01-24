@@ -1,4 +1,3 @@
- 
 export const MARKETS: { [key: number]: string } = {
   1: 'Twitter',
   2: 'Substack',

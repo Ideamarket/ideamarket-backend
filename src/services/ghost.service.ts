@@ -5,7 +5,7 @@ import { GhostListingModel } from '../models/ghost-listing.model'
 import { ObjectAlreadyExistsError } from './errors'
 
 /* eslint-disable import/no-default-export */
-async function fetchAllByMarket(marketId: number, page = 0, count = 50) {
+async function fetchAllByMarket(marketId: number, skip = 0, limit = 50) {
   const filter: any = {}
 
   if (marketId > 0) {
@@ -13,8 +13,8 @@ async function fetchAllByMarket(marketId: number, page = 0, count = 50) {
   }
 
   return GhostListingModel.paginate(filter, {
-    limit: count,
-    offset: page * count,
+    limit,
+    offset: skip,
     sort: { createdAt: -1 },
     populate: 'user',
   })

@@ -11,14 +11,14 @@ const INVALID_MARKET_TYPE_ERROR = 'Provided market type is invalid'
 export async function fetchAllByMarket(req: Request, res: Response) {
   const { marketType } = req.params
   const marketId = Number.parseInt(req.query.marketId as string) || 0
-  const page = Number.parseInt(req.query.page as string) || 0
-  const count = Number.parseInt(req.query.count as string) || 50
+  const skip = Number.parseInt(req.query.skip as string) || 0
+  const limit = Number.parseInt(req.query.limit as string) || 50
 
   try {
     if (marketType === 'ghost') {
       return handleSuccess(
         res,
-        await ghost.fetchAllByMarket(marketId, page, count)
+        await ghost.fetchAllByMarket(marketId, skip, limit)
       )
     }
 
