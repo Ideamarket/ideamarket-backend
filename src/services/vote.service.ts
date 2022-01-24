@@ -34,12 +34,12 @@ export async function upVote(listing: string, market: string, userId: string) {
     const query = {
       listing,
       market,
-      userId: new mongoose.Types.ObjectId(userId),
+      user: new mongoose.Types.ObjectId(userId),
     }
     const update = {
       listing,
       market,
-      userId: new mongoose.Types.ObjectId(userId),
+      user: new mongoose.Types.ObjectId(userId),
       value: 1,
     }
     const options = { upsert: true, new: true, setDefaultsOnInsert: true }
