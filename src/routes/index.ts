@@ -2,6 +2,7 @@ import { Router } from 'express'
 
 import { accountRouter } from './account'
 import { commentsRouter } from './comments'
+import { listingRouter } from './listing'
 import { subgraphRouter } from './subgraph'
 import { switchRouter } from './switch'
 import { versionRouter } from './version'
@@ -16,5 +17,6 @@ routes.use('/votes', votesRouter)
 routes.use('/account', accountRouter)
 routes.use('/fs', switchRouter)
 routes.use('/subgraph', subgraphRouter)
+routes.use('/listing', listingRouter)
 
 export { routes }

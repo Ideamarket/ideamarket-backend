@@ -1,4 +1,3 @@
- 
 /* eslint-disable import/no-default-export */
 import mongoUriBuilder from 'mongo-uri-builder'
 
@@ -61,6 +60,13 @@ const config = {
     fromEmail: 'admin@ideamarket.io',
     emailVerificationTemplateId:
       process.env.SENDGRID_EMAIL_VERIFICATION_TEMPLATE_ID ?? '',
+  },
+  markets: {
+    1: 'Twitter',
+    2: 'Substack',
+    3: 'Showtime',
+    4: 'Wikipedia',
+    5: 'Minds',
   },
 }
 
