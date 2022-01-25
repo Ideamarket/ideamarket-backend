@@ -62,11 +62,11 @@ const config = {
       process.env.SENDGRID_EMAIL_VERIFICATION_TEMPLATE_ID ?? '',
   },
   markets: {
-    1: 'twitter',
-    2: 'substack',
-    3: 'showtime',
-    4: 'wikipedia',
-    5: 'minds',
+    1: 'Twitter',
+    2: 'Substack',
+    3: 'Showtime',
+    4: 'Wikipedia',
+    5: 'Minds',
   },
 }
 
