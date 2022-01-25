@@ -9,28 +9,20 @@ import {
 } from '../controllers/vote.controller'
 import { authenticateAndSetAccount } from '../middleware/authentication'
 import { validateRequest } from '../middleware/validateRequest'
-import {
-  marketTypeParamValidation,
-  voteValidation,
-} from '../validations/votes.validation'
+import { voteValidation } from '../validations/votes.validation'
 
 const votesRouter = express.Router()
 
-votesRouter.get(
-  '/:marketType/:market/:listing',
-  marketTypeParamValidation,
-  fetchVoteCount,
-  validateRequest
-)
+votesRouter.get('/:listingId', voteValidation, fetchVoteCount, validateRequest)
 votesRouter.post(
-  '/:marketType/up',
+  '/:listingId/up',
   authenticateAndSetAccount,
   voteValidation,
   validateRequest,
   upvote
 )
 votesRouter.post(
-  '/:marketType/down',
+  '/:listingId/down',
   authenticateAndSetAccount,
   voteValidation,
   validateRequest,

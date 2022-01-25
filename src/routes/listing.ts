@@ -2,10 +2,7 @@
 
 import express from 'express'
 
-import {
-  fetchAllByMarket,
-  addNewListing,
-} from '../controllers/listing.controller'
+import { fetchAllByMarket, addListing } from '../controllers/listing.controller'
 import { authenticateAndSetAccount } from '../middleware/authentication'
 import { validateRequest } from '../middleware/validateRequest'
 import { createListingValidation } from '../validations/listing.validation'
@@ -18,7 +15,7 @@ listingRouter.post(
   authenticateAndSetAccount,
   createListingValidation,
   validateRequest,
-  addNewListing
+  addListing
 )
 
 export { listingRouter }

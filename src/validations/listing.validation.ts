@@ -1,6 +1,7 @@
-import { body } from 'express-validator'
+import { body, param } from 'express-validator'
 
 export const createListingValidation = [
+  param('marketType').notEmpty().isIn(['ghost', 'onchain']),
   body('marketId')
     .notEmpty()
     .isFloat({ min: 1, max: 5 })

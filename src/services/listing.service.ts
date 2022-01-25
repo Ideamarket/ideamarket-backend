@@ -1,18 +1,24 @@
 /* eslint-disable promise/prefer-await-to-then */
 
-import type { IGhostListing } from '../models/ghost-listing.model'
-import { GhostListingModel } from '../models/ghost-listing.model'
+import type { IListing } from '../models/listing.model'
+import { ListingModel } from '../models/listing.model'
 import { ObjectAlreadyExistsError } from './errors'
 
-/* eslint-disable import/no-default-export */
-async function fetchAllByMarket(marketId: number, skip = 0, limit = 50) {
+export function fetchByMarket(
+  marketType: string,
+  marketId: number,
+  skip = 0,
+  limit = 50
+) {
   const filter: any = {}
 
   if (marketId > 0) {
     filter.marketId = marketId
   }
 
-  return GhostListingModel.paginate(filter, {
+  filter.marketType = marketType
+
+  return ListingModel.paginate(filter, {
     limit,
     offset: skip,
     sort: { createdAt: -1 },
@@ -20,29 +26,23 @@ async function fetchAllByMarket(marketId: number, skip = 0, limit = 50) {
   })
 }
 
-function addNewListing(model: IGhostListing) {
+export function addNewListing(model: IListing) {
   return new Promise((resolve, reject) => {
     // eslint-disable-next-line @typescript-eslint/no-floating-promises
-    GhostListingModel.findOne({
+    ListingModel.findOne({
       value: model.value,
       marketId: model.marketId,
+      marketType: model.marketType,
     })
       .then((m) => {
         if (m) {
           reject(new ObjectAlreadyExistsError(model.value))
         }
 
-        return GhostListingModel.create(model)
+        return ListingModel.create(model)
       })
       .then((item) => {
         resolve(item)
       })
   })
 }
-
-const ghost = {
-  fetchAllByMarket,
-  addNewListing,
-}
-
-export default ghost

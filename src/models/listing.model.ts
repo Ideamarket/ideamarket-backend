@@ -4,26 +4,28 @@ import mongoosePagination from 'mongoose-paginate'
 
 import type { AccountDocument } from './account.model'
 
-export type IGhostListing = {
+export type IListing = {
   user: string
   value: string
   marketId: number
   marketName: string
+  marketType: string
   address: string
 }
 
 // eslint-disable-next-line @typescript-eslint/consistent-type-definitions
-export interface GhostListingDocument extends Document {
+export interface ListingDocument extends Document {
   user: AccountDocument
   value: string
   marketId: number
   marketName: string
+  marketType: string
   address: string
   createdAt: Date
   updatedAt: Date
 }
 
-const GhostListingSchema = new Schema(
+const ListingSchema = new Schema(
   {
     user: {
       type: mongoose.Types.ObjectId,
@@ -33,7 +35,14 @@ const GhostListingSchema = new Schema(
     },
     value: { type: String, required: true },
     marketName: { type: String, required: true, maxlength: 250, index: true },
-    marketId: { type: Number, default: 0, required: true },
+    marketType: {
+      type: String,
+      required: true,
+      enum: ['ghost', 'onchain'],
+      maxlength: 25,
+      index: true,
+    },
+    marketId: { type: Number, default: 0, required: true, index: true },
     address: { type: String },
   },
   {
@@ -41,9 +50,9 @@ const GhostListingSchema = new Schema(
   }
 )
 
-GhostListingSchema.plugin(mongoosePagination)
+ListingSchema.plugin(mongoosePagination)
 
-export const GhostListingModel = mongoose.model<GhostListingDocument>(
-  'GhostListing',
-  GhostListingSchema
+export const ListingModel = mongoose.model<ListingDocument>(
+  'Listing',
+  ListingSchema
 )
