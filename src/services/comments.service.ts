@@ -9,7 +9,7 @@
 import axios from 'axios'
 
 import { CommentModel } from '../models/comment.model'
-import { PermissionAccessViolationError } from './errors'
+import { EntityNotFoundError, PermissionAccessViolationError } from './errors'
 
 export function getAllComments(filter: any, page: number, count: number) {
   filter.isDeleted = false // retrieve all non-deleted records
@@ -161,7 +161,10 @@ const validateOwnership = (commentId: string, userId: string) => {
     CommentModel.findById(commentId)
       .populate('account')
       .then((comment) => {
-        if (comment.account.id !== userId) {
+        // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+        if (!comment) {
+          reject(new EntityNotFoundError('Comment'))
+        } else if (comment.account.id !== userId) {
           reject(new PermissionAccessViolationError())
         } else {
           resolve(comment)
