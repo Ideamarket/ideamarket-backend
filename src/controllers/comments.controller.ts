@@ -41,7 +41,7 @@ export async function addComment(req: Request, res: Response) {
       listing: req.body.listing,
       market: req.body.market,
       value: req.body.value,
-      user: decodedAccount.id,
+      account: decodedAccount.id,
       price: req.body.price,
       deposits: req.body.deposits,
       holders: req.body.holders,
