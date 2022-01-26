@@ -1,12 +1,14 @@
 import config from 'config'
 import type { Request, Response } from 'express'
-import type { IListing } from 'models/listing.model'
+import type { IListing, ListingDocument } from 'models/listing.model'
 import type { DECODED_ACCOUNT } from 'util/jwtTokenUtil'
 
 import { handleSuccess, handleError } from '../lib/base'
-import { fetchByMarket, addNewListing } from '../services/listing.service'
-
-const INVALID_MARKET_TYPE_ERROR = 'Provided market type is invalid'
+import {
+  fetchByMarket,
+  addNewListing,
+  updateListingId,
+} from '../services/listing.service'
 
 export async function fetchAllByMarket(req: Request, res: Response) {
   const { marketType } = req.params
@@ -30,23 +32,27 @@ export async function addListing(req: Request, res: Response) {
     const reqBody = req.body
     const decodedAccount = (req as any).decodedAccount as DECODED_ACCOUNT
 
-    if (marketType === 'ghost') {
-      const ghostListingRequest: IListing = {
-        address: decodedAccount.walletAddress,
-        marketName: config.get(`markets.MARKET${reqBody.marketId as number}`),
-        marketId: reqBody.marketId as number,
-        marketType,
-        account: decodedAccount.id,
-        value: req.body.value as string,
-      }
-      return handleSuccess(res, await addNewListing(ghostListingRequest))
+    const listingRequest: IListing = {
+      address: decodedAccount.walletAddress,
+      marketName: config.get(`markets.MARKET${reqBody.marketId as number}`),
+      marketId: reqBody.marketId as number,
+      marketType,
+      listingId: null, // TODO # UPDATE WHEN WE HAVE ONCHAIN
+      account: decodedAccount.id,
+      value: req.body.value as string,
     }
 
-    return handleError(
-      res,
-      INVALID_MARKET_TYPE_ERROR,
-      INVALID_MARKET_TYPE_ERROR
-    )
+    let recentAddedListing = (await addNewListing(
+      listingRequest
+    )) as ListingDocument
+
+    if (marketType === 'ghost') {
+      recentAddedListing = (await updateListingId(
+        recentAddedListing.id
+      )) as ListingDocument
+    }
+
+    return handleSuccess(res, recentAddedListing)
   } catch (error) {
     console.error(error)
     return handleError(res, error, 'Already exist in listing')

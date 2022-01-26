@@ -7,6 +7,7 @@ import type { AccountDocument } from './account.model'
 export type IListing = {
   account: string
   value: string
+  listingId: string | null
   marketId: number
   marketName: string
   marketType: string
@@ -17,6 +18,7 @@ export type IListing = {
 export interface ListingDocument extends Document {
   account: AccountDocument
   value: string
+  listingId: string
   marketId: number
   marketName: string
   marketType: string
@@ -33,6 +35,7 @@ const ListingSchema = new Schema(
       required: true,
       index: true,
     },
+    listingId: { type: String, index: true, unique: true },
     value: { type: String, required: true },
     marketName: { type: String, required: true, maxlength: 250, index: true },
     marketType: {

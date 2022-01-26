@@ -46,3 +46,24 @@ export function addNewListing(model: IListing) {
       })
   })
 }
+
+export function updateListingId(id: string) {
+  return new Promise((resolve, reject) => {
+    ListingModel.findByIdAndUpdate(
+      id,
+      {
+        listingId: id,
+      },
+      {
+        new: true,
+      }
+    )
+      .then((item) => {
+        resolve(item)
+      })
+      // eslint-disable-next-line promise/prefer-await-to-callbacks
+      .catch((error) => {
+        reject(error)
+      })
+  })
+}
