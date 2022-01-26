@@ -35,7 +35,7 @@ export async function upVote(listingId: string, userId: string) {
   try {
     const query = {
       listing: new mongoose.Types.ObjectId(listingId),
-      user: new mongoose.Types.ObjectId(userId),
+      account: new mongoose.Types.ObjectId(userId),
     }
     const update = {
       ...query,
@@ -56,7 +56,7 @@ export async function downVote(listingId: string, userId: string) {
   try {
     const query = {
       listing: new mongoose.Types.ObjectId(listingId),
-      user: new mongoose.Types.ObjectId(userId),
+      account: new mongoose.Types.ObjectId(userId),
     }
     const update = { ...query, value: -1 }
     const options = { upsert: true, new: true, setDefaultsOnInsert: true }

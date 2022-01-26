@@ -18,7 +18,7 @@ export function getAllComments(filter: any, page: number, count: number) {
     limit: count,
     offset: page * count,
     sort: { createdAt: -1 },
-    populate: 'user',
+    populate: 'account',
   })
 }
 
@@ -159,9 +159,9 @@ export async function moderateById(commentId: string) {
 const validateOwnership = (commentId: string, userId: string) => {
   return new Promise((resolve, reject) => {
     CommentModel.findById(commentId)
-      .populate('user')
+      .populate('account')
       .then((comment) => {
-        if (comment.user.id !== userId) {
+        if (comment.account.id !== userId) {
           reject(new PermissionAccessViolationError())
         } else {
           resolve(comment)

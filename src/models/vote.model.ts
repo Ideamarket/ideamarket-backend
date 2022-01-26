@@ -6,7 +6,7 @@ import type { ListingDocument } from './listing.model'
 
 // eslint-disable-next-line @typescript-eslint/consistent-type-definitions
 export interface VoteDocument extends Document {
-  user: AccountDocument
+  account: AccountDocument
   listing: ListingDocument
   value: number
   createdAt: Date
@@ -15,7 +15,7 @@ export interface VoteDocument extends Document {
 
 const VoteSchema = new Schema(
   {
-    user: {
+    account: {
       type: mongoose.Schema.Types.ObjectId,
       required: true,
       index: true,

@@ -36,7 +36,7 @@ export async function addListing(req: Request, res: Response) {
         marketName: config.get(`markets.MARKET${reqBody.marketId as number}`),
         marketId: reqBody.marketId as number,
         marketType,
-        user: decodedAccount.id,
+        account: decodedAccount.id,
         value: req.body.value as string,
       }
       return handleSuccess(res, await addNewListing(ghostListingRequest))

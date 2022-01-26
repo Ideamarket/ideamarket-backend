@@ -5,7 +5,7 @@ import mongoosePagination from 'mongoose-paginate'
 import type { AccountDocument } from './account.model'
 
 export type IListing = {
-  user: string
+  account: string
   value: string
   marketId: number
   marketName: string
@@ -15,7 +15,7 @@ export type IListing = {
 
 // eslint-disable-next-line @typescript-eslint/consistent-type-definitions
 export interface ListingDocument extends Document {
-  user: AccountDocument
+  account: AccountDocument
   value: string
   marketId: number
   marketName: string
@@ -27,7 +27,7 @@ export interface ListingDocument extends Document {
 
 const ListingSchema = new Schema(
   {
-    user: {
+    account: {
       type: mongoose.Types.ObjectId,
       ref: 'Account',
       required: true,
@@ -42,8 +42,8 @@ const ListingSchema = new Schema(
       maxlength: 25,
       index: true,
     },
-    marketId: { type: Number, default: 0, required: true, index: true },
-    address: { type: String },
+    marketId: { type: Number, required: true, index: true },
+    address: { type: String, required: true },
   },
   {
     timestamps: true,

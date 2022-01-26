@@ -6,7 +6,7 @@ import type { AccountDocument } from './account.model'
 
 // eslint-disable-next-line @typescript-eslint/consistent-type-definitions
 export interface CommentDocument extends Document {
-  user: AccountDocument
+  account: AccountDocument
   userName: string
   userPicture: string
   listing: string
@@ -27,7 +27,7 @@ export interface CommentDocument extends Document {
 
 const CommentSchema = new Schema(
   {
-    user: {
+    account: {
       type: mongoose.Types.ObjectId,
       ref: 'Account',
       required: true,

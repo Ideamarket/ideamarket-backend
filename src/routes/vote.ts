@@ -13,7 +13,7 @@ import { voteValidation } from '../validations/votes.validation'
 
 const votesRouter = express.Router()
 
-votesRouter.get('/:listingId', voteValidation, fetchVoteCount, validateRequest)
+votesRouter.get('/:listingId', voteValidation, validateRequest, fetchVoteCount)
 votesRouter.post(
   '/:listingId/up',
   authenticateAndSetAccount,

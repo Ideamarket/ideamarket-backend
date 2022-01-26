@@ -22,7 +22,7 @@ export function fetchByMarket(
     limit,
     offset: skip,
     sort: { createdAt: -1 },
-    populate: 'user',
+    populate: 'account',
   })
 }
 
