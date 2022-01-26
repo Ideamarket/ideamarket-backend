@@ -35,7 +35,7 @@ const ListingSchema = new Schema(
       required: true,
       index: true,
     },
-    listingId: { type: String, index: true, sparse: true },
+    listingId: { type: String, index: true, sparse: true, unique: true },
     value: { type: String, required: true },
     marketName: { type: String, required: true, maxlength: 250, index: true },
     marketType: {
