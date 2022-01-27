@@ -26,7 +26,7 @@ export function fetchByMarket(
     limit,
     offset: skip,
     sort: { createdAt: -1 },
-    populate: 'account',
+    populate: ['onchainListedByAccount', 'ghostListedByAccount'],
   })
 }
 
@@ -82,7 +82,6 @@ export function migrateGhostToOnChainListing(
 ) {
   return new Promise((resolve, reject) => {
     ListingModel.findById(listingId)
-
       .then((m) => {
         if (m && !m.isOnChain) {
           return m
@@ -98,12 +97,23 @@ export function migrateGhostToOnChainListing(
           `listing not found by id ${listingId}`
         )
       })
+      .then(() => {
+        return ListingModel.findByIdAndUpdate(
+          listingId,
+          {
+            onchainId: model.onchainId,
+            isOnChain: true,
+            onchainListedAt: model.onchainListedAt,
+            onchainListedBy: model.onchainListedBy,
+            onchainListedByAccount: model.onchainListedByAccount,
+          },
+          {
+            new: true,
+          }
+        )
+      })
       .then((item) => {
-        item.onchainId = model.onchainId as string
-        item.isOnChain = true
-        item.onchainListedAt = model.onchainListedAt as Date
-        item.onchainListedBy = model.onchainListedBy as string
-        resolve(item.save())
+        resolve(item)
       })
       // eslint-disable-next-line promise/prefer-await-to-callbacks
       .catch((error) => {

@@ -3,7 +3,10 @@ import type { Request, Response } from 'express'
 import { handleError, handleSuccess } from '../lib/base'
 import { ListingModel } from '../models/listing.model'
 import { executeSubgraphQuery } from '../services/subgraph.service'
-import type { IdeaToken, SubGraphResult } from '../types/ideaToken.types'
+import type {
+  IdeaToken,
+  IdeaTokensSubgraphResult,
+} from '../types/ideaToken.types'
 
 export async function querySubgraph(req: Request, res: Response) {
   try {
@@ -15,14 +18,14 @@ export async function querySubgraph(req: Request, res: Response) {
   }
 }
 
-export async function migrateSubgraphToListings(req: Request, res: Response) {
+export async function cloneWeb2ToOnChainListings(req: Request, res: Response) {
   try {
     const query = req.body.query as string
 
-    const data = (await executeSubgraphQuery(query)) as SubGraphResult
+    const data = (await executeSubgraphQuery(query)) as IdeaTokensSubgraphResult
 
-    const listedTokens = data.ideaTokens.map((ideaToken: IdeaToken) =>
-      ListingModel.build({
+    const clonedTokens = data.ideaTokens.map((ideaToken: IdeaToken) => {
+      const clonedToken = ListingModel.build({
         ghostListedAt: null,
         ghostListedBy: null,
         ghostListedByAccount: null,
@@ -32,14 +35,14 @@ export async function migrateSubgraphToListings(req: Request, res: Response) {
         onchainId: ideaToken.id,
         onchainListedAt: new Date(Number.parseInt(ideaToken.listedAt) * 1000),
         onchainListedBy: ideaToken.tokenOwner,
+        onchainListedByAccount: null,
         value: ideaToken.name,
+        totalVotes: undefined,
       })
-    )
-
-    // eslint-disable-next-line @typescript-eslint/no-misused-promises
-    listedTokens.forEach(async (k) => {
-      await k.save()
+      return clonedToken.save()
     })
+
+    await Promise.all(clonedTokens)
 
     return handleSuccess(res, data)
   } catch (error) {

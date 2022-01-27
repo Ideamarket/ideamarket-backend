@@ -44,6 +44,6 @@ export type IdeaToken = {
   tokenOwner: string
 }
 
-export type SubGraphResult = {
+export type IdeaTokensSubgraphResult = {
   ideaTokens: IdeaToken[]
 }

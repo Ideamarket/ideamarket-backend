@@ -16,6 +16,8 @@ export type IListing = {
   onchainListedBy: string | null | undefined
   onchainListedAt: Date | null | undefined
   ghostListedAt: Date | null | undefined
+  onchainListedByAccount: string | null | undefined
+  totalVotes: number | undefined
 }
 
 export interface ListingDocument extends Document {
@@ -28,7 +30,9 @@ export interface ListingDocument extends Document {
   isOnChain: boolean
   onchainListedBy: string
   onchainListedAt: Date
+  onchainListedByAccount: AccountDocument
   ghostListedAt: Date
+  totalVotes: number
 }
 
 const ListingSchema = new Schema(
@@ -48,6 +52,12 @@ const ListingSchema = new Schema(
     onchainId: { type: String, index: true, sparse: true },
     onchainListedBy: { type: String },
     onchainListedAt: { type: Date, default: null, required: false },
+    onchainListedByAccount: {
+      type: mongoose.Types.ObjectId,
+      ref: 'Account',
+      required: false,
+      index: true,
+    },
     ghostListedAt: { type: Date, default: null, required: false },
   },
   {

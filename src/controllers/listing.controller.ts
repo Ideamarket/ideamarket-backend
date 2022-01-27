@@ -44,6 +44,8 @@ export async function addGhostListing(req: Request, res: Response) {
       onchainId: null,
       onchainListedAt: null,
       onchainListedBy: null,
+      onchainListedByAccount: null,
+      totalVotes: 0,
     }
 
     const recentAddedListing = (await addNewListing(
@@ -73,6 +75,8 @@ export async function addOnChainListing(req: Request, res: Response) {
       onchainId: reqBody.onchainId as string,
       onchainListedAt: new Date(Number.parseInt(reqBody.listedAt) * 1000),
       onchainListedBy: decodedAccount.walletAddress,
+      onchainListedByAccount: decodedAccount.id,
+      totalVotes: 0,
     }
 
     const recentAddedListing = (await addNewListing(
@@ -105,6 +109,8 @@ export async function migrateGhostListingToOnChain(
       onchainId: reqBody.onchainId as string,
       onchainListedAt: new Date((reqBody.listedAt as number) * 1000),
       onchainListedBy: decodedAccount.walletAddress,
+      onchainListedByAccount: decodedAccount.id,
+      totalVotes: undefined,
     }
 
     const recentAddedListing = (await migrateGhostToOnChainListing(
