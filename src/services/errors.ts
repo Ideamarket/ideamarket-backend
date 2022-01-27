@@ -18,8 +18,8 @@ export class EntityNotFoundError extends Error {
 
   custom: boolean
 
-  constructor(type: any) {
-    super(`Object of type ${type} has not been found`)
+  constructor(type: any | null, message: string | null) {
+    super(message ? message : `Object of type ${type} has not been found`)
     this.name = 'EntityNotFoundError'
     this.code = 404
     this.custom = true
@@ -63,8 +63,8 @@ export class ObjectAlreadyExistsError extends Error {
 
   custom: boolean
 
-  constructor(id: string) {
-    super(`Object ${id} already exists`)
+  constructor(id: string | null, customMessage: string) {
+    super(customMessage ? customMessage : `Object ${id} already exists`)
     this.code = 409
     this.name = 'ObjectAlreadyExistsError'
     this.custom = true

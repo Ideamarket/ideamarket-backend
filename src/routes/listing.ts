@@ -2,12 +2,19 @@
 
 import express from 'express'
 
-import { fetchAllByMarket, addListing } from '../controllers/listing.controller'
+import {
+  fetchAllByMarket,
+  addGhostListing,
+  addOnChainListing,
+  migrateGhostListingToOnChain,
+} from '../controllers/listing.controller'
 import { authenticateAndSetAccount } from '../middleware/authentication'
 import { validateRequest } from '../middleware/validateRequest'
 import {
-  createListingValidation,
+  createGhostListingValidation,
+  createOnchainListingValidation,
   marketTypeParamValidation,
+  migrateGhostListingValidation,
 } from '../validations/listing.validation'
 
 const listingRouter = express.Router()
@@ -19,11 +26,27 @@ listingRouter.get(
   fetchAllByMarket
 )
 listingRouter.post(
-  '/:marketType',
+  '/ghost',
   authenticateAndSetAccount,
-  createListingValidation,
+  createGhostListingValidation,
   validateRequest,
-  addListing
+  addGhostListing
+)
+
+listingRouter.post(
+  '/onchain',
+  authenticateAndSetAccount,
+  createOnchainListingValidation,
+  validateRequest,
+  addOnChainListing
+)
+
+listingRouter.post(
+  '/onchain/migrate',
+  authenticateAndSetAccount,
+  migrateGhostListingValidation,
+  validateRequest,
+  migrateGhostListingToOnChain
 )
 
 export { listingRouter }

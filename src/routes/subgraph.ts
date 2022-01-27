@@ -1,7 +1,9 @@
- 
 import express from 'express'
 
-import { querySubgraph } from '../controllers/subgraph.controller'
+import {
+  cloneWeb2ToOnChainListings,
+  querySubgraph,
+} from '../controllers/subgraph.controller'
 import { validateRequest } from '../middleware/validateRequest'
 import { querySubgraphValidation } from '../validations/subgraph.validation'
 
@@ -16,5 +18,8 @@ subgraphRouter.post(
   validateRequest,
   querySubgraph
 )
+
+// eslint-disable-next-line @typescript-eslint/no-misused-promises
+subgraphRouter.post('/migrate', cloneWeb2ToOnChainListings)
 
 export { subgraphRouter }
