@@ -163,7 +163,7 @@ const validateOwnership = (commentId: string, userId: string) => {
       .then((comment) => {
         // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
         if (!comment) {
-          reject(new EntityNotFoundError('Comment'))
+          reject(new EntityNotFoundError('Comment', null))
         } else if (comment.account.id !== userId) {
           reject(new PermissionAccessViolationError())
         } else {
