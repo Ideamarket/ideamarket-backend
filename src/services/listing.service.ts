@@ -1,19 +1,18 @@
+/* eslint-disable unicorn/no-await-expression-member */
 /* eslint-disable promise/prefer-await-to-callbacks */
 /* eslint-disable promise/prefer-await-to-then */
+import config from 'config'
 import { request } from 'graphql-request'
 import type { FilterQuery } from 'mongoose'
 
 import type { IListing, ListingDocument } from '../models/listing.model'
 import { ListingModel } from '../models/listing.model'
 import type { OnchainTokens, Web3TokenData } from '../types/listing.types'
-import { combineWeb2AndWeb3TokenData } from '../util/listingUtil'
-import { getTokensQuery } from '../util/queries/getTokensQuery'
+import type { DECODED_ACCOUNT } from '../util/jwtTokenUtil'
+import { combineWeb2AndWeb3TokenData, mapWeb2Data } from '../util/listingUtil'
+import { getSingleTokenQuery, getTokensQuery } from '../util/queries'
 import { SUBGRAPH_URL } from '../util/web3Util'
-import {
-  EntityNotFoundError,
-  ObjectAlreadyExistsError,
-  IllegalStateError,
-} from './errors'
+import { InternalServerError, ObjectAlreadyExistsError } from './errors'
 
 export type ListingQueryOptions = {
   marketIds: number[]
@@ -114,28 +113,91 @@ export async function fetchGhostListings(options: ListingQueryOptions) {
   )
 }
 
-export function addNewListing(model: IListing) {
-  return new Promise((resolve, reject) => {
-    ListingModel.findOne({
-      value: model.value,
-      marketId: model.marketId,
-    })
-      .then((m) => {
-        if (m) {
-          reject(
-            new ObjectAlreadyExistsError(null, 'Token has been already listed')
-          )
-        } else {
-          resolve(ListingModel.create(model))
-        }
-      })
-      .then((item) => {
-        resolve(item)
-      })
-      .catch((error) => {
-        reject(error)
-      })
+export async function addNewGhostListing({
+  marketId,
+  value,
+  decodedAccount,
+}: {
+  marketId: number
+  value: string
+  decodedAccount: DECODED_ACCOUNT
+}) {
+  const marketName: string = config.get(`markets.market${marketId}`)
+  const listing = await ListingModel.findOne({ marketId, value })
+  if (listing) {
+    throw new ObjectAlreadyExistsError(null, 'Token has already been listed')
+  }
+
+  const listingDoc = ListingModel.build({
+    value,
+    marketId,
+    marketName,
+    isOnChain: false,
+    ghostListedBy: decodedAccount.walletAddress,
+    ghostListedByAccount: decodedAccount.id,
+    ghostListedAt: new Date(),
+    onchainId: null,
+    onchainListedBy: null,
+    onchainListedByAccount: null,
+    onchainListedAt: null,
+    totalVotes: 0,
   })
+  const createdGhostListing = await (
+    await ListingModel.create(listingDoc)
+  ).populate('ghostListedByAccount')
+
+  return mapWeb2Data(createdGhostListing)
+}
+
+export async function updateOrCloneOnchainListing({
+  marketId,
+  value,
+  decodedAccount,
+}: {
+  marketId: number
+  value: string
+  decodedAccount: DECODED_ACCOUNT
+}) {
+  const marketName: string = config.get(`markets.market${marketId}`)
+  const web3Data = await request(
+    SUBGRAPH_URL,
+    getSingleTokenQuery({ marketName, tokenName: value })
+  )
+  const [token] = web3Data.ideaMarkets[0].tokens
+  if (!token) {
+    console.error('Error occurred while fetching web3 data from subgraph')
+    throw new InternalServerError('Failed to get web3 data from subgraph')
+  }
+
+  const listing = await ListingModel.findOne({ marketId, value })
+  const listingDoc: IListing = {
+    value,
+    marketId,
+    marketName,
+    isOnChain: true,
+    ghostListedBy: listing ? listing.ghostListedBy : null,
+    ghostListedByAccount: listing ? listing.ghostListedByAccount?._id : null,
+    ghostListedAt: listing ? listing.ghostListedAt : null,
+    onchainId: token.id,
+    onchainListedBy: token.tokenOwner,
+    onchainListedByAccount: decodedAccount.id,
+    onchainListedAt: new Date(token.listedAt * 1000),
+    totalVotes: listing ? listing.totalVotes : 0,
+  }
+  const updatedOrClonedListing = await ListingModel.findOneAndUpdate(
+    {
+      marketId,
+      value,
+    },
+    listingDoc,
+    {
+      new: true,
+    }
+  )
+    .populate('ghostListedByAccount')
+    .populate('onchainListedByAccount')
+
+  return mapWeb2Data(updatedOrClonedListing)
 }
 
 export function updateListingVoteCountById(id: string, totalVotes: number) {
@@ -149,51 +211,6 @@ export function updateListingVoteCountById(id: string, totalVotes: number) {
         new: true,
       }
     )
-      .then((item) => {
-        resolve(item)
-      })
-      .catch((error) => {
-        reject(error)
-      })
-  })
-}
-
-export function migrateGhostToOnChainListing(
-  listingId: string,
-  model: IListing
-) {
-  return new Promise((resolve, reject) => {
-    ListingModel.findById(listingId)
-      .then((m) => {
-        if (m && !m.isOnChain) {
-          return m
-          // eslint-disable-next-line sonarjs/elseif-without-else
-        } else if (m?.isOnChain) {
-          throw new IllegalStateError(
-            'Listing have been already migrated to onchain'
-          )
-        }
-
-        throw new EntityNotFoundError(
-          null,
-          `listing not found by id ${listingId}`
-        )
-      })
-      .then(() => {
-        return ListingModel.findByIdAndUpdate(
-          listingId,
-          {
-            onchainId: model.onchainId,
-            isOnChain: true,
-            onchainListedAt: model.onchainListedAt,
-            onchainListedBy: model.onchainListedBy,
-            onchainListedByAccount: model.onchainListedByAccount,
-          },
-          {
-            new: true,
-          }
-        )
-      })
       .then((item) => {
         resolve(item)
       })
