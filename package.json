@@ -23,6 +23,7 @@
   "dependencies": {
     "@sendgrid/mail": "7.6.0",
     "@types/mongoose-paginate": "^5.0.11",
+    "@types/open-graph-scraper": "^4.8.1",
     "aws-sdk": "2.1052.0",
     "axios": "0.24.0",
     "config": "^3.3.6",
@@ -41,6 +42,7 @@
     "mongoose-paginate": "^5.0.3",
     "morgan": "^1.10.0",
     "nodemon": "^2.0.15",
+    "open-graph-scraper": "^4.11.0",
     "unique-username-generator": "1.0.1",
     "uuid": "8.3.2",
     "web3": "1.6.1",
