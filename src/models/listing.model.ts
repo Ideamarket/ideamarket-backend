@@ -21,7 +21,7 @@ export type IListing = {
 }
 
 export interface ListingDocument extends Document {
-  ghostListedByAccount: AccountDocument
+  ghostListedByAccount: AccountDocument | null
   ghostListedBy: string
   value: string
   marketId: number
@@ -30,7 +30,7 @@ export interface ListingDocument extends Document {
   isOnChain: boolean
   onchainListedBy: string
   onchainListedAt: Date
-  onchainListedByAccount: AccountDocument
+  onchainListedByAccount: AccountDocument | null
   ghostListedAt: Date
   totalVotes: number
 }

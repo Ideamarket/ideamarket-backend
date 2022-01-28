@@ -1,7 +1,15 @@
-import { body, param } from 'express-validator'
+import { body, query } from 'express-validator'
 
-export const marketTypeParamValidation = [
-  param('marketType').notEmpty().isIn(['ghost', 'onchain']),
+export const fetchListingsValidation = [
+  query('marketType')
+    .optional({ nullable: true })
+    .isIn(['ghost', 'onchain'])
+    .withMessage('Market type is not valid'),
+  query('marketIds').notEmpty().withMessage('MarketIds cannot be empty'),
+  query('orderBy')
+    .notEmpty()
+    .isString()
+    .withMessage('OrderBy cannot be empty and should be a valid string'),
 ]
 
 export const createGhostListingValidation = [

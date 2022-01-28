@@ -5,26 +5,58 @@ import type { DECODED_ACCOUNT } from 'util/jwtTokenUtil'
 
 import { handleSuccess, handleError } from '../lib/base'
 import {
-  fetchByMarket,
   addNewListing,
   migrateGhostToOnChainListing,
+  fetchOnchainListings,
+  fetchGhostListings,
+  fetchAllListings,
 } from '../services/listing.service'
 
 const TOKEN_EXISTED_ERROR = 'Token has been already listed'
 
-export async function fetchAllByMarket(req: Request, res: Response) {
-  const { marketType } = req.params
-  const marketId = Number.parseInt(req.query.marketId as string) || 0
-  const skip = Number.parseInt(req.query.skip as string) || 0
-  const limit = Number.parseInt(req.query.limit as string) || 50
-
+export async function fetchListings(req: Request, res: Response) {
   try {
-    return handleSuccess(
-      res,
-      await fetchByMarket(marketType, marketId, skip, limit)
-    )
+    const marketType = req.query.marketType as string
+    const marketIds = (req.query.marketIds as string)
+      .split(',')
+      .map((id) => Number.parseInt(id))
+    const skip = Number.parseInt(req.query.skip as string) || 0
+    const limit = Number.parseInt(req.query.limit as string) || 10
+    const orderBy = req.query.orderBy as string
+    const orderDirection =
+      (req.query.orderDirection as string | undefined) ?? 'desc'
+    const filterTokens =
+      (req.query.filterTokens as string | undefined)?.split(',') ?? []
+    const isVerifiedFilter = Boolean(req.query.isVerifiedFilter as string)
+    const earliestPricePointTs =
+      Number.parseInt(req.query.earliestPricePointTs as string) || 0
+
+    const options = {
+      marketIds,
+      skip,
+      limit,
+      orderBy,
+      orderDirection,
+      filterTokens,
+      isVerifiedFilter,
+      earliestPricePointTs,
+    }
+
+    if (marketType === 'onchain') {
+      const onchainListings = await fetchOnchainListings(options)
+      return handleSuccess(res, { listings: onchainListings })
+    }
+
+    if (marketType === 'ghost') {
+      const ghostListings = await fetchGhostListings(options)
+      return handleSuccess(res, { listings: ghostListings })
+    }
+
+    const allListings = await fetchAllListings(options)
+    return handleSuccess(res, { listings: allListings })
   } catch (error) {
-    return handleError(res, error, `Unable to fetch ${marketType} listings`)
+    console.error('Error occurred while fetching the listings', error)
+    return handleError(res, error, 'Unable to fetch the listings')
   }
 }
 

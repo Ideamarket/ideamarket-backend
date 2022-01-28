@@ -3,10 +3,6 @@ import type { Request, Response } from 'express'
 import { handleError, handleSuccess } from '../lib/base'
 import { ListingModel } from '../models/listing.model'
 import { executeSubgraphQuery } from '../services/subgraph.service'
-import type {
-  IdeaToken,
-  IdeaTokensSubgraphResult,
-} from '../types/ideaToken.types'
 
 export async function querySubgraph(req: Request, res: Response) {
   try {
@@ -18,13 +14,13 @@ export async function querySubgraph(req: Request, res: Response) {
   }
 }
 
-export async function cloneWeb2ToOnChainListings(req: Request, res: Response) {
+export async function cloneOnChainListingsToWeb2(req: Request, res: Response) {
   try {
     const query = req.body.query as string
 
-    const data = (await executeSubgraphQuery(query)) as IdeaTokensSubgraphResult
+    const data = await executeSubgraphQuery(query)
 
-    const clonedTokens = data.ideaTokens.map((ideaToken: IdeaToken) => {
+    const clonedTokens = data.ideaTokens.map((ideaToken) => {
       const clonedToken = ListingModel.build({
         ghostListedAt: null,
         ghostListedBy: null,
@@ -37,16 +33,18 @@ export async function cloneWeb2ToOnChainListings(req: Request, res: Response) {
         onchainListedBy: ideaToken.tokenOwner,
         onchainListedByAccount: null,
         value: ideaToken.name,
-        totalVotes: undefined,
+        totalVotes: 0,
       })
       return clonedToken.save()
     })
-
     await Promise.all(clonedTokens)
 
     return handleSuccess(res, data)
   } catch (error) {
-    console.error('Error occurred while migrating subgraph', error)
-    return handleError(res, error, 'Unable to migrate subgraph')
+    console.error(
+      'Error occurred while cloning onchain listings to web2',
+      error
+    )
+    return handleError(res, error, 'Unable to clone onchain listings to web2')
   }
 }

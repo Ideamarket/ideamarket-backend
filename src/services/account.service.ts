@@ -56,10 +56,11 @@ export async function updateAccountInDB(accountRequest: IAccount) {
 
   accountDoc.name = accountRequest.name ?? accountDoc.name
   if (
-    await checkUsernameCanBeUpdatedOrNot({
+    accountRequest.username &&
+    (await checkUsernameCanBeUpdatedOrNot({
       currentUsername: accountDoc.username,
       usernameToBeChecked: accountRequest.username,
-    })
+    }))
   ) {
     accountDoc.username = accountRequest.username
   }
