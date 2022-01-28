@@ -1,8 +1,11 @@
 import config from 'config'
 import Web3 from 'web3'
 
-const NETWORK: string = config.get('web3.network')
+export const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000'
+
+export const NETWORK: string = config.get('web3.network')
 const RPC_URL: string = config.get(`web3.rpcUrls.${NETWORK}`)
+export const SUBGRAPH_URL: string = config.get(`web3.subgraphUrls.${NETWORK}`)
 
 const web3 = new Web3(RPC_URL)
 

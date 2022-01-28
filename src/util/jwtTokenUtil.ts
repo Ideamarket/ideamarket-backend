@@ -88,7 +88,7 @@ export async function verifyAuthTokenAndReturnAccount(
 
     return {
       id: account._id,
-      username: account.username ?? null,
+      username: account.username || null,
       walletAddress: account.walletAddress,
       role: account.role,
     }
