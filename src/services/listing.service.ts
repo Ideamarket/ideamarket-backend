@@ -23,10 +23,11 @@ export type ListingQueryOptions = {
   filterTokens: string[]
   isVerifiedFilter: boolean
   earliestPricePointTs: number
+  search: string | null
 }
 
 export async function fetchAllListings(options: ListingQueryOptions) {
-  const { orderBy, skip, limit, marketIds, filterTokens } = options
+  const { orderBy, skip, limit, marketIds, filterTokens, search } = options
   const orderDirection = options.orderDirection === 'asc' ? 1 : -1
 
   const sortOptions: any = {}
@@ -36,6 +37,9 @@ export async function fetchAllListings(options: ListingQueryOptions) {
   filterOptions.push({ marketId: { $in: marketIds } })
   if (filterTokens.length > 0) {
     filterOptions.push({ _id: { $in: filterTokens } })
+  }
+  if (search) {
+    filterOptions.push({ value: { $regex: search, $options: 'i' } })
   }
 
   const web2Listings = await ListingModel.find({ $and: filterOptions })
@@ -48,7 +52,7 @@ export async function fetchAllListings(options: ListingQueryOptions) {
   const onchainListingIds = web2Listings
     .filter((listing) => listing.isOnChain)
     .map((listing) => listing.onchainId)
-  const onchainTokens: OnchainTokens = await request(
+  const onchainTokens: Partial<OnchainTokens> = await request(
     SUBGRAPH_URL,
     getTokensQuery({
       ...options,
@@ -57,9 +61,14 @@ export async function fetchAllListings(options: ListingQueryOptions) {
       filterTokens: onchainListingIds,
     })
   )
+  const tokens = search
+    ? onchainTokens.tokenNameSearch
+    : onchainTokens.ideaTokens
   const onchainListingsMap: Record<string, Web3TokenData> = {}
-  for (const listing of onchainTokens.ideaTokens) {
-    onchainListingsMap[listing.id] = listing
+  if (tokens) {
+    for (const listing of tokens) {
+      onchainListingsMap[listing.id] = listing
+    }
   }
 
   return web2Listings.map((listing) =>
@@ -73,12 +82,17 @@ export async function fetchAllListings(options: ListingQueryOptions) {
 }
 
 export async function fetchOnchainListings(options: ListingQueryOptions) {
-  const onchainTokens: OnchainTokens = await request(
+  const { search } = options
+  const onchainTokens: Partial<OnchainTokens> = await request(
     SUBGRAPH_URL,
     getTokensQuery(options)
   )
 
-  return onchainTokens.ideaTokens.map((token) =>
+  const tokens = search
+    ? onchainTokens.tokenNameSearch
+    : onchainTokens.ideaTokens
+
+  return tokens?.map((token) =>
     combineWeb2AndWeb3TokenData({
       listingDoc: null,
       web3TokenData: token,
@@ -87,7 +101,7 @@ export async function fetchOnchainListings(options: ListingQueryOptions) {
 }
 
 export async function fetchGhostListings(options: ListingQueryOptions) {
-  const { orderBy, skip, limit, marketIds, filterTokens } = options
+  const { orderBy, skip, limit, marketIds, filterTokens, search } = options
   const orderDirection = options.orderDirection === 'asc' ? 1 : -1
 
   const sortOptions: any = {}
@@ -97,6 +111,9 @@ export async function fetchGhostListings(options: ListingQueryOptions) {
   filterOptions.push({ isOnChain: false }, { marketId: { $in: marketIds } })
   if (filterTokens.length > 0) {
     filterOptions.push({ _id: { $in: filterTokens } })
+  }
+  if (search) {
+    filterOptions.push({ value: { $regex: search, $options: 'i' } })
   }
 
   const ghostListings = await ListingModel.find({ $and: filterOptions })

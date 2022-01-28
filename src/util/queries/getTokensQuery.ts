@@ -1,3 +1,4 @@
+/* eslint-disable prefer-template */
 import { gql } from 'graphql-request'
 
 import { WEEK_SECONDS } from '..'
@@ -12,6 +13,7 @@ export function getTokensQuery({
   filterTokens,
   isVerifiedFilter,
   earliestPricePointTs,
+  search,
 }: {
   marketIds: number[]
   skip: number
@@ -21,6 +23,7 @@ export function getTokensQuery({
   filterTokens: string[]
   isVerifiedFilter: boolean
   earliestPricePointTs: number
+  search: string | null
 }): string {
   const hexMarketIds = marketIds.map((id) => `0x${id.toString(16)}`)
   const inMarkets = hexMarketIds.map((id) => `"${id}"`).join(',')
@@ -51,6 +54,52 @@ export function getTokensQuery({
 
   const currentTs = Math.floor(Date.now() / 1000)
   const weekBack = currentTs - WEEK_SECONDS
+
+  if (search) {
+    return gql`
+      {
+        tokenNameSearch(${queries} skip:${skip}, first:${limit}, orderBy:${orderBy}, orderDirection:${orderDirection}, text:${
+      '"' + search + ':*"'
+    }) {
+            id
+            tokenID
+            name
+            supply
+            holders
+            marketCap
+            market {
+              id: marketID
+              name
+            }
+            rank
+            tokenOwner
+            daiInToken
+            invested
+            listedAt
+            lockedAmount
+            lockedPercentage
+            latestPricePoint {
+              timestamp
+              counter
+              oldPrice
+              price
+            }
+            earliestPricePoint: pricePoints(first:1, orderBy:"timestamp", orderDirection:"asc", where:{timestamp_gt:"${earliestPricePointTs}"}) {
+              counter
+              timestamp
+              oldPrice
+              price
+            }
+            dayVolume
+            dayChange
+            pricePoints(where:{timestamp_gt:${weekBack}} orderBy:timestamp) {
+              oldPrice
+              price
+            }
+          }
+      }
+    `
+  }
 
   return gql`
     {
