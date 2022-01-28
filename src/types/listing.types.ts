@@ -19,6 +19,7 @@ export type Web2TokenData = {
 
 export type OnchainTokens = {
   ideaTokens: Web3TokenData[]
+  tokenNameSearch: Web3TokenData[]
 }
 
 export type Web3TokenData = {

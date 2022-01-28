@@ -76,8 +76,6 @@ ListingSchema.statics.build = (attr: IListingModel) => {
   return new ListingModel(attr)
 }
 
-ListingSchema.index({ value: 1, marketId: 1 }, { unique: true })
-
 ListingSchema.plugin(mongoosePagination)
 
 export const ListingModel = mongoose.model<ListingDocument, IListingModel>(
