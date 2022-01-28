@@ -34,7 +34,8 @@
     "MARKET2": "Wikipedia",
     "MARKET3": "Minds",
     "MARKET4": "Substack",
-    "MARKET5": "Showtime"
+    "MARKET5": "Showtime",
+    "MARKET6": "URL"
   },
   "ext": "js,json,ts"
 }

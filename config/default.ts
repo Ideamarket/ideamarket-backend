@@ -67,6 +67,7 @@ const config = {
     market3: process.env.MARKET3 ?? '',
     market4: process.env.MARKET4 ?? '',
     market5: process.env.MARKET5 ?? '',
+    market6: process.env.MARKET6 ?? '',
   },
 }
 
