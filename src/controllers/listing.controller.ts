@@ -68,7 +68,7 @@ export async function addGhostListing(req: Request, res: Response) {
     const listingRequest: IListing = {
       ghostListedByAccount: decodedAccount.id,
       ghostListedBy: decodedAccount.walletAddress,
-      marketName: config.get(`markets.MARKET${reqBody.marketId as number}`),
+      marketName: config.get(`markets.market${reqBody.marketId as number}`),
       marketId: reqBody.marketId as number,
       value: req.body.value as string,
       ghostListedAt: new Date(),
@@ -100,7 +100,7 @@ export async function addOnChainListing(req: Request, res: Response) {
       ghostListedByAccount: null,
       ghostListedBy: null,
       ghostListedAt: null,
-      marketName: config.get(`markets.MARKET${reqBody.marketId as number}`),
+      marketName: config.get(`markets.market${reqBody.marketId as number}`),
       marketId: reqBody.marketId as number,
       value: req.body.value as string,
       isOnChain: true,
