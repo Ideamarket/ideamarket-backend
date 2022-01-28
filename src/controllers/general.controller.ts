@@ -49,10 +49,10 @@ export async function fetchUrlMetadata(req: Request, res: Response) {
 }
 
 const createExpiryDate = (date: Date, days: number) => {
-  /* eslint-disable-next-line unicorn/no-keyword-prefix */
-  const newDate = new Date(date)
-  // eslint-disable-next-line unicorn/no-keyword-prefix
-  return new Date(newDate.setDate(newDate.getDate() + days))
+   
+  const todayDate = new Date(date)
+   
+  return new Date(todayDate.setDate(todayDate.getDate() + days))
 }
 
 const createUrlMetadataResponse = (data: IUrlMetadataModel) => {
