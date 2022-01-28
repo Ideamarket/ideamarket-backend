@@ -19,19 +19,21 @@ export function getSingleTokenQuery({
         tokens(where:{name:${'"' + tokenName + '"'}}) {
             id
             tokenID
-            market {
-              id
-            }
             name
             supply
             holders
             marketCap
+            market {
+              id: marketID
+              name
+            }
+            rank
             tokenOwner
             daiInToken
             invested
             listedAt
             lockedAmount
-            rank
+            lockedPercentage
             latestPricePoint {
               timestamp
               counter

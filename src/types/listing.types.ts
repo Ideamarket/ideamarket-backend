@@ -1,6 +1,6 @@
 export type ListingResponse = {
-  web2TokenData: Web2TokenData | null
-  web3TokenData: Web3TokenData | null
+  web2TokenData: Web2TokenData | Partial<Web2TokenData> | null
+  web3TokenData: Web3TokenData | Partial<Web3TokenData> | null
 }
 
 export type Web2TokenData = {
