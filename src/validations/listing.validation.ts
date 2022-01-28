@@ -12,6 +12,14 @@ export const fetchListingsValidation = [
     .withMessage('OrderBy cannot be empty and should be a valid string'),
 ]
 
+export const fetchListingValidation = [
+  query('marketId')
+    .notEmpty()
+    .isFloat({ min: 1, max: 5 })
+    .withMessage('Invalid marketId provided'),
+  query('value').notEmpty().withMessage('Token value cannot be empty'),
+]
+
 export const addGhostListingValidation = [
   body('marketId')
     .notEmpty()

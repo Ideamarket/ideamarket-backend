@@ -113,6 +113,32 @@ export async function fetchGhostListings(options: ListingQueryOptions) {
   )
 }
 
+export async function fetchSingleListing({
+  marketId,
+  value,
+}: {
+  marketId: number
+  value: string
+}) {
+  const marketName: string = config.get(`markets.market${marketId}`)
+  const pullWeb3Data = request(
+    SUBGRAPH_URL,
+    getSingleTokenQuery({ marketName, tokenName: value })
+  )
+  const fetchListingDoc = ListingModel.findOne({ marketId, value })
+    .populate('ghostListedByAccount')
+    .populate('onchainListedByAccount')
+
+  const [listingDoc, web3Data] = await Promise.all([
+    fetchListingDoc,
+    pullWeb3Data,
+  ])
+  const web3TokenData = web3Data.ideaMarkets[0]
+    .tokens[0] as Partial<Web3TokenData>
+
+  return combineWeb2AndWeb3TokenData({ listingDoc, web3TokenData })
+}
+
 export async function addNewGhostListing({
   marketId,
   value,

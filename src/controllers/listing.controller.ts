@@ -8,6 +8,7 @@ import {
   fetchAllListings,
   addNewGhostListing,
   updateOrCloneOnchainListing,
+  fetchSingleListing,
 } from '../services/listing.service'
 
 export async function fetchListings(req: Request, res: Response) {
@@ -53,6 +54,20 @@ export async function fetchListings(req: Request, res: Response) {
   } catch (error) {
     console.error('Error occurred while fetching the listings', error)
     return handleError(res, error, 'Unable to fetch the listings')
+  }
+}
+
+export async function fetchListing(req: Request, res: Response) {
+  try {
+    const marketId = Number.parseInt(req.query.marketId as string)
+    const value = decodeURIComponent(req.query.value as string)
+
+    const listing = await fetchSingleListing({ marketId, value })
+
+    return handleSuccess(res, listing)
+  } catch (error) {
+    console.error('Error occurred while fetching the listing', error)
+    return handleError(res, error, 'Unable to fetch the listing')
   }
 }
 

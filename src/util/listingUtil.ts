@@ -36,7 +36,7 @@ export function combineWeb2AndWeb3TokenData({
   web3TokenData,
 }: {
   listingDoc: ListingDocument | null
-  web3TokenData: Web3TokenData | null | undefined
+  web3TokenData: Web3TokenData | Partial<Web3TokenData> | null | undefined
 }): ListingResponse {
   return {
     web2TokenData: mapWeb2Data(listingDoc),
