@@ -12,26 +12,18 @@ export const fetchListingsValidation = [
     .withMessage('OrderBy cannot be empty and should be a valid string'),
 ]
 
-export const createGhostListingValidation = [
+export const addGhostListingValidation = [
   body('marketId')
     .notEmpty()
     .isFloat({ min: 1, max: 5 })
-    .withMessage('Invalid market provided for listing'),
+    .withMessage('Invalid marketId provided for listing'),
   body('value').notEmpty().withMessage('Token value to list cannot be empty'),
 ]
 
-export const createOnchainListingValidation = [
+export const addOnChainListingValidation = [
   body('marketId')
     .notEmpty()
     .isFloat({ min: 1, max: 5 })
-    .withMessage('Invalid market provided for listing'),
+    .withMessage('Invalid marketId provided for listing'),
   body('value').notEmpty().withMessage('Token value to list cannot be empty'),
-  body('onchainId').notEmpty().withMessage('onchainId is required'),
-  body('listedAt').notEmpty().withMessage('listedAt is required'),
-]
-
-export const migrateGhostListingValidation = [
-  body('listingId').notEmpty().withMessage('listingId is required'),
-  body('onchainId').notEmpty().withMessage('onchainId is required'),
-  body('listedAt').notEmpty().withMessage('listedAt is required'),
 ]

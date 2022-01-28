@@ -5,7 +5,9 @@ import type {
   Web3TokenData,
 } from '../types/listing.types'
 
-function mapWeb2Data(listingDoc: ListingDocument | null): Web2TokenData | null {
+export function mapWeb2Data(
+  listingDoc: ListingDocument | null
+): Web2TokenData | null {
   if (!listingDoc) {
     return null
   }
