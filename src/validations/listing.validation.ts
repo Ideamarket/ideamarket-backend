@@ -1,4 +1,4 @@
-import { body, query } from 'express-validator'
+import { body, oneOf, query } from 'express-validator'
 
 export const fetchListingsValidation = [
   query('marketType')
@@ -34,4 +34,18 @@ export const addOnChainListingValidation = [
     .isFloat({ min: 1, max: 5 })
     .withMessage('Invalid marketId provided for listing'),
   body('value').notEmpty().withMessage('Token value to list cannot be empty'),
+]
+
+export const addListingToBlacklistValidation = [
+  oneOf(
+    [
+      body('listingId').notEmpty().isString(),
+      body('onchainId').notEmpty().isString(),
+    ],
+    'Atleast one of listingId and onchainId is mandatory'
+  ),
+]
+
+export const removeListingFromBlacklistValidation = [
+  body('listingId').notEmpty().isString().withMessage('ListingId is required'),
 ]

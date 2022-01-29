@@ -1,17 +1,24 @@
+/* eslint-disable sonarjs/no-duplicate-string */
 /* eslint-disable @typescript-eslint/no-misused-promises */
 import express from 'express'
 
 import {
   addGhostListing,
+  addListingToBlacklist,
   addOnChainListing,
+  fetchBlacklistedListings,
   fetchListing,
   fetchListings,
+  removeListingFromBlacklist,
 } from '../controllers/listing.controller'
 import { authenticateAndSetAccount } from '../middleware/authentication'
+import { authorizeAdmin } from '../middleware/authorization'
 import { validateRequest } from '../middleware/validateRequest'
 import {
+  addListingToBlacklistValidation,
   addGhostListingValidation,
   addOnChainListingValidation,
+  removeListingFromBlacklistValidation,
   fetchListingsValidation,
   fetchListingValidation,
 } from '../validations/listing.validation'
@@ -41,6 +48,26 @@ listingRouter.post(
   addOnChainListingValidation,
   validateRequest,
   addOnChainListing
+)
+
+listingRouter.post(
+  '/blacklist',
+  authenticateAndSetAccount,
+  authorizeAdmin,
+  addListingToBlacklistValidation,
+  validateRequest,
+  addListingToBlacklist
+)
+
+listingRouter.get('/blacklist', fetchBlacklistedListings)
+
+listingRouter.delete(
+  '/blacklist',
+  authenticateAndSetAccount,
+  authorizeAdmin,
+  removeListingFromBlacklistValidation,
+  validateRequest,
+  removeListingFromBlacklist
 )
 
 export { listingRouter }

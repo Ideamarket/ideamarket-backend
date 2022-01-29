@@ -5,14 +5,23 @@ import config from 'config'
 import { request } from 'graphql-request'
 import type { FilterQuery } from 'mongoose'
 
+import { BlacklistedListingModel } from '../models/blacklisted-listings.model'
 import type { IListing, ListingDocument } from '../models/listing.model'
 import { ListingModel } from '../models/listing.model'
 import type { OnchainTokens, Web3TokenData } from '../types/listing.types'
 import type { DECODED_ACCOUNT } from '../util/jwtTokenUtil'
-import { combineWeb2AndWeb3TokenData, mapWeb2Data } from '../util/listingUtil'
+import {
+  combineWeb2AndWeb3TokenData,
+  mapBlacklistedListing,
+  mapWeb2Data,
+} from '../util/listingUtil'
 import { getSingleTokenQuery, getTokensQuery } from '../util/queries'
 import { SUBGRAPH_URL } from '../util/web3Util'
-import { InternalServerError, ObjectAlreadyExistsError } from './errors'
+import {
+  EntityNotFoundError,
+  InternalServerError,
+  ObjectAlreadyExistsError,
+} from './errors'
 
 export type ListingQueryOptions = {
   marketIds: number[]
@@ -49,7 +58,25 @@ export async function fetchAllListings(options: ListingQueryOptions) {
     .populate('ghostListedByAccount')
     .populate('onchainListedByAccount')
 
-  const onchainListingIds = web2Listings
+  // Filtering blacklisted listings
+  const listingIds = web2Listings.map((listing) => listing._id)
+  const blacklistedListings = await BlacklistedListingModel.find({
+    listing: { $in: listingIds },
+  })
+    .select(['listing'])
+    .populate({ path: 'listing', select: ['id'] })
+  const blackListedListingIds = new Set(
+    blacklistedListings.map(
+      (blacklistedListing) => blacklistedListing.listing.id
+    )
+  )
+  const filteredWeb2Listings = web2Listings.filter(
+    (listing) => !blackListedListingIds.has(listing.id)
+  )
+  // ------------------------------
+
+  // Fetching web3 data for onchain listings
+  const onchainListingIds = filteredWeb2Listings
     .filter((listing) => listing.isOnChain)
     .map((listing) => listing.onchainId)
   const onchainTokens: Partial<OnchainTokens> = await request(
@@ -70,8 +97,9 @@ export async function fetchAllListings(options: ListingQueryOptions) {
       onchainListingsMap[listing.id] = listing
     }
   }
+  // ------------------------------
 
-  return web2Listings.map((listing) =>
+  return filteredWeb2Listings.map((listing) =>
     combineWeb2AndWeb3TokenData({
       listingDoc: listing,
       web3TokenData: listing.isOnChain
@@ -92,7 +120,26 @@ export async function fetchOnchainListings(options: ListingQueryOptions) {
     ? onchainTokens.tokenNameSearch
     : onchainTokens.ideaTokens
 
-  return tokens?.map((token) =>
+  if (!tokens || tokens.length === 0) {
+    return []
+  }
+
+  // Filtering blacklisted listings
+  const onchainIds = tokens.map((token) => token.id)
+  const blacklistedListings = await BlacklistedListingModel.find({
+    onchainId: { $in: onchainIds },
+  }).select(['onchainId'])
+  const blacklistedOnchainIds = new Set(
+    blacklistedListings
+      .filter((listing) => !!listing.onchainId)
+      .map((listing) => listing.onchainId)
+  )
+  const filteredTokens = tokens.filter(
+    (token) => !blacklistedOnchainIds.has(token.id)
+  )
+  // ------------------------------
+
+  return filteredTokens.map((token) =>
     combineWeb2AndWeb3TokenData({
       listingDoc: null,
       web3TokenData: token,
@@ -122,7 +169,24 @@ export async function fetchGhostListings(options: ListingQueryOptions) {
     .limit(limit)
     .populate('ghostListedByAccount')
 
-  return ghostListings.map((listing) =>
+  // Filtering blacklisted listings
+  const listingIds = ghostListings.map((listing) => listing._id)
+  const blacklistedListings = await BlacklistedListingModel.find({
+    listing: { $in: listingIds },
+  })
+    .select(['listing'])
+    .populate({ path: 'listing', select: ['id'] })
+  const blackListedListingIds = new Set(
+    blacklistedListings.map(
+      (blacklistedListing) => blacklistedListing.listing.id
+    )
+  )
+  const filteredGhostListings = ghostListings.filter(
+    (listing) => !blackListedListingIds.has(listing.id)
+  )
+  // ------------------------------
+
+  return filteredGhostListings.map((listing) =>
     combineWeb2AndWeb3TokenData({
       listingDoc: listing,
       web3TokenData: null,
@@ -261,4 +325,47 @@ export function updateListingVoteCountById(id: string, totalVotes: number) {
         reject(error)
       })
   })
+}
+
+export async function addBlacklistListing({
+  listingId,
+  onchainId,
+  account,
+}: {
+  listingId: string | null
+  onchainId: string | null
+  account: DECODED_ACCOUNT
+}) {
+  const listingDoc = await ListingModel.findOne({
+    $or: [{ _id: listingId }, { onchainId }],
+  })
+  if (!listingDoc) {
+    throw new EntityNotFoundError('Listing', null)
+  }
+
+  const blacklistedListingDoc = BlacklistedListingModel.build({
+    listing: listingDoc._id,
+    onchainId: listingDoc.onchainId,
+    blacklistedBy: account.id,
+  })
+  const blacklistedListing = await (
+    await BlacklistedListingModel.create(blacklistedListingDoc)
+  ).populate('blacklistedBy')
+
+  return mapBlacklistedListing(blacklistedListing)
+}
+
+export async function fetchAllBlacklistedListings() {
+  const blacklistedListings = await BlacklistedListingModel.find().populate({
+    path: 'blacklistedBy',
+    select: ['username'],
+  })
+
+  return blacklistedListings.map((blacklistedListing) =>
+    mapBlacklistedListing(blacklistedListing)
+  )
+}
+
+export async function deleteBlacklistedListing(listingId: string) {
+  await BlacklistedListingModel.findOneAndDelete({ listing: listingId })
 }

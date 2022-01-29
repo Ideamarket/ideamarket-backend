@@ -67,3 +67,9 @@ type PricePoint = {
   oldPrice: string
   price: string
 }
+
+export type BlacklistedListingResponse = {
+  listingId: string
+  blacklistedBy: string | null
+  blacklistedAt: Date
+}
