@@ -43,6 +43,7 @@
     "morgan": "^1.10.0",
     "nodemon": "^2.0.15",
     "open-graph-scraper": "^4.11.0",
+    "ts-open-graph-scraper": "^0.0.2",
     "unique-username-generator": "1.0.1",
     "uuid": "8.3.2",
     "web3": "1.6.1",

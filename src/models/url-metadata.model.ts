@@ -6,7 +6,7 @@ export type IUrlMetadataModel = {
   ogImage: string | undefined
   ogTitle: string
   ogDescription: string
-  favicon: string
+  favicon: string | undefined
   expiresAt: Date
 }
 

@@ -8,6 +8,6 @@ export async function fetchUrlMetadata(req: Request, res: Response) {
     const url = req.body.url as string
     return handleSuccess(res, await fetchByUrl(url))
   } catch (error) {
-    return handleError(res, error, 'Unable to fetch version')
+    return handleError(res, error, 'Unable to fetch URL metadata')
   }
 }
