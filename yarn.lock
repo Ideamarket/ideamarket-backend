@@ -1011,13 +1011,6 @@
   resolved "https://registry.yarnpkg.com/@types/normalize-package-data/-/normalize-package-data-2.4.1.tgz#d3357479a0fdfdd5907fe67e17e0a85c906e1301"
   integrity sha512-Gj7cI7z+98M282Tqmp2K5EIsoouUEzbBJhQQzDE3jSIRk6r9gsz0oUokqIUR4u1R3dMHo0pDHM7sNOHyhulypw==
 
-"@types/open-graph-scraper@^4.8.1":
-  version "4.8.1"
-  resolved "https://registry.yarnpkg.com/@types/open-graph-scraper/-/open-graph-scraper-4.8.1.tgz#c009360a3e242f7e9a290d3609ffb950f44d6966"
-  integrity sha512-YtDUxwWiqD0urgCrhGfIeuy84J5TfnrtkM/5a5JXAXGLfi1uMHtZGpDT4ZVwlo9jBNemvXHya6cH28bZS1To1g==
-  dependencies:
-    "@types/node" "*"
-
 "@types/parse-json@^4.0.0":
   version "4.0.0"
   resolved "https://registry.yarnpkg.com/@types/parse-json/-/parse-json-4.0.0.tgz#2f8bb441434d163b35fb8ffdccd7138927ffb8c0"
@@ -5203,17 +5196,6 @@ onetime@^5.1.0, onetime@^5.1.2:
   integrity sha512-kbpaSSGJTWdAY5KPVeMOKXSrPtr8C8C7wodJbcsd51jRnmD+GZu8Y0VoU6Dm5Z4vWr0Ig/1NKuWRKf7j5aaYSg==
   dependencies:
     mimic-fn "^2.1.0"
-
-open-graph-scraper@^4.11.0:
-  version "4.11.0"
-  resolved "https://registry.yarnpkg.com/open-graph-scraper/-/open-graph-scraper-4.11.0.tgz#ac342e2a3365d2b62c557d066e0eef5328245665"
-  integrity sha512-APlovc5JOWXXUIyNc/1o340ik5d7RA/0TBTRMxpOMvsUXX4/uyjpHQijBUU7NxhjJpDHpc3d/lg7KcHBaSpKEw==
-  dependencies:
-    chardet "^1.4.0"
-    cheerio "^1.0.0-rc.10"
-    got "^11.8.2"
-    iconv-lite "^0.6.3"
-    validator "^13.7.0"
 
 optionator@^0.9.1:
   version "0.9.1"
