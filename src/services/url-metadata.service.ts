@@ -1,5 +1,4 @@
-import type { OpenGraphImage } from 'open-graph-scraper'
-import og from 'open-graph-scraper'
+import og from 'ts-open-graph-scraper'
 
 import type { IUrlMetadataModel } from '../models/url-metadata.model'
 import { UrlMetadataModel } from '../models/url-metadata.model'
@@ -17,17 +16,13 @@ export async function fetchByUrl(url: string) {
 
   const extractRet = await extract(url)
 
-  if (extractRet.error) {
-    return null
-  }
-
-  const { ogTitle, favicon, ogDescription, ogImage } = extractRet.result
+  const { ogTitle, ogDescription, ogImage } = extractRet
 
   data = await saveUrlMetadata({
-    ogImage: ogImage ? (ogImage as OpenGraphImage).url : undefined,
+    ogImage: ogImage ? ogImage[0].url : undefined,
     ogTitle: ogTitle as string,
     ogDescription: ogDescription as string,
-    favicon: favicon as string,
+    favicon: ogImage ? ogImage[0].url : undefined,
     url,
     expiresAt: createExpiryDate(new Date(), 7),
   })
