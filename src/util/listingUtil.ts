@@ -1,5 +1,7 @@
+import type { BlacklistedListingDocument } from '../models/blacklisted-listings.model'
 import type { ListingDocument } from '../models/listing.model'
 import type {
+  BlacklistedListingResponse,
   ListingResponse,
   Web2TokenData,
   Web3TokenData,
@@ -41,5 +43,15 @@ export function combineWeb2AndWeb3TokenData({
   return {
     web2TokenData: mapWeb2Data(listingDoc),
     web3TokenData: web3TokenData ?? null,
+  }
+}
+
+export function mapBlacklistedListing(
+  blacklistedListing: BlacklistedListingDocument
+): BlacklistedListingResponse {
+  return {
+    listingId: blacklistedListing.listing._id,
+    blacklistedBy: blacklistedListing.blacklistedBy?.username ?? null,
+    blacklistedAt: blacklistedListing.createdAt,
   }
 }

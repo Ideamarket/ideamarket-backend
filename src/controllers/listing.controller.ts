@@ -9,6 +9,9 @@ import {
   addNewGhostListing,
   updateOrCloneOnchainListing,
   fetchSingleListing,
+  addBlacklistListing,
+  fetchAllBlacklistedListings,
+  deleteBlacklistedListing,
 } from '../services/listing.service'
 
 export async function fetchListings(req: Request, res: Response) {
@@ -106,5 +109,47 @@ export async function addOnChainListing(req: Request, res: Response) {
   } catch (error) {
     console.error('Error occurred while adding onchain listing', error)
     return handleError(res, error, 'Unable to add onchain listing')
+  }
+}
+
+export async function addListingToBlacklist(req: Request, res: Response) {
+  try {
+    const reqBody = req.body
+    const decodedAccount = (req as any).decodedAccount as DECODED_ACCOUNT
+
+    const blacklistedListing = await addBlacklistListing({
+      listingId: reqBody.listingId ?? null,
+      onchainId: reqBody.onchainId ?? null,
+      account: decodedAccount,
+    })
+
+    return handleSuccess(res, { blacklistedListing })
+  } catch (error) {
+    console.error('Error occurred while adding listing to blacklist', error)
+    return handleError(res, error, 'Unable to add listing to blacklist')
+  }
+}
+
+export async function fetchBlacklistedListings(req: Request, res: Response) {
+  try {
+    const blacklistedListings = await fetchAllBlacklistedListings()
+
+    return handleSuccess(res, { blacklistedListings })
+  } catch (error) {
+    console.error('Error occurred while fetching blacklisted listings', error)
+    return handleError(res, error, 'Unable to fetch blacklisted listings')
+  }
+}
+
+export async function removeListingFromBlacklist(req: Request, res: Response) {
+  try {
+    const reqBody = req.body
+    await deleteBlacklistedListing(reqBody.listingId)
+    return handleSuccess(res, {
+      message: 'Listing has been removed from blacklist',
+    })
+  } catch (error) {
+    console.error('Error occurred while removing listing from blacklist', error)
+    return handleError(res, error, 'Unable to remove listing from blacklist')
   }
 }
