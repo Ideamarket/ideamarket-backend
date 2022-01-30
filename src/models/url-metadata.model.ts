@@ -1,11 +1,12 @@
 import type { Document } from 'mongoose'
 import mongoose, { Schema } from 'mongoose'
 
-export type IUrlMetadataModel = {
+export type IUrlMetadata = {
   url: string
   ogImage: string | undefined
   ogTitle: string
   ogDescription: string
+  ogType: string
   favicon: string | undefined
   expiresAt: Date
 }
@@ -16,6 +17,7 @@ export interface UrlMetadataDocument extends Document {
   ogImage: string
   ogTitle: string
   ogDescription: string
+  ogType: string
   favicon: string
   expiresAt: Date
 }
@@ -26,6 +28,7 @@ const UrlMetadataSchema = new Schema(
     ogImage: { type: String },
     ogTitle: { type: String },
     ogDescription: { type: String },
+    ogType: { type: String },
     favicon: { type: String },
     expiresAt: { type: Date, required: true },
   },
