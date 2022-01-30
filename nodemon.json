@@ -30,6 +30,7 @@
     "SUBGRAPH_URL_TEST": "https://rinkeby.infura.io/v3/98ca28d50f234e618a22a8b0d83c40b2",
     "SENDGRID_API_KEY": "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",
     "SENDGRID_EMAIL_VERIFICATION_TEMPLATE_ID": "d-8fd80cf05e4e4a01bf5b3e5c04684d1f",
+    "VALID_MARKET_IDS": "1,2,3,4,5,6",
     "MARKET1": "Twitter",
     "MARKET2": "Wikipedia",
     "MARKET3": "Minds",
