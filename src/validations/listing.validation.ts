@@ -18,7 +18,7 @@ export const fetchListingsValidation = [
 export const fetchListingValidation = [
   query('marketId')
     .notEmpty()
-    .isInt()
+    .isString()
     .custom(isMarketIdValid)
     .withMessage('marketId is invalid'),
   query('value').notEmpty().withMessage('Token value cannot be empty'),
