@@ -1,10 +1,29 @@
-/* eslint-disable @typescript-eslint/no-misused-promises */
 import express from 'express'
 
-import { fetchUrlMetadata } from '../controllers/general.controller'
+import {
+  fetchUrlMetadata,
+  fetchValidUrl,
+} from '../controllers/general.controller'
+import { validateRequest } from '../middleware/validateRequest'
+import {
+  fetchUrlMetadataValidation,
+  fetchValidUrlValidation,
+} from '../validations/general.validation'
 
 const generalRouter = express.Router()
 
-generalRouter.post('/url-metadata', fetchUrlMetadata)
+generalRouter.post(
+  '/url-metadata',
+  fetchUrlMetadataValidation,
+  validateRequest,
+  fetchUrlMetadata
+)
 
-export { generalRouter as genericRouter }
+generalRouter.get(
+  '/valid-url',
+  fetchValidUrlValidation,
+  validateRequest,
+  fetchValidUrl
+)
+
+export { generalRouter }
