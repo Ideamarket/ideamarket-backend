@@ -1,3 +1,10 @@
+import type {
+  EarliestPricePoint,
+  LatestPricePoint,
+  Market,
+  PricePoint,
+} from './subgraph.types'
+
 export type ListingResponse = {
   web2TokenData: Web2TokenData | Partial<Web2TokenData> | null
   web3TokenData: Web3TokenData | Partial<Web3TokenData> | null
@@ -5,12 +12,13 @@ export type ListingResponse = {
 
 export type Web2TokenData = {
   listingId: string
+  value: string
   marketId: number
   marketName: string
-  value: string
   isOnChain: boolean
   ghostListedBy: string | null
   ghostListedAt: Date | null
+  onchainValue: string | null
   onchainId: string | null
   onchainListedBy: string | null
   onchainListedAt: Date | null
@@ -42,30 +50,6 @@ export type Web3TokenData = {
   supply: string
   tokenID: number
   tokenOwner: string
-}
-
-type EarliestPricePoint = {
-  counter: number
-  oldPrice: string
-  price: string
-  timestamp: string
-}
-
-type LatestPricePoint = {
-  counter: number
-  oldPrice: string
-  price: string
-  timestamp: string
-}
-
-type Market = {
-  id: number
-  name: string
-}
-
-type PricePoint = {
-  oldPrice: string
-  price: string
 }
 
 export type BlacklistedListingResponse = {

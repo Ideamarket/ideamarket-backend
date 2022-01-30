@@ -16,13 +16,14 @@ export function mapWeb2Data(
 
   const web2TokenData: Web2TokenData = {
     listingId: listingDoc._id,
+    value: listingDoc.value,
     marketId: listingDoc.marketId,
     marketName: listingDoc.marketName,
-    value: listingDoc.value,
-    isOnChain: listingDoc.isOnChain,
+    isOnChain: listingDoc.isOnchain,
     ghostListedBy:
       listingDoc.ghostListedByAccount?.username ?? listingDoc.ghostListedBy,
     ghostListedAt: listingDoc.ghostListedAt,
+    onchainValue: listingDoc.onchainValue,
     onchainId: listingDoc.onchainId,
     onchainListedBy:
       listingDoc.onchainListedByAccount?.username ?? listingDoc.onchainListedBy,
