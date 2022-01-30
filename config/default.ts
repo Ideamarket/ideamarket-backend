@@ -63,6 +63,14 @@ const config = {
   },
   markets: {
     validMarketIds: process.env.VALID_MARKET_IDS ?? '1,2,3,4,5,6',
+    names: {
+      twitterMarketName: 'Twitter',
+      substackMarketName: 'Substack',
+      showtimeMarketName: 'Showtime',
+      wikipediaMarketName: 'Wikipedia',
+      mindsMarketName: 'Minds',
+      urlMarketName: 'URL',
+    },
     market1: process.env.MARKET1 ?? '',
     market2: process.env.MARKET2 ?? '',
     market3: process.env.MARKET3 ?? '',

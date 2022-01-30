@@ -1,7 +1,6 @@
+/* eslint-disable promise/prefer-await-to-then */
 /* eslint-disable unicorn/no-await-expression-member */
 /* eslint-disable promise/prefer-await-to-callbacks */
-/* eslint-disable promise/prefer-await-to-then */
-import config from 'config'
 import { request } from 'graphql-request'
 import type { FilterQuery } from 'mongoose'
 
@@ -15,6 +14,7 @@ import {
   mapBlacklistedListing,
   mapWeb2Data,
 } from '../util/listingUtil'
+import { getAllMarkets } from '../util/marketUtil'
 import { getSingleTokenQuery, getTokensQuery } from '../util/queries'
 import { SUBGRAPH_URL } from '../util/web3Util'
 import {
@@ -77,7 +77,7 @@ export async function fetchAllListings(options: ListingQueryOptions) {
 
   // Fetching web3 data for onchain listings
   const onchainListingIds = filteredWeb2Listings
-    .filter((listing) => listing.isOnChain)
+    .filter((listing) => listing.isOnchain)
     .map((listing) => listing.onchainId)
   const onchainTokens: Partial<OnchainTokens> = await request(
     SUBGRAPH_URL,
@@ -102,7 +102,7 @@ export async function fetchAllListings(options: ListingQueryOptions) {
   return filteredWeb2Listings.map((listing) =>
     combineWeb2AndWeb3TokenData({
       listingDoc: listing,
-      web3TokenData: listing.isOnChain
+      web3TokenData: listing.isOnchain
         ? onchainListingsMap[listing.onchainId]
         : null,
     })
@@ -155,7 +155,7 @@ export async function fetchGhostListings(options: ListingQueryOptions) {
   sortOptions[orderBy] = orderDirection
 
   const filterOptions: FilterQuery<ListingDocument>[] = []
-  filterOptions.push({ isOnChain: false }, { marketId: { $in: marketIds } })
+  filterOptions.push({ isOnchain: false }, { marketId: { $in: marketIds } })
   if (filterTokens.length > 0) {
     filterOptions.push({ _id: { $in: filterTokens } })
   }
@@ -201,7 +201,7 @@ export async function fetchSingleListing({
   marketId: number
   value: string
 }) {
-  const marketName: string = config.get(`markets.market${marketId}`)
+  const marketName = getAllMarkets()[marketId]
   const pullWeb3Data = request(
     SUBGRAPH_URL,
     getSingleTokenQuery({ marketName, tokenName: value })
@@ -229,7 +229,7 @@ export async function addNewGhostListing({
   value: string
   decodedAccount: DECODED_ACCOUNT
 }) {
-  const marketName: string = config.get(`markets.market${marketId}`)
+  const marketName = getAllMarkets()[marketId]
   const listing = await ListingModel.findOne({ marketId, value })
   if (listing) {
     throw new ObjectAlreadyExistsError(null, 'Token has already been listed')
@@ -239,10 +239,11 @@ export async function addNewGhostListing({
     value,
     marketId,
     marketName,
-    isOnChain: false,
+    isOnchain: false,
     ghostListedBy: decodedAccount.walletAddress,
     ghostListedByAccount: decodedAccount.id,
     ghostListedAt: new Date(),
+    onchainValue: null,
     onchainId: null,
     onchainListedBy: null,
     onchainListedByAccount: null,
@@ -259,16 +260,18 @@ export async function addNewGhostListing({
 export async function updateOrCloneOnchainListing({
   marketId,
   value,
+  onchainValue,
   decodedAccount,
 }: {
   marketId: number
   value: string
+  onchainValue: string
   decodedAccount: DECODED_ACCOUNT
 }) {
-  const marketName: string = config.get(`markets.market${marketId}`)
+  const marketName = getAllMarkets()[marketId]
   const web3Data = await request(
     SUBGRAPH_URL,
-    getSingleTokenQuery({ marketName, tokenName: value })
+    getSingleTokenQuery({ marketName, tokenName: onchainValue })
   )
   const [token] = web3Data.ideaMarkets[0].tokens
   if (!token) {
@@ -281,10 +284,11 @@ export async function updateOrCloneOnchainListing({
     value,
     marketId,
     marketName,
-    isOnChain: true,
+    isOnchain: true,
     ghostListedBy: listing ? listing.ghostListedBy : null,
     ghostListedByAccount: listing ? listing.ghostListedByAccount?._id : null,
     ghostListedAt: listing ? listing.ghostListedAt : null,
+    onchainValue,
     onchainId: token.id,
     onchainListedBy: token.tokenOwner,
     onchainListedByAccount: decodedAccount.id,

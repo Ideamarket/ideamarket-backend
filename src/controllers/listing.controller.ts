@@ -83,7 +83,7 @@ export async function addGhostListing(req: Request, res: Response) {
 
     const ghostListing = await addNewGhostListing({
       marketId: reqBody.marketId as number,
-      value: decodeURIComponent(reqBody.value as string),
+      value: decodeURI(reqBody.value as string),
       decodedAccount,
     })
 
@@ -101,7 +101,8 @@ export async function addOnChainListing(req: Request, res: Response) {
 
     const listing = await updateOrCloneOnchainListing({
       marketId: reqBody.marketId as number,
-      value: decodeURIComponent(reqBody.value as string),
+      value: decodeURI(reqBody.value as string),
+      onchainValue: decodeURIComponent(reqBody.onchainValue as string),
       decodedAccount,
     })
 

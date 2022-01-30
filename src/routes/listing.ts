@@ -12,7 +12,7 @@ import {
   removeListingFromBlacklist,
 } from '../controllers/listing.controller'
 import { authenticateAndSetAccount } from '../middleware/authentication'
-import { authorizeAdmin } from '../middleware/authorization'
+import { authorizeModeratorOrAdmin } from '../middleware/authorization'
 import { validateRequest } from '../middleware/validateRequest'
 import {
   addListingToBlacklistValidation,
@@ -53,7 +53,7 @@ listingRouter.post(
 listingRouter.post(
   '/blacklist',
   authenticateAndSetAccount,
-  authorizeAdmin,
+  authorizeModeratorOrAdmin,
   addListingToBlacklistValidation,
   validateRequest,
   addListingToBlacklist
@@ -64,7 +64,7 @@ listingRouter.get('/blacklist', fetchBlacklistedListings)
 listingRouter.delete(
   '/blacklist',
   authenticateAndSetAccount,
-  authorizeAdmin,
+  authorizeModeratorOrAdmin,
   removeListingFromBlacklistValidation,
   validateRequest,
   removeListingFromBlacklist
