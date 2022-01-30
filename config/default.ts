@@ -62,6 +62,7 @@ const config = {
       process.env.SENDGRID_EMAIL_VERIFICATION_TEMPLATE_ID ?? '',
   },
   markets: {
+    validMarketIds: process.env.VALID_MARKET_IDS ?? '1,2,3,4,5,6',
     market1: process.env.MARKET1 ?? '',
     market2: process.env.MARKET2 ?? '',
     market3: process.env.MARKET3 ?? '',
