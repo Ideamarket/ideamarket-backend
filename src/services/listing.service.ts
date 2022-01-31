@@ -273,7 +273,10 @@ export async function updateOrCloneOnchainListing({
     SUBGRAPH_URL,
     getSingleTokenQuery({ marketName, tokenName: onchainValue })
   )
-  const [token] = web3Data.ideaMarkets[0].tokens
+  const token = web3Data.ideaMarkets[0].tokens[0] as
+    | Web3TokenData
+    | null
+    | undefined
   if (!token) {
     console.error('Error occurred while fetching web3 data from subgraph')
     throw new InternalServerError('Failed to get web3 data from subgraph')
@@ -290,9 +293,9 @@ export async function updateOrCloneOnchainListing({
     ghostListedAt: listing ? listing.ghostListedAt : null,
     onchainValue,
     onchainId: token.id,
-    onchainListedBy: token.tokenOwner,
+    onchainListedBy: token.lister,
     onchainListedByAccount: decodedAccount?.id ?? null,
-    onchainListedAt: new Date(token.listedAt * 1000),
+    onchainListedAt: new Date(Number.parseInt(token.listedAt) * 1000),
     totalVotes: listing ? listing.totalVotes : 0,
   }
 

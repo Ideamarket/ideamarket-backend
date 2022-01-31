@@ -72,6 +72,7 @@ export function getTokensQuery({
               name
             }
             rank
+            lister
             tokenOwner
             daiInToken
             invested
@@ -115,6 +116,7 @@ export function getTokensQuery({
             name
           }
           rank
+          lister
           tokenOwner
           daiInToken
           invested

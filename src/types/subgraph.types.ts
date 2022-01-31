@@ -6,7 +6,7 @@ export type IdeaToken = {
   id: string
   name: string
   market: Market
-  tokenOwner: string
+  lister: string
   listedAt: string
 }
 

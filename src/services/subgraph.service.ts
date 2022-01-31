@@ -59,7 +59,7 @@ export async function cloneOnchainTokensToWeb2() {
         onchainValue: ideaToken.name,
         onchainId: ideaToken.id,
         onchainListedAt: new Date(Number.parseInt(ideaToken.listedAt) * 1000),
-        onchainListedBy: ideaToken.tokenOwner,
+        onchainListedBy: ideaToken.lister,
         onchainListedByAccount: null,
         totalVotes: 0,
       })
