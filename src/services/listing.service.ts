@@ -201,21 +201,21 @@ export async function fetchSingleListing({
   marketId: number
   value: string
 }) {
+  let web3TokenData = null
   const marketName = getAllMarkets()[marketId]
-  const pullWeb3Data = request(
-    SUBGRAPH_URL,
-    getSingleTokenQuery({ marketName, tokenName: value })
-  )
-  const fetchListingDoc = ListingModel.findOne({ marketId, value })
+
+  const listingDoc = await ListingModel.findOne({ marketId, value })
     .populate('ghostListedByAccount')
     .populate('onchainListedByAccount')
 
-  const [listingDoc, web3Data] = await Promise.all([
-    fetchListingDoc,
-    pullWeb3Data,
-  ])
-  const web3TokenData = web3Data.ideaMarkets[0]
-    .tokens[0] as Partial<Web3TokenData>
+  // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+  if (listingDoc?.isOnchain && listingDoc.onchainValue) {
+    const web3Data = await request(
+      SUBGRAPH_URL,
+      getSingleTokenQuery({ marketName, tokenName: listingDoc.onchainValue })
+    )
+    web3TokenData = web3Data.ideaMarkets[0].tokens[0] as Partial<Web3TokenData>
+  }
 
   return combineWeb2AndWeb3TokenData({ listingDoc, web3TokenData })
 }
