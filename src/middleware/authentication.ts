@@ -26,6 +26,34 @@ export function authenticate(req: Request, res: Response, next: NextFunction) {
       AUTHENTICATION_FAILED_ERR_MSG
     )
   }
+
+  const [, authToken] = authorizationHeader.split(' ')
+  const isAuthTokenValid = verifyAuthToken(authToken)
+  if (!isAuthTokenValid) {
+    console.error(INVALID_AUTH_TOKEN_ERR_LOG)
+    return handleError(
+      res,
+      new UnAuthenticatedError(),
+      AUTHENTICATION_FAILED_ERR_MSG
+    )
+  }
+  console.info(AUTHENTICATION_SUCCESS_LOG)
+  next()
+  return
+}
+
+export function optionalAuthenticate(
+  req: Request,
+  res: Response,
+  next: NextFunction
+) {
+  const authorizationHeader = req.headers.authorization as string
+  if (!authorizationHeader) {
+    console.info(AUTHORIZATION_HEADER_MISSING_ERR_LOG)
+    next()
+    return
+  }
+
   const [, authToken] = authorizationHeader.split(' ')
   const isAuthTokenValid = verifyAuthToken(authToken)
   if (!isAuthTokenValid) {
@@ -55,6 +83,36 @@ export async function authenticateAndSetAccount(
       AUTHENTICATION_FAILED_ERR_MSG
     )
   }
+
+  const [, authToken] = authorizationHeader.split(' ')
+  const decodedAccount = await verifyAuthTokenAndReturnAccount(authToken)
+  console.info(`Account : ${JSON.stringify(decodedAccount)}`)
+  if (!decodedAccount) {
+    console.error(INVALID_AUTH_TOKEN_ERR_LOG)
+    return handleError(
+      res,
+      new UnAuthenticatedError(),
+      AUTHENTICATION_FAILED_ERR_MSG
+    )
+  }
+  console.info(AUTHENTICATION_SUCCESS_LOG)
+  ;(req as any).decodedAccount = decodedAccount
+  next()
+  return
+}
+
+export async function optionalAuthenticateAndSetAccount(
+  req: Request,
+  res: Response,
+  next: NextFunction
+) {
+  const authorizationHeader = req.headers.authorization as string
+  if (!authorizationHeader) {
+    console.info(AUTHORIZATION_HEADER_MISSING_ERR_LOG)
+    next()
+    return
+  }
+
   const [, authToken] = authorizationHeader.split(' ')
   const decodedAccount = await verifyAuthTokenAndReturnAccount(authToken)
   console.info(`Account : ${JSON.stringify(decodedAccount)}`)
