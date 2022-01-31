@@ -11,7 +11,10 @@ import {
   fetchListings,
   removeListingFromBlacklist,
 } from '../controllers/listing.controller'
-import { authenticateAndSetAccount } from '../middleware/authentication'
+import {
+  authenticateAndSetAccount,
+  optionalAuthenticateAndSetAccount,
+} from '../middleware/authentication'
 import { authorizeModeratorOrAdmin } from '../middleware/authorization'
 import { validateRequest } from '../middleware/validateRequest'
 import {
@@ -44,7 +47,7 @@ listingRouter.post(
 
 listingRouter.post(
   '/onchain',
-  authenticateAndSetAccount,
+  optionalAuthenticateAndSetAccount,
   addOnChainListingValidation,
   validateRequest,
   addOnChainListing

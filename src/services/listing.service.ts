@@ -266,7 +266,7 @@ export async function updateOrCloneOnchainListing({
   marketId: number
   value: string
   onchainValue: string
-  decodedAccount: DECODED_ACCOUNT
+  decodedAccount: DECODED_ACCOUNT | null
 }) {
   const marketName = getAllMarkets()[marketId]
   const web3Data = await request(
@@ -291,17 +291,19 @@ export async function updateOrCloneOnchainListing({
     onchainValue,
     onchainId: token.id,
     onchainListedBy: token.tokenOwner,
-    onchainListedByAccount: decodedAccount.id,
+    onchainListedByAccount: decodedAccount?.id ?? null,
     onchainListedAt: new Date(token.listedAt * 1000),
     totalVotes: listing ? listing.totalVotes : 0,
   }
+
   const updatedOrClonedListing = await ListingModel.findOneAndUpdate(
     {
       marketId,
       value,
     },
-    listingDoc,
+    { $set: listingDoc },
     {
+      upsert: true,
       new: true,
     }
   )

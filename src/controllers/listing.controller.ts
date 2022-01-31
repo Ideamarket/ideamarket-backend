@@ -97,13 +97,15 @@ export async function addGhostListing(req: Request, res: Response) {
 export async function addOnChainListing(req: Request, res: Response) {
   try {
     const reqBody = req.body
-    const decodedAccount = (req as any).decodedAccount as DECODED_ACCOUNT
+    const decodedAccount = (req as any).decodedAccount as
+      | DECODED_ACCOUNT
+      | undefined
 
     const listing = await updateOrCloneOnchainListing({
       marketId: reqBody.marketId as number,
       value: decodeURI(reqBody.value as string),
       onchainValue: decodeURIComponent(reqBody.onchainValue as string),
-      decodedAccount,
+      decodedAccount: decodedAccount ?? null,
     })
 
     return handleSuccess(res, listing)
