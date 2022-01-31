@@ -18,7 +18,7 @@ export function getAllTokensQuery(): string {
             id: marketID
             name
           }
-          tokenOwner
+          lister
           listedAt
         }
     }

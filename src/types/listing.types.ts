@@ -49,6 +49,7 @@ export type Web3TokenData = {
   rank: number
   supply: string
   tokenID: number
+  lister: string
   tokenOwner: string
 }
 

@@ -28,6 +28,7 @@ export function getSingleTokenQuery({
               name
             }
             rank
+            lister
             tokenOwner
             daiInToken
             invested
