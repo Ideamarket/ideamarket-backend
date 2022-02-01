@@ -1,30 +1,78 @@
-import config from 'config'
 import type { Request, Response } from 'express'
-import type { IListing, ListingDocument } from 'models/listing.model'
 import type { DECODED_ACCOUNT } from 'util/jwtTokenUtil'
 
 import { handleSuccess, handleError } from '../lib/base'
 import {
-  fetchByMarket,
-  addNewListing,
-  migrateGhostToOnChainListing,
+  fetchOnchainListings,
+  fetchGhostListings,
+  fetchAllListings,
+  addNewGhostListing,
+  updateOrCloneOnchainListing,
+  fetchSingleListing,
+  addBlacklistListing,
+  fetchAllBlacklistedListings,
+  deleteBlacklistedListing,
 } from '../services/listing.service'
 
-const TOKEN_EXISTED_ERROR = 'Token has been already listed'
-
-export async function fetchAllByMarket(req: Request, res: Response) {
-  const { marketType } = req.params
-  const marketId = Number.parseInt(req.query.marketId as string) || 0
-  const skip = Number.parseInt(req.query.skip as string) || 0
-  const limit = Number.parseInt(req.query.limit as string) || 50
-
+export async function fetchListings(req: Request, res: Response) {
   try {
-    return handleSuccess(
-      res,
-      await fetchByMarket(marketType, marketId, skip, limit)
-    )
+    const marketType = req.query.marketType as string
+    const marketIds = (req.query.marketIds as string)
+      .split(',')
+      .map((id) => Number.parseInt(id))
+    const skip = Number.parseInt(req.query.skip as string) || 0
+    const limit = Number.parseInt(req.query.limit as string) || 10
+    const orderBy = req.query.orderBy as string
+    const orderDirection =
+      (req.query.orderDirection as string | undefined) ?? 'desc'
+    const filterTokens =
+      (req.query.filterTokens as string | undefined)?.split(',') ?? []
+    const isVerifiedFilter = Boolean(req.query.isVerifiedFilter as string)
+    const earliestPricePointTs =
+      Number.parseInt(req.query.earliestPricePointTs as string) || 0
+    const search = (req.query.search as string) || null
+
+    const options = {
+      marketIds,
+      skip,
+      limit,
+      orderBy,
+      orderDirection,
+      filterTokens,
+      isVerifiedFilter,
+      earliestPricePointTs,
+      search,
+    }
+
+    if (marketType === 'onchain') {
+      const onchainListings = await fetchOnchainListings(options)
+      return handleSuccess(res, { listings: onchainListings })
+    }
+
+    if (marketType === 'ghost') {
+      const ghostListings = await fetchGhostListings(options)
+      return handleSuccess(res, { listings: ghostListings })
+    }
+
+    const allListings = await fetchAllListings(options)
+    return handleSuccess(res, { listings: allListings })
   } catch (error) {
-    return handleError(res, error, `Unable to fetch ${marketType} listings`)
+    console.error('Error occurred while fetching the listings', error)
+    return handleError(res, error, 'Unable to fetch the listings')
+  }
+}
+
+export async function fetchListing(req: Request, res: Response) {
+  try {
+    const marketId = Number.parseInt(req.query.marketId as string)
+    const value = decodeURIComponent(req.query.value as string)
+
+    const listing = await fetchSingleListing({ marketId, value })
+
+    return handleSuccess(res, listing)
+  } catch (error) {
+    console.error('Error occurred while fetching the listing', error)
+    return handleError(res, error, 'Unable to fetch the listing')
   }
 }
 
@@ -33,98 +81,78 @@ export async function addGhostListing(req: Request, res: Response) {
     const reqBody = req.body
     const decodedAccount = (req as any).decodedAccount as DECODED_ACCOUNT
 
-    const listingRequest: IListing = {
-      ghostListedByAccount: decodedAccount.id,
-      ghostListedBy: decodedAccount.walletAddress,
-      marketName: config.get(`markets.MARKET${reqBody.marketId as number}`),
+    const ghostListing = await addNewGhostListing({
       marketId: reqBody.marketId as number,
-      value: req.body.value as string,
-      ghostListedAt: new Date(),
-      isOnChain: false,
-      onchainId: null,
-      onchainListedAt: null,
-      onchainListedBy: null,
-      onchainListedByAccount: null,
-      totalVotes: 0,
-    }
+      value: decodeURI(reqBody.value as string),
+      decodedAccount,
+    })
 
-    const recentAddedListing = (await addNewListing(
-      listingRequest
-    )) as ListingDocument
-
-    return handleSuccess(res, recentAddedListing)
+    return handleSuccess(res, ghostListing)
   } catch (error) {
-    console.error(error)
-    return handleError(res, error, TOKEN_EXISTED_ERROR)
+    console.error('Error occurred while adding ghost listing', error)
+    return handleError(res, error, 'Unable to add ghost listing')
   }
 }
 
 export async function addOnChainListing(req: Request, res: Response) {
   try {
     const reqBody = req.body
-    const decodedAccount = (req as any).decodedAccount as DECODED_ACCOUNT
+    const decodedAccount = (req as any).decodedAccount as
+      | DECODED_ACCOUNT
+      | undefined
 
-    const listingRequest: IListing = {
-      ghostListedByAccount: null,
-      ghostListedBy: null,
-      ghostListedAt: null,
-      marketName: config.get(`markets.MARKET${reqBody.marketId as number}`),
+    const listing = await updateOrCloneOnchainListing({
       marketId: reqBody.marketId as number,
-      value: req.body.value as string,
-      isOnChain: true,
-      onchainId: reqBody.onchainId as string,
-      onchainListedAt: new Date(Number.parseInt(reqBody.listedAt) * 1000),
-      onchainListedBy: decodedAccount.walletAddress,
-      onchainListedByAccount: decodedAccount.id,
-      totalVotes: 0,
-    }
+      value: decodeURI(reqBody.value as string),
+      onchainValue: decodeURIComponent(reqBody.onchainValue as string),
+      decodedAccount: decodedAccount ?? null,
+    })
 
-    const recentAddedListing = (await addNewListing(
-      listingRequest
-    )) as ListingDocument
-
-    return handleSuccess(res, recentAddedListing)
+    return handleSuccess(res, listing)
   } catch (error) {
-    console.error(error)
-    return handleError(res, error, TOKEN_EXISTED_ERROR)
+    console.error('Error occurred while adding onchain listing', error)
+    return handleError(res, error, 'Unable to add onchain listing')
   }
 }
 
-export async function migrateGhostListingToOnChain(
-  req: Request,
-  res: Response
-) {
+export async function addListingToBlacklist(req: Request, res: Response) {
   try {
     const reqBody = req.body
     const decodedAccount = (req as any).decodedAccount as DECODED_ACCOUNT
 
-    const listingRequest: IListing = {
-      ghostListedByAccount: undefined,
-      ghostListedBy: undefined,
-      marketName: undefined,
-      marketId: undefined,
-      value: undefined,
-      ghostListedAt: undefined,
-      isOnChain: true,
-      onchainId: reqBody.onchainId as string,
-      onchainListedAt: new Date((reqBody.listedAt as number) * 1000),
-      onchainListedBy: decodedAccount.walletAddress,
-      onchainListedByAccount: decodedAccount.id,
-      totalVotes: undefined,
-    }
+    const blacklistedListing = await addBlacklistListing({
+      listingId: reqBody.listingId ?? null,
+      onchainId: reqBody.onchainId ?? null,
+      account: decodedAccount,
+    })
 
-    const recentAddedListing = (await migrateGhostToOnChainListing(
-      reqBody.listingId as string,
-      listingRequest
-    )) as ListingDocument
+    return handleSuccess(res, { blacklistedListing })
+  } catch (error) {
+    console.error('Error occurred while adding listing to blacklist', error)
+    return handleError(res, error, 'Unable to add listing to blacklist')
+  }
+}
 
-    return handleSuccess(res, recentAddedListing)
-  } catch (error: any) {
-    console.error(error)
-    return handleError(
-      res,
-      error,
-      error?.message || 'Unable to handle listing migration to onchain'
-    )
+export async function fetchBlacklistedListings(req: Request, res: Response) {
+  try {
+    const blacklistedListings = await fetchAllBlacklistedListings()
+
+    return handleSuccess(res, { blacklistedListings })
+  } catch (error) {
+    console.error('Error occurred while fetching blacklisted listings', error)
+    return handleError(res, error, 'Unable to fetch blacklisted listings')
+  }
+}
+
+export async function removeListingFromBlacklist(req: Request, res: Response) {
+  try {
+    const reqBody = req.body
+    await deleteBlacklistedListing(reqBody.listingId)
+    return handleSuccess(res, {
+      message: 'Listing has been removed from blacklist',
+    })
+  } catch (error) {
+    console.error('Error occurred while removing listing from blacklist', error)
+    return handleError(res, error, 'Unable to remove listing from blacklist')
   }
 }

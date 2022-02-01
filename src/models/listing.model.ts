@@ -6,64 +6,20 @@ import mongoosePagination from 'mongoose-paginate'
 import type { AccountDocument } from './account.model'
 
 export type IListing = {
-  ghostListedByAccount: string | null | undefined
-  ghostListedBy: string | null | undefined
   value: string | undefined
   marketId: number | undefined
   marketName: string | undefined
-  onchainId: string | null | undefined
-  isOnChain: boolean
-  onchainListedBy: string | null | undefined
-  onchainListedAt: Date | null | undefined
+  isOnchain: boolean
+  ghostListedBy: string | null | undefined
+  ghostListedByAccount: string | null | undefined
   ghostListedAt: Date | null | undefined
+  onchainValue: string | null | undefined
+  onchainId: string | null | undefined
+  onchainListedBy: string | null | undefined
   onchainListedByAccount: string | null | undefined
+  onchainListedAt: Date | null | undefined
   totalVotes: number | undefined
 }
-
-export interface ListingDocument extends Document {
-  ghostListedByAccount: AccountDocument
-  ghostListedBy: string
-  value: string
-  marketId: number
-  marketName: string
-  onchainId: string
-  isOnChain: boolean
-  onchainListedBy: string
-  onchainListedAt: Date
-  onchainListedByAccount: AccountDocument
-  ghostListedAt: Date
-  totalVotes: number
-}
-
-const ListingSchema = new Schema(
-  {
-    ghostListedByAccount: {
-      type: mongoose.Types.ObjectId,
-      ref: 'Account',
-      required: false,
-      index: true,
-    },
-    ghostListedBy: { type: String },
-    value: { type: String, required: true },
-    marketName: { type: String, required: true, maxlength: 250, index: true },
-    marketId: { type: Number, required: true, index: true },
-    totalVotes: { type: Number, default: 0, required: true },
-    isOnChain: { type: Boolean, default: false, index: true },
-    onchainId: { type: String, index: true, sparse: true },
-    onchainListedBy: { type: String },
-    onchainListedAt: { type: Date, default: null, required: false },
-    onchainListedByAccount: {
-      type: mongoose.Types.ObjectId,
-      ref: 'Account',
-      required: false,
-      index: true,
-    },
-    ghostListedAt: { type: Date, default: null, required: false },
-  },
-  {
-    timestamps: true,
-  }
-)
 
 interface IListingModel
   extends mongoose.Model<ListingDocument>,
@@ -71,11 +27,61 @@ interface IListingModel
   build(attr: IListing): ListingDocument
 }
 
+export interface ListingDocument extends Document {
+  value: string
+  marketId: number
+  marketName: string
+  isOnchain: boolean
+  ghostListedBy: string
+  ghostListedByAccount: AccountDocument | null
+  ghostListedAt: Date
+  onchainValue: string
+  onchainId: string
+  onchainListedBy: string
+  onchainListedByAccount: AccountDocument | null
+  onchainListedAt: Date
+  totalVotes: number
+}
+
+const ListingSchema = new Schema(
+  {
+    value: { type: String, required: true },
+    marketId: { type: Number, required: true, index: true },
+    marketName: { type: String, required: true, maxlength: 250, index: true },
+    isOnchain: { type: Boolean, default: false, index: true },
+    ghostListedBy: { type: String },
+    ghostListedByAccount: {
+      type: mongoose.Types.ObjectId,
+      ref: 'Account',
+      required: false,
+      index: true,
+    },
+    ghostListedAt: { type: Date, default: null, required: false },
+    onchainValue: { type: String },
+    onchainId: { type: String, index: true, sparse: true },
+    onchainListedBy: { type: String },
+    onchainListedByAccount: {
+      type: mongoose.Types.ObjectId,
+      ref: 'Account',
+      required: false,
+      index: true,
+    },
+    onchainListedAt: { type: Date, default: null, required: false },
+    totalVotes: { type: Number, default: 0, required: true },
+  },
+  {
+    versionKey: false,
+    timestamps: true,
+  }
+)
+ListingSchema.index(
+  { marketId: 1, value: 1, onchainValue: 1 },
+  { unique: true }
+)
+
 ListingSchema.statics.build = (attr: IListingModel) => {
   return new ListingModel(attr)
 }
-
-ListingSchema.index({ value: 1, marketId: 1 }, { unique: true })
 
 ListingSchema.plugin(mongoosePagination)
 

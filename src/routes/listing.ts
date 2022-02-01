@@ -1,52 +1,76 @@
+/* eslint-disable sonarjs/no-duplicate-string */
 /* eslint-disable @typescript-eslint/no-misused-promises */
-
 import express from 'express'
 
 import {
-  fetchAllByMarket,
   addGhostListing,
+  addListingToBlacklist,
   addOnChainListing,
-  migrateGhostListingToOnChain,
+  fetchBlacklistedListings,
+  fetchListing,
+  fetchListings,
+  removeListingFromBlacklist,
 } from '../controllers/listing.controller'
-import { authenticateAndSetAccount } from '../middleware/authentication'
+import {
+  authenticateAndSetAccount,
+  optionalAuthenticateAndSetAccount,
+} from '../middleware/authentication'
+import { authorizeModeratorOrAdmin } from '../middleware/authorization'
 import { validateRequest } from '../middleware/validateRequest'
 import {
-  createGhostListingValidation,
-  createOnchainListingValidation,
-  marketTypeParamValidation,
-  migrateGhostListingValidation,
+  addListingToBlacklistValidation,
+  addGhostListingValidation,
+  addOnChainListingValidation,
+  removeListingFromBlacklistValidation,
+  fetchListingsValidation,
+  fetchListingValidation,
 } from '../validations/listing.validation'
 
 const listingRouter = express.Router()
 
+listingRouter.get('', fetchListingsValidation, validateRequest, fetchListings)
+
 listingRouter.get(
-  '/:marketType',
-  marketTypeParamValidation,
+  '/single',
+  fetchListingValidation,
   validateRequest,
-  fetchAllByMarket
+  fetchListing
 )
+
 listingRouter.post(
   '/ghost',
   authenticateAndSetAccount,
-  createGhostListingValidation,
+  addGhostListingValidation,
   validateRequest,
   addGhostListing
 )
 
 listingRouter.post(
   '/onchain',
-  authenticateAndSetAccount,
-  createOnchainListingValidation,
+  optionalAuthenticateAndSetAccount,
+  addOnChainListingValidation,
   validateRequest,
   addOnChainListing
 )
 
 listingRouter.post(
-  '/onchain/migrate',
+  '/blacklist',
   authenticateAndSetAccount,
-  migrateGhostListingValidation,
+  authorizeModeratorOrAdmin,
+  addListingToBlacklistValidation,
   validateRequest,
-  migrateGhostListingToOnChain
+  addListingToBlacklist
+)
+
+listingRouter.get('/blacklist', fetchBlacklistedListings)
+
+listingRouter.delete(
+  '/blacklist',
+  authenticateAndSetAccount,
+  authorizeModeratorOrAdmin,
+  removeListingFromBlacklistValidation,
+  validateRequest,
+  removeListingFromBlacklist
 )
 
 export { listingRouter }

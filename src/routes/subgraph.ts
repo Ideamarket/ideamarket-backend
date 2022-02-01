@@ -1,9 +1,12 @@
+/* eslint-disable @typescript-eslint/no-misused-promises */
 import express from 'express'
 
 import {
-  cloneWeb2ToOnChainListings,
+  cloneOnChainListingsToWeb2,
   querySubgraph,
 } from '../controllers/subgraph.controller'
+import { authenticateAndSetAccount } from '../middleware/authentication'
+import { authorizeAdmin } from '../middleware/authorization'
 import { validateRequest } from '../middleware/validateRequest'
 import { querySubgraphValidation } from '../validations/subgraph.validation'
 
@@ -19,7 +22,11 @@ subgraphRouter.post(
   querySubgraph
 )
 
-// eslint-disable-next-line @typescript-eslint/no-misused-promises
-subgraphRouter.post('/migrate', cloneWeb2ToOnChainListings)
+subgraphRouter.post(
+  '/cloneToWeb2',
+  authenticateAndSetAccount,
+  authorizeAdmin,
+  cloneOnChainListingsToWeb2
+)
 
 export { subgraphRouter }

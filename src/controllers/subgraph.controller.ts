@@ -1,12 +1,10 @@
 import type { Request, Response } from 'express'
 
 import { handleError, handleSuccess } from '../lib/base'
-import { ListingModel } from '../models/listing.model'
-import { executeSubgraphQuery } from '../services/subgraph.service'
-import type {
-  IdeaToken,
-  IdeaTokensSubgraphResult,
-} from '../types/ideaToken.types'
+import {
+  cloneOnchainTokensToWeb2,
+  executeSubgraphQuery,
+} from '../services/subgraph.service'
 
 export async function querySubgraph(req: Request, res: Response) {
   try {
@@ -18,35 +16,18 @@ export async function querySubgraph(req: Request, res: Response) {
   }
 }
 
-export async function cloneWeb2ToOnChainListings(req: Request, res: Response) {
+export async function cloneOnChainListingsToWeb2(req: Request, res: Response) {
   try {
-    const query = req.body.query as string
+    await cloneOnchainTokensToWeb2()
 
-    const data = (await executeSubgraphQuery(query)) as IdeaTokensSubgraphResult
-
-    const clonedTokens = data.ideaTokens.map((ideaToken: IdeaToken) => {
-      const clonedToken = ListingModel.build({
-        ghostListedAt: null,
-        ghostListedBy: null,
-        ghostListedByAccount: null,
-        isOnChain: true,
-        marketId: ideaToken.market.id,
-        marketName: ideaToken.market.name,
-        onchainId: ideaToken.id,
-        onchainListedAt: new Date(Number.parseInt(ideaToken.listedAt) * 1000),
-        onchainListedBy: ideaToken.tokenOwner,
-        onchainListedByAccount: null,
-        value: ideaToken.name,
-        totalVotes: undefined,
-      })
-      return clonedToken.save()
+    return handleSuccess(res, {
+      message: 'All onchain listings have been cloned to web2',
     })
-
-    await Promise.all(clonedTokens)
-
-    return handleSuccess(res, data)
   } catch (error) {
-    console.error('Error occurred while migrating subgraph', error)
-    return handleError(res, error, 'Unable to migrate subgraph')
+    console.error(
+      'Error occurred while cloning onchain listings to web2',
+      error
+    )
+    return handleError(res, error, 'Unable to clone onchain listings to web2')
   }
 }

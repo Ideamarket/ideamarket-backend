@@ -33,7 +33,7 @@ interface IAccountModel extends mongoose.Model<AccountDocument> {
 
 interface AccountDocument extends mongoose.Document {
   name?: string
-  username?: string
+  username: string
   email?: string
   bio?: string
   profilePhoto?: string | null
