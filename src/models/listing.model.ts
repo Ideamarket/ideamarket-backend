@@ -74,6 +74,9 @@ const ListingSchema = new Schema(
     timestamps: true,
   }
 )
+
+ListingSchema.index({ marketId: 1, value: 1 })
+ListingSchema.index({ marketId: 1, onchainValue: 1 })
 ListingSchema.index(
   { marketId: 1, value: 1, onchainValue: 1 },
   { unique: true }
