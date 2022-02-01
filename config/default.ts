@@ -21,6 +21,7 @@ const config = {
         database: process.env.MONGODB_DATABASE ?? 'ideamarket',
       }),
   },
+  lockingDatabaseName: process.env.LOCKING_MONGODB_DATABASE,
   jwt: {
     secretKey: process.env.JWT_SECRET_KEY ?? undefined,
     expiry: process.env.JWT_TOKEN_EXPIRY
