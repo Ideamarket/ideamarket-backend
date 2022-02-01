@@ -23,6 +23,7 @@ export type Web2TokenData = {
   onchainListedBy: string | null
   onchainListedAt: Date | null
   totalVotes: number
+  upVoted: boolean | null
 }
 
 export type OnchainTokens = {

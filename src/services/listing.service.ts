@@ -1,6 +1,5 @@
-/* eslint-disable promise/prefer-await-to-then */
+/* eslint-disable @typescript-eslint/no-unnecessary-condition */
 /* eslint-disable unicorn/no-await-expression-member */
-/* eslint-disable promise/prefer-await-to-callbacks */
 import { request } from 'graphql-request'
 import type { FilterQuery } from 'mongoose'
 
@@ -22,6 +21,7 @@ import {
   InternalServerError,
   ObjectAlreadyExistsError,
 } from './errors'
+import { checkUpVotedOrNot } from './vote.service'
 
 export type ListingQueryOptions = {
   marketIds: number[]
@@ -35,7 +35,13 @@ export type ListingQueryOptions = {
   search: string | null
 }
 
-export async function fetchAllListings(options: ListingQueryOptions) {
+export async function fetchAllListings({
+  options,
+  account,
+}: {
+  options: ListingQueryOptions
+  account: DECODED_ACCOUNT | null
+}) {
   const { orderBy, skip, limit, marketIds, filterTokens, search } = options
   const orderDirection = options.orderDirection === 'asc' ? 1 : -1
 
@@ -99,14 +105,19 @@ export async function fetchAllListings(options: ListingQueryOptions) {
   }
   // ------------------------------
 
-  return filteredWeb2Listings.map((listing) =>
+  const allListingsResponse = filteredWeb2Listings.map(async (listing) =>
     combineWeb2AndWeb3TokenData({
       listingDoc: listing,
+      upVoted: await checkUpVotedOrNot({
+        listingId: listing.id,
+        accountId: account ? account.id : null,
+      }),
       web3TokenData: listing.isOnchain
         ? onchainListingsMap[listing.onchainId]
         : null,
     })
   )
+  return Promise.all(allListingsResponse)
 }
 
 export async function fetchOnchainListings(options: ListingQueryOptions) {
@@ -139,15 +150,23 @@ export async function fetchOnchainListings(options: ListingQueryOptions) {
   )
   // ------------------------------
 
-  return filteredTokens.map((token) =>
+  const onchainListingsResponse = filteredTokens.map(async (token) =>
     combineWeb2AndWeb3TokenData({
       listingDoc: null,
+      upVoted: null,
       web3TokenData: token,
     })
   )
+  return Promise.all(onchainListingsResponse)
 }
 
-export async function fetchGhostListings(options: ListingQueryOptions) {
+export async function fetchGhostListings({
+  options,
+  account,
+}: {
+  options: ListingQueryOptions
+  account: DECODED_ACCOUNT | null
+}) {
   const { orderBy, skip, limit, marketIds, filterTokens, search } = options
   const orderDirection = options.orderDirection === 'asc' ? 1 : -1
 
@@ -186,20 +205,27 @@ export async function fetchGhostListings(options: ListingQueryOptions) {
   )
   // ------------------------------
 
-  return filteredGhostListings.map((listing) =>
+  const ghostListingsResponse = filteredGhostListings.map(async (listing) =>
     combineWeb2AndWeb3TokenData({
       listingDoc: listing,
+      upVoted: await checkUpVotedOrNot({
+        listingId: listing.id,
+        accountId: account ? account.id : null,
+      }),
       web3TokenData: null,
     })
   )
+  return Promise.all(ghostListingsResponse)
 }
 
 export async function fetchSingleListing({
   marketId,
   value,
+  account,
 }: {
   marketId: number
   value: string
+  account: DECODED_ACCOUNT | null
 }) {
   let web3TokenData = null
   const marketName = getAllMarkets()[marketId]
@@ -208,7 +234,6 @@ export async function fetchSingleListing({
     .populate('ghostListedByAccount')
     .populate('onchainListedByAccount')
 
-  // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
   if (listingDoc?.isOnchain && listingDoc.onchainValue) {
     const web3Data = await request(
       SUBGRAPH_URL,
@@ -217,17 +242,26 @@ export async function fetchSingleListing({
     web3TokenData = web3Data.ideaMarkets[0].tokens[0] as Partial<Web3TokenData>
   }
 
-  return combineWeb2AndWeb3TokenData({ listingDoc, web3TokenData })
+  return combineWeb2AndWeb3TokenData({
+    listingDoc,
+    upVoted: listingDoc
+      ? await checkUpVotedOrNot({
+          listingId: listingDoc.id,
+          accountId: account ? account.id : null,
+        })
+      : null,
+    web3TokenData,
+  })
 }
 
 export async function addNewGhostListing({
   marketId,
   value,
-  decodedAccount,
+  account,
 }: {
   marketId: number
   value: string
-  decodedAccount: DECODED_ACCOUNT
+  account: DECODED_ACCOUNT
 }) {
   const marketName = getAllMarkets()[marketId]
   const listing = await ListingModel.findOne({ marketId, value })
@@ -240,8 +274,8 @@ export async function addNewGhostListing({
     marketId,
     marketName,
     isOnchain: false,
-    ghostListedBy: decodedAccount.walletAddress,
-    ghostListedByAccount: decodedAccount.id,
+    ghostListedBy: account.walletAddress,
+    ghostListedByAccount: account.id,
     ghostListedAt: new Date(),
     onchainValue: null,
     onchainId: null,
@@ -254,19 +288,19 @@ export async function addNewGhostListing({
     await ListingModel.create(listingDoc)
   ).populate('ghostListedByAccount')
 
-  return mapWeb2Data(createdGhostListing)
+  return mapWeb2Data({ listingDoc: createdGhostListing, upVoted: false })
 }
 
 export async function updateOrCloneOnchainListing({
   marketId,
   value,
   onchainValue,
-  decodedAccount,
+  account,
 }: {
   marketId: number
   value: string
   onchainValue: string
-  decodedAccount: DECODED_ACCOUNT | null
+  account: DECODED_ACCOUNT | null
 }) {
   const marketName = getAllMarkets()[marketId]
   const web3Data = await request(
@@ -294,7 +328,7 @@ export async function updateOrCloneOnchainListing({
     onchainValue,
     onchainId: token.id,
     onchainListedBy: token.lister,
-    onchainListedByAccount: decodedAccount?.id ?? null,
+    onchainListedByAccount: account?.id ?? null,
     onchainListedAt: new Date(Number.parseInt(token.listedAt) * 1000),
     totalVotes: listing ? listing.totalVotes : 0,
   }
@@ -313,27 +347,23 @@ export async function updateOrCloneOnchainListing({
     .populate('ghostListedByAccount')
     .populate('onchainListedByAccount')
 
-  return mapWeb2Data(updatedOrClonedListing)
+  return mapWeb2Data({
+    listingDoc: updatedOrClonedListing,
+    upVoted: await checkUpVotedOrNot({
+      listingId: updatedOrClonedListing.id,
+      accountId: account ? account.id : null,
+    }),
+  })
 }
 
-export function updateListingVoteCountById(id: string, totalVotes: number) {
-  return new Promise((resolve, reject) => {
-    ListingModel.findByIdAndUpdate(
-      id,
-      {
-        totalVotes,
-      },
-      {
-        new: true,
-      }
-    )
-      .then((item) => {
-        resolve(item)
-      })
-      .catch((error) => {
-        reject(error)
-      })
-  })
+export async function updateTotalVotesInListing({
+  listingId,
+  totalVotes,
+}: {
+  listingId: string
+  totalVotes: number
+}) {
+  return ListingModel.findByIdAndUpdate(listingId, { $set: { totalVotes } })
 }
 
 export async function addBlacklistListing({

@@ -16,6 +16,9 @@ import {
 
 export async function fetchListings(req: Request, res: Response) {
   try {
+    const decodedAccount = (req as any).decodedAccount as
+      | DECODED_ACCOUNT
+      | undefined
     const marketType = req.query.marketType as string
     const marketIds = (req.query.marketIds as string)
       .split(',')
@@ -50,11 +53,17 @@ export async function fetchListings(req: Request, res: Response) {
     }
 
     if (marketType === 'ghost') {
-      const ghostListings = await fetchGhostListings(options)
+      const ghostListings = await fetchGhostListings({
+        options,
+        account: decodedAccount ?? null,
+      })
       return handleSuccess(res, { listings: ghostListings })
     }
 
-    const allListings = await fetchAllListings(options)
+    const allListings = await fetchAllListings({
+      options,
+      account: decodedAccount ?? null,
+    })
     return handleSuccess(res, { listings: allListings })
   } catch (error) {
     console.error('Error occurred while fetching the listings', error)
@@ -64,10 +73,17 @@ export async function fetchListings(req: Request, res: Response) {
 
 export async function fetchListing(req: Request, res: Response) {
   try {
+    const decodedAccount = (req as any).decodedAccount as
+      | DECODED_ACCOUNT
+      | undefined
     const marketId = Number.parseInt(req.query.marketId as string)
     const value = decodeURIComponent(req.query.value as string)
 
-    const listing = await fetchSingleListing({ marketId, value })
+    const listing = await fetchSingleListing({
+      marketId,
+      value,
+      account: decodedAccount ?? null,
+    })
 
     return handleSuccess(res, listing)
   } catch (error) {
@@ -84,7 +100,7 @@ export async function addGhostListing(req: Request, res: Response) {
     const ghostListing = await addNewGhostListing({
       marketId: reqBody.marketId as number,
       value: decodeURI(reqBody.value as string),
-      decodedAccount,
+      account: decodedAccount,
     })
 
     return handleSuccess(res, ghostListing)
@@ -105,7 +121,7 @@ export async function addOnChainListing(req: Request, res: Response) {
       marketId: reqBody.marketId as number,
       value: decodeURI(reqBody.value as string),
       onchainValue: decodeURIComponent(reqBody.onchainValue as string),
-      decodedAccount: decodedAccount ?? null,
+      account: decodedAccount ?? null,
     })
 
     return handleSuccess(res, listing)

@@ -28,10 +28,17 @@ import {
 
 const listingRouter = express.Router()
 
-listingRouter.get('', fetchListingsValidation, validateRequest, fetchListings)
+listingRouter.get(
+  '',
+  optionalAuthenticateAndSetAccount,
+  fetchListingsValidation,
+  validateRequest,
+  fetchListings
+)
 
 listingRouter.get(
   '/single',
+  optionalAuthenticateAndSetAccount,
   fetchListingValidation,
   validateRequest,
   fetchListing
