@@ -14,6 +14,5 @@ export const fetchValidUrlValidation = [
     .notEmpty()
     .withMessage('url cannot be empty or null')
     .isString()
-    .isURL()
     .withMessage('url is not valid'),
 ]
