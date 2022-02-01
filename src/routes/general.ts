@@ -1,10 +1,14 @@
 /* eslint-disable @typescript-eslint/no-misused-promises */
 import express from 'express'
 
-import { fetchUrlMetadata } from '../controllers/general.controller'
+import {
+  fetchLatestApr,
+  fetchUrlMetadata,
+} from '../controllers/general.controller'
 
 const generalRouter = express.Router()
 
 generalRouter.post('/url-metadata', fetchUrlMetadata)
+generalRouter.get('/apr', fetchLatestApr)
 
-export { generalRouter as genericRouter }
+export { generalRouter }
