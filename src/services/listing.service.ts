@@ -120,7 +120,13 @@ export async function fetchAllListings({
   return Promise.all(allListingsResponse)
 }
 
-export async function fetchOnchainListings(options: ListingQueryOptions) {
+export async function fetchOnchainListings({
+  options,
+  account,
+}: {
+  options: ListingQueryOptions
+  account: DECODED_ACCOUNT | null
+}) {
   const { search } = options
   const onchainTokens: Partial<OnchainTokens> = await request(
     SUBGRAPH_URL,
@@ -150,13 +156,22 @@ export async function fetchOnchainListings(options: ListingQueryOptions) {
   )
   // ------------------------------
 
-  const onchainListingsResponse = filteredTokens.map(async (token) =>
-    combineWeb2AndWeb3TokenData({
-      listingDoc: null,
-      upVoted: null,
+  const onchainListingsResponse = filteredTokens.map(async (token) => {
+    const listingDoc = await ListingModel.findOne({
+      marketId: token.market.id,
+      onchainValue: token.name,
+    })
+    return combineWeb2AndWeb3TokenData({
+      listingDoc,
+      upVoted: listingDoc
+        ? await checkUpVotedOrNot({
+            listingId: listingDoc.id,
+            accountId: account ? account.id : null,
+          })
+        : null,
       web3TokenData: token,
     })
-  )
+  })
   return Promise.all(onchainListingsResponse)
 }
 

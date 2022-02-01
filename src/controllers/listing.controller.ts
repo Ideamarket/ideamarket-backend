@@ -49,7 +49,10 @@ export async function fetchListings(req: Request, res: Response) {
     }
 
     if (marketType === 'onchain') {
-      const onchainListings = await fetchOnchainListings(options)
+      const onchainListings = await fetchOnchainListings({
+        options,
+        account: decodedAccount ?? null,
+      })
       return handleSuccess(res, { listings: onchainListings })
     }
 
