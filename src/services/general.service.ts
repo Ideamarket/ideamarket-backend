@@ -11,7 +11,7 @@ import cheerio from 'cheerio'
 export async function checkAndReturnValidUrl(url: string) {
   let res: any = null
   try {
-    res = await axios.get(url)
+    res = await axios.get(encodeURI(url))
   } catch (error: any) {
     console.error(
       // eslint-disable-next-line @typescript-eslint/restrict-template-expressions

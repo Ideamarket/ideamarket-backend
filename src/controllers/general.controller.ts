@@ -19,7 +19,9 @@ export async function fetchValidUrl(req: Request, res: Response) {
     const url = decodeURI(req.query.url as string)
     const validUrl = await checkAndReturnValidUrl(url)
 
-    return handleSuccess(res, validUrl)
+    return handleSuccess(res, {
+      validUrl: validUrl ? decodeURI(validUrl) : null,
+    })
   } catch (error) {
     console.error('Error occurred while fetching valid url', error)
     return handleError(res, error, 'Unable to fetch valid URL')
