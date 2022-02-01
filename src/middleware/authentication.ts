@@ -9,6 +9,7 @@ import {
   verifyAuthTokenAndReturnAccount,
 } from '../util/jwtTokenUtil'
 
+const AUTHORIZATION_HEADER_MISSING_MSG = 'authorization header is missing'
 const AUTHORIZATION_HEADER_MISSING_ERR_LOG =
   'Authentication failed! authorization header is missing'
 const INVALID_AUTH_TOKEN_ERR_LOG = 'Authentication failed! Invalid auth token'
@@ -49,7 +50,7 @@ export function optionalAuthenticate(
 ) {
   const authorizationHeader = req.headers.authorization as string
   if (!authorizationHeader) {
-    console.info(AUTHORIZATION_HEADER_MISSING_ERR_LOG)
+    console.info(AUTHORIZATION_HEADER_MISSING_MSG)
     next()
     return
   }
@@ -108,7 +109,7 @@ export async function optionalAuthenticateAndSetAccount(
 ) {
   const authorizationHeader = req.headers.authorization as string
   if (!authorizationHeader) {
-    console.info(AUTHORIZATION_HEADER_MISSING_ERR_LOG)
+    console.info(AUTHORIZATION_HEADER_MISSING_MSG)
     next()
     return
   }

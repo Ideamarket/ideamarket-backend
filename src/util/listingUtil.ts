@@ -7,9 +7,13 @@ import type {
   Web3TokenData,
 } from '../types/listing.types'
 
-export function mapWeb2Data(
+export function mapWeb2Data({
+  listingDoc,
+  upVoted,
+}: {
   listingDoc: ListingDocument | null
-): Web2TokenData | null {
+  upVoted: boolean | null
+}): Web2TokenData | null {
   if (!listingDoc) {
     return null
   }
@@ -29,6 +33,7 @@ export function mapWeb2Data(
       listingDoc.onchainListedByAccount?.username ?? listingDoc.onchainListedBy,
     onchainListedAt: listingDoc.onchainListedAt,
     totalVotes: listingDoc.totalVotes,
+    upVoted,
   }
 
   return web2TokenData
@@ -36,13 +41,15 @@ export function mapWeb2Data(
 
 export function combineWeb2AndWeb3TokenData({
   listingDoc,
+  upVoted,
   web3TokenData,
 }: {
   listingDoc: ListingDocument | null
+  upVoted: boolean | null
   web3TokenData: Web3TokenData | Partial<Web3TokenData> | null | undefined
 }): ListingResponse {
   return {
-    web2TokenData: mapWeb2Data(listingDoc),
+    web2TokenData: mapWeb2Data({ listingDoc, upVoted }),
     web3TokenData: web3TokenData ?? null,
   }
 }

@@ -3,30 +3,61 @@
 import express from 'express'
 
 import {
-  downvote,
-  upvote,
+  downVote,
+  upVote,
   fetchVoteCount,
+  deleteUpVote,
+  deleteDownVote,
 } from '../controllers/vote.controller'
 import { authenticateAndSetAccount } from '../middleware/authentication'
 import { validateRequest } from '../middleware/validateRequest'
-import { voteValidation } from '../validations/votes.validation'
+import {
+  downVoteValidation,
+  fetchVoteCountValidation,
+  upVoteValidation,
+} from '../validations/votes.validation'
 
 const votesRouter = express.Router()
 
-votesRouter.get('/:listingId', voteValidation, validateRequest, fetchVoteCount)
+// -------------------- ROUTES -------------------- //
+
+// Fetch Vote Count
+votesRouter.get('', fetchVoteCountValidation, validateRequest, fetchVoteCount)
+
+// UpVote a listing
 votesRouter.post(
-  '/:listingId/up',
+  '/up',
   authenticateAndSetAccount,
-  voteValidation,
+  upVoteValidation,
   validateRequest,
-  upvote
+  upVote
 )
-votesRouter.post(
-  '/:listingId/down',
+
+// Delete upVote of a listing
+votesRouter.delete(
+  '/up',
   authenticateAndSetAccount,
-  voteValidation,
+  upVoteValidation,
   validateRequest,
-  downvote
+  deleteUpVote
+)
+
+// DownVote a listing
+votesRouter.post(
+  '/down',
+  authenticateAndSetAccount,
+  downVoteValidation,
+  validateRequest,
+  downVote
+)
+
+// Delete downVote of a listing
+votesRouter.delete(
+  '/down',
+  authenticateAndSetAccount,
+  downVoteValidation,
+  validateRequest,
+  deleteDownVote
 )
 
 export { votesRouter }
