@@ -34,4 +34,6 @@ const VoteSchema = new Schema(
   }
 )
 
+VoteSchema.index({ account: 1, listing: 1, value: 1 }, { unique: true })
+
 export const VoteModel = mongoose.model<VoteDocument>('Vote', VoteSchema)
