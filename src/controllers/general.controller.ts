@@ -4,6 +4,7 @@ import { handleSuccess, handleError } from '../lib/base'
 import { fetchLatestAprFromDB } from '../services/apr.service'
 import { checkAndReturnValidUrl } from '../services/general.service'
 import { fetchMetadata } from '../services/url-metadata.service'
+import { normalize } from '../util'
 
 export async function fetchUrlMetadata(req: Request, res: Response) {
   try {
@@ -28,7 +29,7 @@ export async function fetchLatestApr(req: Request, res: Response) {
 export async function fetchValidUrl(req: Request, res: Response) {
   try {
     const url = decodeURI(req.query.url as string)
-    const validUrl = await checkAndReturnValidUrl(url)
+    const validUrl = await checkAndReturnValidUrl(normalize(url))
 
     return handleSuccess(res, {
       validUrl: validUrl ? decodeURI(validUrl) : null,

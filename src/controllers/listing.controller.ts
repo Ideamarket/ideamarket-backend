@@ -13,6 +13,7 @@ import {
   fetchAllBlacklistedListings,
   deleteBlacklistedListing,
 } from '../services/listing.service'
+import { normalize } from '../util'
 
 export async function fetchListings(req: Request, res: Response) {
   try {
@@ -81,7 +82,7 @@ export async function fetchListing(req: Request, res: Response) {
 
     const listing = await fetchSingleListing({
       marketId,
-      value,
+      value: normalize(value),
       account: decodedAccount ?? null,
     })
 
@@ -99,7 +100,7 @@ export async function addGhostListing(req: Request, res: Response) {
 
     const ghostListing = await addNewGhostListing({
       marketId: reqBody.marketId as number,
-      value: decodeURI(reqBody.value as string),
+      value: normalize(decodeURI(reqBody.value as string)),
       account: decodedAccount,
     })
 
@@ -119,7 +120,7 @@ export async function addOnChainListing(req: Request, res: Response) {
 
     const listing = await updateOrCloneOnchainListing({
       marketId: reqBody.marketId as number,
-      value: decodeURI(reqBody.value as string),
+      value: normalize(decodeURI(reqBody.value as string)),
       onchainValue: decodeURIComponent(reqBody.onchainValue as string),
       account: decodedAccount ?? null,
     })
