@@ -2,7 +2,13 @@ import { gql } from 'graphql-request'
 
 import { getAllMarketIds } from '../marketUtil'
 
-export function getAllTokensQuery(): string {
+export function getAllTokensQuery({
+  skip,
+  limit,
+}: {
+  skip: number
+  limit: number
+}): string {
   const marketIds = getAllMarketIds()
   const hexMarketIds = marketIds.map((id) => `0x${id.toString(16)}`)
   const inMarkets = hexMarketIds.map((id) => `"${id}"`).join(',')
@@ -11,7 +17,7 @@ export function getAllTokensQuery(): string {
 
   return gql`
     {
-      ideaTokens(${queries}) {
+      ideaTokens(${queries} skip:${skip}, first:${limit}) {
           id
           name
           market {

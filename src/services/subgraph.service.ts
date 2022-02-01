@@ -1,9 +1,10 @@
+/* eslint-disable no-await-in-loop */
 import config from 'config'
 import { gql, request } from 'graphql-request'
 
 import { ListingModel } from '../models/listing.model'
 import type { OnchainTokens } from '../types/listing.types'
-import type { IdeaTokens } from '../types/subgraph.types'
+import type { IdeaToken, IdeaTokens } from '../types/subgraph.types'
 import { getTokenNameUrl } from '../util/marketUtil'
 import { getAllTokensQuery } from '../util/queries/getAllTokensQuery'
 import { EntityNotFoundError, InternalServerError } from './errors'
@@ -23,12 +24,22 @@ export async function executeSubgraphQuery(
 }
 
 export async function cloneOnchainTokensToWeb2() {
-  let onchainListings: IdeaTokens = {
-    ideaTokens: [],
-  }
+  const allOnchainListings: IdeaToken[] = []
 
   try {
-    onchainListings = await request(SUBGRAPH_URL, getAllTokensQuery())
+    let index = 0
+    let fetchedAll = false
+    while (!fetchedAll) {
+      const onchainListings: IdeaTokens = await request(
+        SUBGRAPH_URL,
+        getAllTokensQuery({ skip: index * 100, limit: 100 })
+      )
+      allOnchainListings.push(...onchainListings.ideaTokens)
+      if (onchainListings.ideaTokens.length === 0) {
+        fetchedAll = true
+      }
+      index += 1
+    }
   } catch (error) {
     console.error(
       'Error occurred while fetching onchain listings from subgraph',
@@ -39,12 +50,13 @@ export async function cloneOnchainTokensToWeb2() {
     )
   }
 
-  if (onchainListings.ideaTokens.length === 0) {
+  console.log(`Total onchain listings found = ${allOnchainListings.length}`)
+  if (allOnchainListings.length === 0) {
     throw new EntityNotFoundError(null, 'Got 0 onchain listings from subgraph')
   }
 
   try {
-    const clonedListings = onchainListings.ideaTokens.map((ideaToken) => {
+    const clonedListings = allOnchainListings.map((ideaToken) => {
       const clonedListing = ListingModel.build({
         value: getTokenNameUrl({
           marketName: ideaToken.market.name,
