@@ -2,12 +2,14 @@ import type { Request, Response } from 'express'
 
 import { handleSuccess, handleError } from '../lib/base'
 import { checkAndReturnValidUrl } from '../services/general.service'
-import { fetchByUrl } from '../services/url-metadata.service'
+import { fetchMetadata } from '../services/url-metadata.service'
 
 export async function fetchUrlMetadata(req: Request, res: Response) {
   try {
-    const url = req.body.url as string
-    return handleSuccess(res, await fetchByUrl(url))
+    const url = decodeURI(req.body.url as string)
+    const urlMetaData = await fetchMetadata(url)
+
+    return handleSuccess(res, urlMetaData)
   } catch (error) {
     console.error('Error occurred while fetching url metadata', error)
     return handleError(res, error, 'Unable to fetch URL metadata')

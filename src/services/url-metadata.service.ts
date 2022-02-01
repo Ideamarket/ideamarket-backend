@@ -1,34 +1,34 @@
-import og from 'ts-open-graph-scraper'
+import ogs from 'ts-open-graph-scraper'
 
 import type { IUrlMetadata } from '../models/url-metadata.model'
 import { UrlMetadataModel } from '../models/url-metadata.model'
+import { getDateAfterXDays } from '../util'
 
-export function extract(url: string) {
-  return og({ url })
+export function extractMetadataFromOGS(url: string) {
+  return ogs({ url: encodeURI(url) })
 }
 
-export async function fetchByUrl(url: string) {
-  let data = await UrlMetadataModel.findOne({ url })
+export async function fetchMetadata(url: string) {
+  let urlMetadataDoc = await UrlMetadataModel.findOne({ url })
 
-  if (data && Date.now() < data.expiresAt.getTime()) {
-    return createUrlMetadataResponse(data as IUrlMetadata)
+  if (urlMetadataDoc && Date.now() < urlMetadataDoc.expiresAt.getTime()) {
+    return createUrlMetadataResponse(urlMetadataDoc as IUrlMetadata)
   }
 
-  const extractRet = await extract(url)
+  const metadataFromOGS = await extractMetadataFromOGS(url)
+  const { ogTitle, ogDescription, ogImage, ogType } = metadataFromOGS
 
-  const { ogTitle, ogDescription, ogImage, ogType } = extractRet
-
-  data = await saveUrlMetadata({
+  urlMetadataDoc = await saveUrlMetadata({
     ogImage: ogImage ? ogImage[0].url : undefined,
     ogTitle: ogTitle as string,
     ogDescription: ogDescription as string,
     ogType: ogType as string,
     favicon: ogImage ? ogImage[0].url : undefined,
     url,
-    expiresAt: createExpiryDate(new Date(), 7),
+    expiresAt: getDateAfterXDays(7),
   })
 
-  return createUrlMetadataResponse(data as IUrlMetadata)
+  return createUrlMetadataResponse(urlMetadataDoc as IUrlMetadata)
 }
 
 export function saveUrlMetadata(model: IUrlMetadata) {
@@ -37,13 +37,7 @@ export function saveUrlMetadata(model: IUrlMetadata) {
   return UrlMetadataModel.findOneAndUpdate(query, model, options)
 }
 
-const createExpiryDate = (date: Date, days: number) => {
-  const todayDate = new Date(date)
-
-  return new Date(todayDate.setDate(todayDate.getDate() + days))
-}
-
-const createUrlMetadataResponse = (data: IUrlMetadata) => {
+function createUrlMetadataResponse(data: IUrlMetadata) {
   return {
     ogTitle: data.ogTitle,
     ogDescription: data.ogDescription,
