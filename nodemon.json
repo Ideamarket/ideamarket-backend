@@ -15,7 +15,7 @@
     "AWS_REGION": "us-east-1",
     "ACCOUNTS_S3_BUCKET": "ideamarket-user-accounts",
     "ACCOUNTS_CLOUDFRONT_DOMAIN": "https://d37wda20o7ykez.cloudfront.net",
-    "NETWORK": "avm",
+    "NETWORK": "test-avm-l2",
     "RPC_URL_AVM": "https://arbitrum-mainnet.infura.io/v3/98ca28d50f234e618a22a8b0d83c40b2",
     "RPC_URL_MAINNET": "https://mainnet.infura.io/v3/98ca28d50f234e618a22a8b0d83c40b2",
     "RPC_URL_RINKEBY": "https://rinkeby.infura.io/v3/98ca28d50f234e618a22a8b0d83c40b2",

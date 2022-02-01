@@ -77,7 +77,7 @@ export async function fetchListing(req: Request, res: Response) {
       | DECODED_ACCOUNT
       | undefined
     const marketId = Number.parseInt(req.query.marketId as string)
-    const value = decodeURIComponent(req.query.value as string)
+    const value = decodeURI(req.query.value as string)
 
     const listing = await fetchSingleListing({
       marketId,
