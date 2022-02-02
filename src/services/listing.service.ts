@@ -47,6 +47,7 @@ export async function fetchAllListings({
 
   const sortOptions: any = {}
   sortOptions[orderBy] = orderDirection
+  sortOptions._id = 1
 
   const filterOptions: FilterQuery<ListingDocument>[] = []
   filterOptions.push({ marketId: { $in: marketIds } })
