@@ -90,6 +90,7 @@ export async function fetchAllListings({
     SUBGRAPH_URL,
     getTokensQuery({
       ...options,
+      search: null,
       skip: 0,
       orderBy: 'supply',
       filterTokens: onchainListingIds,
