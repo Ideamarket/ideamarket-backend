@@ -8,6 +8,8 @@ import {
   verifyAuthToken,
   verifyAuthTokenAndReturnAccount,
 } from '../util/jwtTokenUtil'
+import { CORRELATION_ID } from './correlationId'
+import { getCurrentDateTime } from './logger'
 
 const AUTHORIZATION_HEADER_MISSING_MSG = 'authorization header is missing'
 const AUTHORIZATION_HEADER_MISSING_ERR_LOG =
@@ -87,7 +89,12 @@ export async function authenticateAndSetAccount(
 
   const [, authToken] = authorizationHeader.split(' ')
   const decodedAccount = await verifyAuthTokenAndReturnAccount(authToken)
-  console.info(`Account : ${JSON.stringify(decodedAccount)}`)
+  const correlationId = (req.headers[CORRELATION_ID] ?? '') as string
+  console.info(
+    `${getCurrentDateTime()} :: ${correlationId} :: Account : ${JSON.stringify(
+      decodedAccount
+    )}`
+  )
   if (!decodedAccount) {
     console.error(INVALID_AUTH_TOKEN_ERR_LOG)
     return handleError(

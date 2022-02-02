@@ -6,6 +6,7 @@ import express from 'express'
 import fileUpload from 'express-fileupload'
 
 import { connectMongoDB } from './db/mongodb'
+import { requestLogger, setCorrelationId } from './middleware'
 import { routes } from './routes'
 
 const app = express()
@@ -17,6 +18,8 @@ app.use(cors())
 app.use(express.json())
 app.use(express.urlencoded({ extended: false }))
 app.use(fileUpload())
+app.use(setCorrelationId)
+app.use(requestLogger)
 
 // MongoDB
 connectMongoDB()
