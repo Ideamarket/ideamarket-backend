@@ -96,13 +96,11 @@ export async function fetchAllListings({
       filterTokens: onchainListingIds,
     })
   )
-  const tokens = search
-    ? onchainTokens.tokenNameSearch
-    : onchainTokens.ideaTokens
+  const tokens = onchainTokens.ideaTokens
   const onchainListingsMap: Record<string, Web3TokenData> = {}
   if (tokens) {
-    for (const listing of tokens) {
-      onchainListingsMap[listing.id] = listing
+    for (const token of tokens) {
+      onchainListingsMap[token.id] = token
     }
   }
   // ------------------------------
