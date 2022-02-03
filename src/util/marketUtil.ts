@@ -53,7 +53,7 @@ export function getTokenNameUrl({
       break
     }
     case substackMarketName: {
-      tokenNameUrl = `https://${tokenName}.substack.com/`
+      tokenNameUrl = `https://${tokenName}.substack.com`
       break
     }
     case showtimeMarketName: {
