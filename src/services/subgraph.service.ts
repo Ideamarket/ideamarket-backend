@@ -50,13 +50,26 @@ export async function cloneOnchainTokensToWeb2() {
     )
   }
 
-  console.log(`Total onchain listings found = ${allOnchainListings.length}`)
+  console.log(`Total Onchain listings found = ${allOnchainListings.length}`)
   if (allOnchainListings.length === 0) {
     throw new EntityNotFoundError(null, 'Got 0 onchain listings from subgraph')
   }
 
   try {
-    const clonedListings = allOnchainListings.map((ideaToken) => {
+    const clonedListings = allOnchainListings.map(async (ideaToken) => {
+      const listingExists = await ListingModel.exists({
+        marketId: ideaToken.market.id,
+        onchainValue: ideaToken.name,
+      })
+      if (listingExists) {
+        console.log(
+          `MarketId=${ideaToken.market.id} and OnchainValue=${ideaToken.name} already exists in DB`
+        )
+        return Promise.resolve()
+      }
+      console.log(
+        `MarketId=${ideaToken.market.id} and OnchainValue=${ideaToken.name} does not exist in DB`
+      )
       const clonedListing = ListingModel.build({
         value: getTokenNameUrl({
           marketName: ideaToken.market.name,
