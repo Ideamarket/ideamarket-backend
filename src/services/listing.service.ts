@@ -189,6 +189,7 @@ export async function fetchGhostListings({
 
   const sortOptions: any = {}
   sortOptions[orderBy] = orderDirection
+  sortOptions._id = 1
 
   const filterOptions: FilterQuery<ListingDocument>[] = []
   filterOptions.push({ isOnchain: false }, { marketId: { $in: marketIds } })
