@@ -12,6 +12,7 @@ import { CORRELATION_ID } from './correlationId'
 import { getCurrentDateTime } from './logger'
 
 const AUTHORIZATION_HEADER_MISSING_MSG = 'authorization header is missing'
+const AUTHORIZATION_TOKEN_MISSING_MSG = 'authorization token is missing'
 const AUTHORIZATION_HEADER_MISSING_ERR_LOG =
   'Authentication failed! authorization header is missing'
 const INVALID_AUTH_TOKEN_ERR_LOG = 'Authentication failed! Invalid auth token'
@@ -58,6 +59,11 @@ export function optionalAuthenticate(
   }
 
   const [, authToken] = authorizationHeader.split(' ')
+  if (!authToken) {
+    console.info(AUTHORIZATION_TOKEN_MISSING_MSG)
+    next()
+    return
+  }
   const isAuthTokenValid = verifyAuthToken(authToken)
   if (!isAuthTokenValid) {
     console.error(INVALID_AUTH_TOKEN_ERR_LOG)
@@ -122,6 +128,11 @@ export async function optionalAuthenticateAndSetAccount(
   }
 
   const [, authToken] = authorizationHeader.split(' ')
+  if (!authToken) {
+    console.info(AUTHORIZATION_TOKEN_MISSING_MSG)
+    next()
+    return
+  }
   const decodedAccount = await verifyAuthTokenAndReturnAccount(authToken)
   console.info(`Account : ${JSON.stringify(decodedAccount)}`)
   if (!decodedAccount) {
