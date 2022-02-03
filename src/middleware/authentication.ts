@@ -59,7 +59,7 @@ export function optionalAuthenticate(
   }
 
   const [, authToken] = authorizationHeader.split(' ')
-  if (!authToken) {
+  if (!authToken || authToken === 'null') {
     console.info(AUTHORIZATION_TOKEN_MISSING_MSG)
     next()
     return
@@ -128,7 +128,7 @@ export async function optionalAuthenticateAndSetAccount(
   }
 
   const [, authToken] = authorizationHeader.split(' ')
-  if (!authToken) {
+  if (!authToken || authToken === 'null') {
     console.info(AUTHORIZATION_TOKEN_MISSING_MSG)
     next()
     return
