@@ -1,4 +1,4 @@
-import { LPAprModel } from 'models/lp-apr.model'
+import { LPAprModel } from '../models/lp-apr.model'
 
 export function fetchLatestLPAprFromDB() {
   return new Promise((resolve) => {

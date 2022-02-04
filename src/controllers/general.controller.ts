@@ -1,9 +1,9 @@
 import type { Request, Response } from 'express'
-import { fetchLatestLPAprFromDB } from 'services/lp-apr.service'
 
 import { handleSuccess, handleError } from '../lib/base'
 import { fetchLatestAprFromDB } from '../services/apr.service'
 import { checkAndReturnValidUrl } from '../services/general.service'
+import { fetchLatestLPAprFromDB } from '../services/lp-apr.service'
 import { fetchMetadata } from '../services/url-metadata.service'
 import { normalize } from '../util'
 
