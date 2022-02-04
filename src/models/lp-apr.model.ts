@@ -3,24 +3,15 @@ import type { Document } from 'mongoose'
 import mongoose, { Schema } from 'mongoose'
 
 // eslint-disable-next-line @typescript-eslint/consistent-type-definitions
-export interface IAprModel {
+export interface LPAprDocument extends Document {
   value: string
-  blockTimestamp: number
   valueAsHex: string
+  blockTimestamp: number
   createdAt: Date
   updatedAt: Date
 }
 
-// eslint-disable-next-line @typescript-eslint/consistent-type-definitions
-export interface AprDocument extends Document {
-  value: string
-  blockTimestamp: number
-  valueAsHex: string
-  createdAt: Date
-  updatedAt: Date
-}
-
-const AprSchema = new Schema(
+const LPAprSchema = new Schema(
   {
     value: { type: String, index: true },
     valueAsHex: { type: String },
@@ -32,6 +23,6 @@ const AprSchema = new Schema(
   }
 )
 
-export const AprModel = mongoose.connection
+export const LPAprModel = mongoose.connection
   .useDb(config.get('lockingDatabaseName'))
-  .model<AprDocument>('Apr', AprSchema)
+  .model<LPAprDocument>('LPApr', LPAprSchema)
