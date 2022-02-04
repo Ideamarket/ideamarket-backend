@@ -2,6 +2,7 @@ import express from 'express'
 
 import {
   fetchLatestApr,
+  fetchLatestLPApr,
   fetchUrlMetadata,
   fetchValidUrl,
 } from '../controllers/general.controller'
@@ -29,5 +30,8 @@ generalRouter.get(
 
 // eslint-disable-next-line @typescript-eslint/no-misused-promises
 generalRouter.get('/apr', fetchLatestApr)
+
+// eslint-disable-next-line @typescript-eslint/no-misused-promises
+generalRouter.get('/lp-apr', fetchLatestLPApr)
 
 export { generalRouter }

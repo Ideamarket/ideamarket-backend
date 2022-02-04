@@ -1,4 +1,5 @@
 import type { Request, Response } from 'express'
+import { fetchLatestLPAprFromDB } from 'services/lp-apr.service'
 
 import { handleSuccess, handleError } from '../lib/base'
 import { fetchLatestAprFromDB } from '../services/apr.service'
@@ -21,6 +22,14 @@ export async function fetchUrlMetadata(req: Request, res: Response) {
 export async function fetchLatestApr(req: Request, res: Response) {
   try {
     return handleSuccess(res, { apr: await fetchLatestAprFromDB() })
+  } catch (error) {
+    return handleError(res, error, 'Unable to fetch version')
+  }
+}
+
+export async function fetchLatestLPApr(req: Request, res: Response) {
+  try {
+    return handleSuccess(res, { apr: await fetchLatestLPAprFromDB() })
   } catch (error) {
     return handleError(res, error, 'Unable to fetch version')
   }
