@@ -1,3 +1,4 @@
+/* eslint-disable unicorn/no-keyword-prefix */
 /* eslint-disable no-await-in-loop */
 import config from 'config'
 import { gql, request } from 'graphql-request'
@@ -54,6 +55,8 @@ export async function cloneOnchainTokensToWeb2() {
   if (allOnchainListings.length === 0) {
     throw new EntityNotFoundError(null, 'Got 0 onchain listings from subgraph')
   }
+  const totalOnchainListings = allOnchainListings.length
+  let newOnchainListings = 0
 
   try {
     const clonedListings = allOnchainListings.map(async (ideaToken) => {
@@ -70,6 +73,7 @@ export async function cloneOnchainTokensToWeb2() {
       console.log(
         `MarketId=${ideaToken.market.id} and OnchainValue=${ideaToken.name} does not exist in DB`
       )
+      newOnchainListings += 1
       const clonedListing = ListingModel.build({
         value: getTokenNameUrl({
           marketName: ideaToken.market.name,
@@ -93,6 +97,7 @@ export async function cloneOnchainTokensToWeb2() {
     })
 
     await Promise.all(clonedListings)
+    return { totalOnchainListings, newOnchainListings }
   } catch (error) {
     console.error(
       'Error occurred while adding cloned onchain listings to web2',

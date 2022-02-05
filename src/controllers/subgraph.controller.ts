@@ -18,10 +18,11 @@ export async function querySubgraph(req: Request, res: Response) {
 
 export async function cloneOnChainListingsToWeb2(req: Request, res: Response) {
   try {
-    await cloneOnchainTokensToWeb2()
+    const response = await cloneOnchainTokensToWeb2()
 
     return handleSuccess(res, {
       message: 'All onchain listings have been cloned to web2',
+      ...response,
     })
   } catch (error) {
     console.error(
