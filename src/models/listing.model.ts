@@ -19,6 +19,13 @@ export type IListing = {
   onchainListedByAccount: string | null | undefined
   onchainListedAt: Date | null | undefined
   totalVotes: number | undefined
+  price: number | undefined
+  dayChange: number | undefined
+  weekChange: number | undefined
+  deposits: number | undefined
+  holders: number | undefined
+  yearIncome: number | undefined
+  claimableIncome: number | undefined
 }
 
 interface IListingModel
@@ -41,6 +48,13 @@ export interface ListingDocument extends Document {
   onchainListedByAccount: AccountDocument | null
   onchainListedAt: Date
   totalVotes: number
+  price: number
+  dayChange: number
+  weekChange: number
+  deposits: number
+  holders: number
+  yearIncome: number
+  claimableIncome: number
 }
 
 const ListingSchema = new Schema(
@@ -68,6 +82,13 @@ const ListingSchema = new Schema(
     },
     onchainListedAt: { type: Date, default: null, required: false },
     totalVotes: { type: Number, default: 0, required: true },
+    price: { type: Number, default: 0, required: true },
+    dayChange: { type: Number, default: 0, required: true },
+    weekChange: { type: Number, default: 0, required: true },
+    deposits: { type: Number, default: 0, required: true },
+    holders: { type: Number, default: 0, required: true },
+    yearIncome: { type: Number, default: 0, required: true },
+    claimableIncome: { type: Number, default: 0, required: true },
   },
   {
     versionKey: false,
@@ -81,6 +102,27 @@ ListingSchema.index(
   { marketId: 1, value: 1, onchainValue: 1 },
   { unique: true }
 )
+
+ListingSchema.index({ marketId: 1, price: -1 })
+ListingSchema.index({ isOnchain: 1, marketId: 1, price: -1 })
+
+ListingSchema.index({ marketId: 1, dayChange: -1 })
+ListingSchema.index({ isOnchain: 1, marketId: 1, dayChange: -1 })
+
+ListingSchema.index({ marketId: 1, weekChange: -1 })
+ListingSchema.index({ isOnchain: 1, marketId: 1, weekChange: -1 })
+
+ListingSchema.index({ marketId: 1, deposits: -1 })
+ListingSchema.index({ isOnchain: 1, marketId: 1, deposits: -1 })
+
+ListingSchema.index({ marketId: 1, holders: -1 })
+ListingSchema.index({ isOnchain: 1, marketId: 1, holders: -1 })
+
+ListingSchema.index({ marketId: 1, yearIncome: -1 })
+ListingSchema.index({ isOnchain: 1, marketId: 1, yearIncome: -1 })
+
+ListingSchema.index({ marketId: 1, totalVotes: -1 })
+ListingSchema.index({ isOnchain: 1, marketId: 1, totalVotes: -1 })
 
 ListingSchema.statics.build = (attr: IListingModel) => {
   return new ListingModel(attr)

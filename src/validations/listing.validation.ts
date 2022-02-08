@@ -1,4 +1,3 @@
-/* eslint-disable sonarjs/no-duplicate-string */
 import { body, oneOf, query } from 'express-validator'
 
 import { isMarketIdValid } from '../util/marketUtil'
@@ -16,12 +15,17 @@ export const fetchListingsValidation = [
 ]
 
 export const fetchListingValidation = [
-  query('marketId')
-    .notEmpty()
-    .isString()
-    .custom(isMarketIdValid)
-    .withMessage('marketId is invalid'),
-  query('value').notEmpty().withMessage('Token value cannot be empty'),
+  oneOf(
+    [
+      query('listingId').notEmpty().isString(),
+      [
+        query('marketId').notEmpty().isString().custom(isMarketIdValid),
+        query('value').notEmpty().isString(),
+        query('onchainValue').notEmpty().isString(),
+      ],
+    ],
+    'Atleast one of listingId (or) [marketId, value, onchainValue] are mandatory'
+  ),
 ]
 
 export const addGhostListingValidation = [
@@ -33,7 +37,7 @@ export const addGhostListingValidation = [
   body('value').notEmpty().withMessage('Token value cannot be empty'),
 ]
 
-export const addOnChainListingValidation = [
+export const addOnchainListingValidation = [
   body('marketId')
     .notEmpty()
     .isInt()

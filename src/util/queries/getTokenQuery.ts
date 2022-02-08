@@ -3,7 +3,7 @@ import { gql } from 'graphql-request'
 
 import { WEEK_SECONDS } from '..'
 
-export function getSingleTokenQuery({
+export function getTokenQuery({
   marketName,
   tokenName,
 }: {
@@ -18,21 +18,30 @@ export function getSingleTokenQuery({
       ideaMarkets(where:{name:${'"' + marketName + '"'}}) {
         tokens(where:{name:${'"' + tokenName + '"'}}) {
             id
+            tokenID
             name
+            supply
             holders
             marketCap
             market {
               id: marketID
               name
             }
+            rank
             lister
+            tokenOwner
+            daiInToken
+            invested
             listedAt
+            lockedAmount
+            lockedPercentage
             latestPricePoint {
               timestamp
               counter
               oldPrice
               price
             }
+            dayVolume
             dayChange
             pricePoints(where:{timestamp_gt:${weekBack}} orderBy:timestamp) {
               oldPrice

@@ -3,6 +3,7 @@ import type { ListingDocument } from '../models/listing.model'
 import type {
   BlacklistedListingResponse,
   ListingResponse,
+  NewListingResponse,
   Web2TokenData,
   Web3TokenData,
 } from '../types/listing.types'
@@ -23,7 +24,7 @@ export function mapWeb2Data({
     value: listingDoc.value,
     marketId: listingDoc.marketId,
     marketName: listingDoc.marketName,
-    isOnChain: listingDoc.isOnchain,
+    isOnchain: listingDoc.isOnchain,
     ghostListedBy:
       listingDoc.ghostListedByAccount?.username ?? listingDoc.ghostListedBy,
     ghostListedAt: listingDoc.ghostListedAt,
@@ -51,6 +52,43 @@ export function combineWeb2AndWeb3TokenData({
   return {
     web2TokenData: mapWeb2Data({ listingDoc, upVoted }),
     web3TokenData: web3TokenData ?? null,
+  }
+}
+
+export function mapListingResponse({
+  listingDoc,
+  upVoted,
+}: {
+  listingDoc: ListingDocument | null
+  upVoted: boolean | null
+}): NewListingResponse | null {
+  if (!listingDoc) {
+    return null
+  }
+
+  return {
+    listingId: listingDoc.id,
+    value: listingDoc.value,
+    marketId: listingDoc.marketId,
+    marketName: listingDoc.marketName,
+    isOnchain: listingDoc.isOnchain,
+    ghostListedBy:
+      listingDoc.ghostListedByAccount?.username ?? listingDoc.ghostListedBy,
+    ghostListedAt: listingDoc.ghostListedAt,
+    onchainValue: listingDoc.onchainValue,
+    onchainId: listingDoc.onchainId,
+    onchainListedBy:
+      listingDoc.onchainListedByAccount?.username ?? listingDoc.onchainListedBy,
+    onchainListedAt: listingDoc.onchainListedAt,
+    totalVotes: listingDoc.totalVotes,
+    price: listingDoc.price,
+    dayChange: listingDoc.dayChange,
+    weekChange: listingDoc.weekChange,
+    deposits: listingDoc.deposits,
+    holders: listingDoc.holders,
+    yearIncome: listingDoc.yearIncome,
+    claimableIncome: listingDoc.claimableIncome,
+    upVoted,
   }
 }
 
