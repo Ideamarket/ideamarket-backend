@@ -6,24 +6,30 @@ import type { FilterQuery } from 'mongoose'
 import { BlacklistedListingModel } from '../models/blacklisted-listings.model'
 import type { IListing, ListingDocument } from '../models/listing.model'
 import { ListingModel } from '../models/listing.model'
-import type { OnchainTokens, Web3TokenData } from '../types/listing.types'
+import type { Web3TokenData } from '../types/listing.types'
+import type { IdeaToken, PricePoint } from '../types/subgraph.types'
 import type { DECODED_ACCOUNT } from '../util/jwtTokenUtil'
+import { mapBlacklistedListing, mapListingResponse } from '../util/listingUtil'
+import { getAllMarkets, getTokenNameUrl } from '../util/marketUtil'
+import { getSingleTokenQuery, getTokenQuery } from '../util/queries'
 import {
-  combineWeb2AndWeb3TokenData,
-  mapBlacklistedListing,
-  mapWeb2Data,
-} from '../util/listingUtil'
-import { getAllMarkets } from '../util/marketUtil'
-import { getSingleTokenQuery, getTokensQuery } from '../util/queries'
-import { SUBGRAPH_URL } from '../util/web3Util'
+  calculateClaimableIncome,
+  calculateDayChange,
+  calculateMarketCap,
+  calculatePrice,
+  calculateYearIncome,
+  SUBGRAPH_URL,
+} from '../util/web3Util'
 import {
   EntityNotFoundError,
   InternalServerError,
   ObjectAlreadyExistsError,
 } from './errors'
+import { fetchAllOnchainTokensFromWeb3 } from './subgraph.service'
 import { checkUpVotedOrNot } from './vote.service'
 
 export type ListingQueryOptions = {
+  marketType: 'onchain' | 'ghost' | null
   marketIds: number[]
   skip: number
   limit: number
@@ -42,15 +48,30 @@ export async function fetchAllListings({
   options: ListingQueryOptions
   account: DECODED_ACCOUNT | null
 }) {
-  const { orderBy, skip, limit, marketIds, filterTokens, search } = options
+  const { marketType, marketIds, skip, limit, orderBy, filterTokens, search } =
+    options
   const orderDirection = options.orderDirection === 'asc' ? 1 : -1
 
+  // Sorting Options
   const sortOptions: any = {}
   sortOptions[orderBy] = orderDirection
-  sortOptions._id = 1
+  if (marketType !== 'ghost') {
+    sortOptions.onchainListedAt = -1
+  }
+  if (marketType !== 'onchain') {
+    sortOptions.ghostListedAt = -1
+  }
+  sortOptions._id = -1
 
+  // Filtering Options
   const filterOptions: FilterQuery<ListingDocument>[] = []
   filterOptions.push({ marketId: { $in: marketIds } })
+  if (marketType === 'onchain') {
+    filterOptions.push({ isOnchain: true })
+  }
+  if (marketType === 'ghost') {
+    filterOptions.push({ isOnchain: false })
+  }
   if (filterTokens.length > 0) {
     filterOptions.push({ _id: { $in: filterTokens } })
   }
@@ -58,7 +79,8 @@ export async function fetchAllListings({
     filterOptions.push({ value: { $regex: search, $options: 'i' } })
   }
 
-  const web2Listings = await ListingModel.find({ $and: filterOptions })
+  // Listings
+  const listings = await ListingModel.find({ $and: filterOptions })
     .sort(sortOptions)
     .skip(skip)
     .limit(limit)
@@ -66,7 +88,7 @@ export async function fetchAllListings({
     .populate('onchainListedByAccount')
 
   // Filtering blacklisted listings
-  const listingIds = web2Listings.map((listing) => listing._id)
+  const listingIds = listings.map((listing) => listing._id)
   const blacklistedListings = await BlacklistedListingModel.find({
     listing: { $in: listingIds },
   })
@@ -77,196 +99,124 @@ export async function fetchAllListings({
       (blacklistedListing) => blacklistedListing.listing.id
     )
   )
-  const filteredWeb2Listings = web2Listings.filter(
+  const filteredListings = listings.filter(
     (listing) => !blackListedListingIds.has(listing.id)
   )
-  // ------------------------------
 
-  // Fetching web3 data for onchain listings
-  const onchainListingIds = filteredWeb2Listings
-    .filter((listing) => listing.isOnchain)
-    .map((listing) => listing.onchainId)
-  const onchainTokens: Partial<OnchainTokens> = await request(
-    SUBGRAPH_URL,
-    getTokensQuery({
-      ...options,
-      search: null,
-      skip: 0,
-      orderBy: 'supply',
-      filterTokens: onchainListingIds,
-    })
-  )
-  const tokens = onchainTokens.ideaTokens
-  const onchainListingsMap: Record<string, Web3TokenData> = {}
-  if (tokens) {
-    for (const token of tokens) {
-      onchainListingsMap[token.id] = token
-    }
-  }
-  // ------------------------------
-
-  const allListingsResponse = filteredWeb2Listings.map(async (listing) =>
-    combineWeb2AndWeb3TokenData({
+  // Formatting listings
+  const listingsResponse = filteredListings.map(async (listing) =>
+    mapListingResponse({
       listingDoc: listing,
       upVoted: await checkUpVotedOrNot({
         listingId: listing.id,
         accountId: account ? account.id : null,
       }),
-      web3TokenData: listing.isOnchain
-        ? onchainListingsMap[listing.onchainId]
-        : null,
     })
   )
-  return Promise.all(allListingsResponse)
-}
-
-export async function fetchOnchainListings({
-  options,
-  account,
-}: {
-  options: ListingQueryOptions
-  account: DECODED_ACCOUNT | null
-}) {
-  const { search } = options
-  const onchainTokens: Partial<OnchainTokens> = await request(
-    SUBGRAPH_URL,
-    getTokensQuery(options)
-  )
-
-  const tokens = search
-    ? onchainTokens.tokenNameSearch
-    : onchainTokens.ideaTokens
-
-  if (!tokens || tokens.length === 0) {
-    return []
-  }
-
-  // Filtering blacklisted listings
-  const onchainIds = tokens.map((token) => token.id)
-  const blacklistedListings = await BlacklistedListingModel.find({
-    onchainId: { $in: onchainIds },
-  }).select(['onchainId'])
-  const blacklistedOnchainIds = new Set(
-    blacklistedListings
-      .filter((listing) => !!listing.onchainId)
-      .map((listing) => listing.onchainId)
-  )
-  const filteredTokens = tokens.filter(
-    (token) => !blacklistedOnchainIds.has(token.id)
-  )
-  // ------------------------------
-
-  const onchainListingsResponse = filteredTokens.map(async (token) => {
-    const listingDoc = await ListingModel.findOne({
-      marketId: token.market.id,
-      onchainValue: token.name,
-    })
-    return combineWeb2AndWeb3TokenData({
-      listingDoc,
-      upVoted: listingDoc
-        ? await checkUpVotedOrNot({
-            listingId: listingDoc.id,
-            accountId: account ? account.id : null,
-          })
-        : null,
-      web3TokenData: token,
-    })
-  })
-  return Promise.all(onchainListingsResponse)
-}
-
-export async function fetchGhostListings({
-  options,
-  account,
-}: {
-  options: ListingQueryOptions
-  account: DECODED_ACCOUNT | null
-}) {
-  const { orderBy, skip, limit, marketIds, filterTokens, search } = options
-  const orderDirection = options.orderDirection === 'asc' ? 1 : -1
-
-  const sortOptions: any = {}
-  sortOptions[orderBy] = orderDirection
-  sortOptions._id = 1
-
-  const filterOptions: FilterQuery<ListingDocument>[] = []
-  filterOptions.push({ isOnchain: false }, { marketId: { $in: marketIds } })
-  if (filterTokens.length > 0) {
-    filterOptions.push({ _id: { $in: filterTokens } })
-  }
-  if (search) {
-    filterOptions.push({ value: { $regex: search, $options: 'i' } })
-  }
-
-  const ghostListings = await ListingModel.find({ $and: filterOptions })
-    .sort(sortOptions)
-    .skip(skip)
-    .limit(limit)
-    .populate('ghostListedByAccount')
-
-  // Filtering blacklisted listings
-  const listingIds = ghostListings.map((listing) => listing._id)
-  const blacklistedListings = await BlacklistedListingModel.find({
-    listing: { $in: listingIds },
-  })
-    .select(['listing'])
-    .populate({ path: 'listing', select: ['id'] })
-  const blackListedListingIds = new Set(
-    blacklistedListings.map(
-      (blacklistedListing) => blacklistedListing.listing.id
-    )
-  )
-  const filteredGhostListings = ghostListings.filter(
-    (listing) => !blackListedListingIds.has(listing.id)
-  )
-  // ------------------------------
-
-  const ghostListingsResponse = filteredGhostListings.map(async (listing) =>
-    combineWeb2AndWeb3TokenData({
-      listingDoc: listing,
-      upVoted: await checkUpVotedOrNot({
-        listingId: listing.id,
-        accountId: account ? account.id : null,
-      }),
-      web3TokenData: null,
-    })
-  )
-  return Promise.all(ghostListingsResponse)
+  return Promise.all(listingsResponse)
 }
 
 export async function fetchSingleListing({
+  listingId,
   marketId,
   value,
+  onchainValue,
+  account,
+}: {
+  listingId: string | null
+  marketId: number | null
+  value: string | null
+  onchainValue: string | null
+  account: DECODED_ACCOUNT | null
+}) {
+  if (listingId) {
+    return fetchListingById({ listingId, account })
+  }
+
+  if (marketId && value && onchainValue) {
+    return fetchListingByMarketAndValue({
+      marketId,
+      value,
+      onchainValue,
+      account,
+    })
+  }
+
+  return null
+}
+
+async function fetchListingById({
+  listingId,
+  account,
+}: {
+  listingId: string
+  account: DECODED_ACCOUNT | null
+}) {
+  try {
+    const listing = await ListingModel.findById(listingId)
+      .populate('ghostListedByAccount')
+      .populate('onchainListedByAccount')
+
+    if (!listing) {
+      return null
+    }
+
+    return mapListingResponse({
+      listingDoc: listing,
+      upVoted: await checkUpVotedOrNot({
+        listingId: listing.id,
+        accountId: account ? account.id : null,
+      }),
+    })
+  } catch (error) {
+    console.error('Error occurred while fetching listing from web2', error)
+    throw new InternalServerError('Failed to fetch listing')
+  }
+}
+
+async function fetchListingByMarketAndValue({
+  marketId,
+  value,
+  onchainValue,
   account,
 }: {
   marketId: number
   value: string
+  onchainValue: string
   account: DECODED_ACCOUNT | null
 }) {
-  let web3TokenData = null
+  let listing = null
   const marketName = getAllMarkets()[marketId]
 
-  const listingDoc = await ListingModel.findOne({ marketId, value })
+  // Fetch listing data from web2 db
+  listing = await ListingModel.findOne({ marketId, value })
     .populate('ghostListedByAccount')
     .populate('onchainListedByAccount')
 
-  if (listingDoc?.isOnchain && listingDoc.onchainValue) {
-    const web3Data = await request(
+  // Pull data from subgraph if web3 data is not present in web2 db
+  if (!listing || !listing.isOnchain) {
+    const onchainTokens = await request(
       SUBGRAPH_URL,
-      getSingleTokenQuery({ marketName, tokenName: listingDoc.onchainValue })
+      getSingleTokenQuery({ marketName, tokenName: onchainValue })
     )
-    web3TokenData = web3Data.ideaMarkets[0].tokens[0] as Partial<Web3TokenData>
+    const onchainIdeaToken = onchainTokens.ideaMarkets[0].tokens[0] as IdeaToken
+    listing = await updateOnchainListing({
+      ideaToken: onchainIdeaToken,
+      updateIfExists: false,
+    })
   }
 
-  return combineWeb2AndWeb3TokenData({
-    listingDoc,
-    upVoted: listingDoc
-      ? await checkUpVotedOrNot({
-          listingId: listingDoc.id,
-          accountId: account ? account.id : null,
-        })
-      : null,
-    web3TokenData,
+  if (!listing) {
+    console.info('Listing not present in web2 and web3')
+    return null
+  }
+
+  return mapListingResponse({
+    listingDoc: listing,
+    upVoted: await checkUpVotedOrNot({
+      listingId: listing.id,
+      accountId: account ? account.id : null,
+    }),
   })
 }
 
@@ -299,12 +249,19 @@ export async function addNewGhostListing({
     onchainListedByAccount: null,
     onchainListedAt: null,
     totalVotes: 0,
+    price: 0,
+    dayChange: 0,
+    weekChange: 0,
+    deposits: 0,
+    holders: 0,
+    yearIncome: 0,
+    claimableIncome: 0,
   })
   const createdGhostListing = await (
     await ListingModel.create(listingDoc)
   ).populate('ghostListedByAccount')
 
-  return mapWeb2Data({ listingDoc: createdGhostListing, upVoted: false })
+  return mapListingResponse({ listingDoc: createdGhostListing, upVoted: false })
 }
 
 export async function updateOrCloneOnchainListing({
@@ -321,7 +278,7 @@ export async function updateOrCloneOnchainListing({
   const marketName = getAllMarkets()[marketId]
   const web3Data = await request(
     SUBGRAPH_URL,
-    getSingleTokenQuery({ marketName, tokenName: onchainValue })
+    getTokenQuery({ marketName, tokenName: onchainValue })
   )
   const token = web3Data.ideaMarkets[0].tokens[0] as
     | Web3TokenData
@@ -347,6 +304,13 @@ export async function updateOrCloneOnchainListing({
     onchainListedByAccount: account?.id ?? null,
     onchainListedAt: new Date(Number.parseInt(token.listedAt) * 1000),
     totalVotes: listing ? listing.totalVotes : 0,
+    price: calculatePrice(token.latestPricePoint.price),
+    dayChange: calculateDayChange(token.dayChange),
+    weekChange: calculateWeekChange(token.pricePoints),
+    deposits: calculateMarketCap(token.marketCap),
+    holders: token.holders,
+    yearIncome: calculateYearIncome(token.marketCap),
+    claimableIncome: calculateClaimableIncome(),
   }
 
   const updatedOrClonedListing = await ListingModel.findOneAndUpdate(
@@ -363,13 +327,90 @@ export async function updateOrCloneOnchainListing({
     .populate('ghostListedByAccount')
     .populate('onchainListedByAccount')
 
-  return mapWeb2Data({
+  return mapListingResponse({
     listingDoc: updatedOrClonedListing,
     upVoted: await checkUpVotedOrNot({
       listingId: updatedOrClonedListing.id,
       accountId: account ? account.id : null,
     }),
   })
+}
+
+export async function updateAllOnchainListings() {
+  try {
+    const allOnchainIdeaTokens: IdeaToken[] =
+      await fetchAllOnchainTokensFromWeb3()
+
+    const updatedListings = allOnchainIdeaTokens.map((ideaToken) =>
+      updateOnchainListing({ ideaToken, updateIfExists: true })
+    )
+
+    await Promise.all(updatedListings)
+  } catch (error) {
+    console.error('Error occurred while updating all onchain listings', error)
+    throw new InternalServerError('Failed to update all onchain listings')
+  }
+}
+
+export async function updateOnchainListing({
+  ideaToken,
+  updateIfExists,
+}: {
+  ideaToken: IdeaToken
+  updateIfExists: boolean
+}) {
+  try {
+    const value = getTokenNameUrl({
+      marketName: ideaToken.market.name,
+      tokenName: ideaToken.name,
+    })
+    const listing = await ListingModel.findOne({
+      marketId: ideaToken.market.id,
+      value,
+    })
+
+    if (!updateIfExists && listing?.onchainValue) {
+      return await Promise.resolve(null)
+    }
+
+    const listingDoc: IListing = {
+      value: listing ? listing.value : value,
+      marketId: ideaToken.market.id,
+      marketName: ideaToken.market.name,
+      isOnchain: true,
+      ghostListedBy: listing ? listing.ghostListedBy : null,
+      ghostListedByAccount: listing ? listing.ghostListedByAccount?._id : null,
+      ghostListedAt: listing ? listing.ghostListedAt : null,
+      onchainValue: ideaToken.name,
+      onchainId: ideaToken.id,
+      onchainListedBy: ideaToken.lister,
+      onchainListedByAccount: listing?.onchainListedByAccount?._id ?? null,
+      onchainListedAt: new Date(Number.parseInt(ideaToken.listedAt) * 1000),
+      totalVotes: listing ? listing.totalVotes : 0,
+      price: calculatePrice(ideaToken.latestPricePoint.price),
+      dayChange: calculateDayChange(ideaToken.dayChange),
+      weekChange: calculateWeekChange(ideaToken.pricePoints),
+      deposits: calculateMarketCap(ideaToken.marketCap),
+      holders: ideaToken.holders,
+      yearIncome: calculateYearIncome(ideaToken.marketCap),
+      claimableIncome: calculateClaimableIncome(),
+    }
+
+    return await ListingModel.findOneAndUpdate(
+      {
+        marketId: listingDoc.marketId,
+        onchainValue: listingDoc.onchainValue,
+      },
+      { $set: listingDoc },
+      {
+        upsert: true,
+        new: true,
+      }
+    )
+  } catch (error) {
+    console.error('Error occurred while updating onchain listing', error)
+    return Promise.resolve(null)
+  }
 }
 
 export async function updateTotalVotesInListing({
@@ -423,4 +464,19 @@ export async function fetchAllBlacklistedListings() {
 
 export async function deleteBlacklistedListing(listingId: string) {
   await BlacklistedListingModel.findOneAndDelete({ listing: listingId })
+}
+
+export function calculateWeekChange(weeklyPricePoints: PricePoint[]) {
+  let weeklyChange = '0'
+  if (weeklyPricePoints?.length > 0) {
+    const yearlyCurrentPrice = Number(
+      weeklyPricePoints[weeklyPricePoints.length - 1].price
+    )
+
+    const yearlyOldPrice = Number(weeklyPricePoints[0].oldPrice)
+    weeklyChange = Number(
+      ((yearlyCurrentPrice - yearlyOldPrice) * 100) / yearlyOldPrice
+    ).toFixed(2)
+  }
+  return Number.parseFloat(weeklyChange)
 }

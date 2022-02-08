@@ -3,15 +3,14 @@ import type { DECODED_ACCOUNT } from 'util/jwtTokenUtil'
 
 import { handleSuccess, handleError } from '../lib/base'
 import {
-  fetchOnchainListings,
-  fetchGhostListings,
-  fetchAllListings,
   addNewGhostListing,
   updateOrCloneOnchainListing,
   fetchSingleListing,
   addBlacklistListing,
   fetchAllBlacklistedListings,
   deleteBlacklistedListing,
+  fetchAllListings,
+  updateAllOnchainListings,
 } from '../services/listing.service'
 import { normalize } from '../util'
 
@@ -20,7 +19,7 @@ export async function fetchListings(req: Request, res: Response) {
     const decodedAccount = (req as any).decodedAccount as
       | DECODED_ACCOUNT
       | undefined
-    const marketType = req.query.marketType as string
+    const marketType = req.query.marketType as string | null | undefined
     const marketIds = (req.query.marketIds as string)
       .split(',')
       .map((id) => Number.parseInt(id))
@@ -37,6 +36,7 @@ export async function fetchListings(req: Request, res: Response) {
     const search = (req.query.search as string) || null
 
     const options = {
+      marketType: (marketType as 'onchain' | 'ghost' | null) ?? null,
       marketIds,
       skip,
       limit,
@@ -48,26 +48,11 @@ export async function fetchListings(req: Request, res: Response) {
       search,
     }
 
-    if (marketType === 'onchain') {
-      const onchainListings = await fetchOnchainListings({
-        options,
-        account: decodedAccount ?? null,
-      })
-      return handleSuccess(res, { listings: onchainListings })
-    }
-
-    if (marketType === 'ghost') {
-      const ghostListings = await fetchGhostListings({
-        options,
-        account: decodedAccount ?? null,
-      })
-      return handleSuccess(res, { listings: ghostListings })
-    }
-
     const allListings = await fetchAllListings({
       options,
       account: decodedAccount ?? null,
     })
+
     return handleSuccess(res, { listings: allListings })
   } catch (error) {
     console.error('Error occurred while fetching the listings', error)
@@ -80,12 +65,20 @@ export async function fetchListing(req: Request, res: Response) {
     const decodedAccount = (req as any).decodedAccount as
       | DECODED_ACCOUNT
       | undefined
-    const marketId = Number.parseInt(req.query.marketId as string)
-    const value = decodeURI(req.query.value as string)
+    const listingId = req.query.listingId as string | null | undefined
+    const marketId = req.query.marketId
+      ? Number.parseInt(req.query.marketId as string)
+      : null
+    const value = req.query.value ? decodeURI(req.query.value as string) : null
+    const onchainValue = req.query.onchainValue
+      ? decodeURI(req.query.onchainValue as string)
+      : null
 
     const listing = await fetchSingleListing({
+      listingId: listingId ?? null,
       marketId,
-      value: normalize(value),
+      value: value ? normalize(value) : null,
+      onchainValue: onchainValue ? normalize(onchainValue) : null,
       account: decodedAccount ?? null,
     })
 
@@ -114,7 +107,7 @@ export async function addGhostListing(req: Request, res: Response) {
   }
 }
 
-export async function addOnChainListing(req: Request, res: Response) {
+export async function addOnchainListing(req: Request, res: Response) {
   try {
     const reqBody = req.body
     const decodedAccount = (req as any).decodedAccount as
@@ -132,6 +125,19 @@ export async function addOnChainListing(req: Request, res: Response) {
   } catch (error) {
     console.error('Error occurred while adding onchain listing', error)
     return handleError(res, error, 'Unable to add onchain listing')
+  }
+}
+
+export async function updateOnchainListings(req: Request, res: Response) {
+  try {
+    await updateAllOnchainListings()
+
+    return handleSuccess(res, {
+      message: 'All onchain listings have been updated',
+    })
+  } catch (error) {
+    console.error('Error occurred while updating all onchain listings', error)
+    return handleError(res, error, 'Unable to add update all onchain listings')
   }
 }
 

@@ -10,12 +10,35 @@ export type ListingResponse = {
   web3TokenData: Web3TokenData | Partial<Web3TokenData> | null
 }
 
+export type NewListingResponse = {
+  listingId: string
+  value: string
+  marketId: number
+  marketName: string
+  isOnchain: boolean
+  ghostListedBy: string | null
+  ghostListedAt: Date | null
+  onchainValue: string | null
+  onchainId: string | null
+  onchainListedBy: string | null
+  onchainListedAt: Date | null
+  totalVotes: number
+  price: number
+  dayChange: number
+  weekChange: number
+  deposits: number
+  holders: number
+  yearIncome: number
+  claimableIncome: number
+  upVoted: boolean | null
+}
+
 export type Web2TokenData = {
   listingId: string
   value: string
   marketId: number
   marketName: string
-  isOnChain: boolean
+  isOnchain: boolean
   ghostListedBy: string | null
   ghostListedAt: Date | null
   onchainValue: string | null

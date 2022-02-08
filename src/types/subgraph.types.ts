@@ -6,6 +6,11 @@ export type IdeaToken = {
   id: string
   name: string
   market: Market
+  dayChange: string
+  marketCap: string
+  latestPricePoint: LatestPricePoint
+  holders: number
+  pricePoints: PricePoint[]
   lister: string
   listedAt: string
 }

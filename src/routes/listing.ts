@@ -5,22 +5,26 @@ import express from 'express'
 import {
   addGhostListing,
   addListingToBlacklist,
-  addOnChainListing,
+  addOnchainListing,
   fetchBlacklistedListings,
   fetchListing,
   fetchListings,
   removeListingFromBlacklist,
+  updateOnchainListings,
 } from '../controllers/listing.controller'
 import {
   authenticateAndSetAccount,
   optionalAuthenticateAndSetAccount,
 } from '../middleware/authentication'
-import { authorizeModeratorOrAdmin } from '../middleware/authorization'
+import {
+  authorizeAdmin,
+  authorizeModeratorOrAdmin,
+} from '../middleware/authorization'
 import { validateRequest } from '../middleware/validateRequest'
 import {
   addListingToBlacklistValidation,
   addGhostListingValidation,
-  addOnChainListingValidation,
+  addOnchainListingValidation,
   removeListingFromBlacklistValidation,
   fetchListingsValidation,
   fetchListingValidation,
@@ -55,9 +59,16 @@ listingRouter.post(
 listingRouter.post(
   '/onchain',
   optionalAuthenticateAndSetAccount,
-  addOnChainListingValidation,
+  addOnchainListingValidation,
   validateRequest,
-  addOnChainListing
+  addOnchainListing
+)
+
+listingRouter.patch(
+  '/onchain',
+  authenticateAndSetAccount,
+  authorizeAdmin,
+  updateOnchainListings
 )
 
 listingRouter.post(

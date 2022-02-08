@@ -2,7 +2,7 @@
 import express from 'express'
 
 import {
-  cloneOnChainListingsToWeb2,
+  cloneNewOnchainListingsToWeb2,
   querySubgraph,
 } from '../controllers/subgraph.controller'
 import { authenticateAndSetAccount } from '../middleware/authentication'
@@ -26,7 +26,7 @@ subgraphRouter.post(
   '/cloneToWeb2',
   authenticateAndSetAccount,
   authorizeAdmin,
-  cloneOnChainListingsToWeb2
+  cloneNewOnchainListingsToWeb2
 )
 
 export { subgraphRouter }

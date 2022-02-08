@@ -2,7 +2,7 @@ import type { Request, Response } from 'express'
 
 import { handleError, handleSuccess } from '../lib/base'
 import {
-  cloneOnchainTokensToWeb2,
+  copyNewOnchainTokensToWeb2,
   executeSubgraphQuery,
 } from '../services/subgraph.service'
 
@@ -16,19 +16,26 @@ export async function querySubgraph(req: Request, res: Response) {
   }
 }
 
-export async function cloneOnChainListingsToWeb2(req: Request, res: Response) {
+export async function cloneNewOnchainListingsToWeb2(
+  req: Request,
+  res: Response
+) {
   try {
-    const response = await cloneOnchainTokensToWeb2()
+    const response = await copyNewOnchainTokensToWeb2()
 
     return handleSuccess(res, {
-      message: 'All onchain listings have been cloned to web2',
+      message: 'All new onchain listings have been copied to web2',
       ...response,
     })
   } catch (error) {
     console.error(
-      'Error occurred while cloning onchain listings to web2',
+      'Error occurred while copying new onchain listings to web2',
       error
     )
-    return handleError(res, error, 'Unable to clone onchain listings to web2')
+    return handleError(
+      res,
+      error,
+      'Unable to copy new onchain listings to web2'
+    )
   }
 }
