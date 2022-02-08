@@ -1,3 +1,4 @@
+/* eslint-disable no-await-in-loop */
 /* eslint-disable @typescript-eslint/no-unnecessary-condition */
 /* eslint-disable unicorn/no-await-expression-member */
 import { request } from 'graphql-request'
@@ -6,12 +7,18 @@ import type { FilterQuery } from 'mongoose'
 import { BlacklistedListingModel } from '../models/blacklisted-listings.model'
 import type { IListing, ListingDocument } from '../models/listing.model'
 import { ListingModel } from '../models/listing.model'
+import type { TriggerDocument } from '../models/trigger.model'
+import { TriggerModel, TriggerType } from '../models/trigger.model'
 import type { Web3TokenData } from '../types/listing.types'
 import type { IdeaToken, PricePoint } from '../types/subgraph.types'
 import type { DECODED_ACCOUNT } from '../util/jwtTokenUtil'
 import { mapBlacklistedListing, mapListingResponse } from '../util/listingUtil'
 import { getAllMarkets, getTokenNameUrl } from '../util/marketUtil'
-import { getSingleTokenQuery, getTokenQuery } from '../util/queries'
+import {
+  getTokensByMarketIdAndTokenNameQuery,
+  getTokenQuery,
+  getTokensByMarketIdAndTokenIdQuery,
+} from '../util/queries'
 import {
   calculateClaimableIncome,
   calculateDayChange,
@@ -186,7 +193,6 @@ async function fetchListingByMarketAndValue({
   account: DECODED_ACCOUNT | null
 }) {
   let listing = null
-  const marketName = getAllMarkets()[marketId]
 
   // Fetch listing data from web2 db
   listing = await ListingModel.findOne({ marketId, value })
@@ -197,7 +203,10 @@ async function fetchListingByMarketAndValue({
   if (!listing || !listing.isOnchain) {
     const onchainTokens = await request(
       SUBGRAPH_URL,
-      getSingleTokenQuery({ marketName, tokenName: onchainValue })
+      getTokensByMarketIdAndTokenNameQuery({
+        marketId,
+        tokenName: onchainValue,
+      })
     )
     const onchainIdeaToken = onchainTokens.ideaMarkets[0].tokens[0] as IdeaToken
     listing = await updateOnchainListing({
@@ -421,6 +430,40 @@ export async function updateTotalVotesInListing({
   totalVotes: number
 }) {
   return ListingModel.findByIdAndUpdate(listingId, { $set: { totalVotes } })
+}
+
+export async function resolveOnchainListingTriggers(
+  triggers: TriggerDocument[]
+) {
+  for (const trigger of triggers) {
+    await resolveOnchainListingTrigger(trigger)
+  }
+}
+
+export async function resolveOnchainListingTrigger(trigger: TriggerDocument) {
+  try {
+    console.info(`Resolving trigger - ${trigger._id as string}`)
+    const marketId = Number.parseInt(trigger.triggerData.marketId as string)
+    const tokenId = Number.parseInt(trigger.triggerData.tokenId as string)
+    if (!marketId || !tokenId) {
+      console.error(
+        `TriggerData is not valid for type = ${TriggerType.ONCHAIN_LISTING}`
+      )
+      return
+    }
+
+    const onchainTokens = await request(
+      SUBGRAPH_URL,
+      getTokensByMarketIdAndTokenIdQuery({ marketId, tokenId })
+    )
+    const ideaToken = onchainTokens.ideaMarkets[0].tokens[0] as IdeaToken
+
+    await updateOnchainListing({ ideaToken, updateIfExists: true })
+    await TriggerModel.findByIdAndDelete(trigger._id)
+    console.info(`Trigger - ${trigger._id as string} resolved`)
+  } catch (error) {
+    console.error('Error occurred while resolving ghost listing trigger', error)
+  }
 }
 
 export async function addBlacklistListing({

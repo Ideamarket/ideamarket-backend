@@ -1,22 +1,22 @@
-/* eslint-disable prefer-template */
+ 
 import { gql } from 'graphql-request'
 
 import { WEEK_SECONDS } from '..'
 
-export function getSingleTokenQuery({
-  marketName,
-  tokenName,
+export function getTokensByMarketIdAndTokenIdQuery({
+  marketId,
+  tokenId,
 }: {
-  marketName: string
-  tokenName: string
+  marketId: number
+  tokenId: number
 }): string {
   const currentTs = Math.floor(Date.now() / 1000)
   const weekBack = currentTs - WEEK_SECONDS
 
   return gql`
     {
-      ideaMarkets(where:{name:${'"' + marketName + '"'}}) {
-        tokens(where:{name:${'"' + tokenName + '"'}}) {
+      ideaMarkets(where:{marketID:${marketId}}) {
+        tokens(where:{tokenID:${tokenId}}) {
             id
             name
             holders
