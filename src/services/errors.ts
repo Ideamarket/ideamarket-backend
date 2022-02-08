@@ -1,6 +1,21 @@
 /* eslint-disable @typescript-eslint/restrict-template-expressions */
 /* eslint-disable @typescript-eslint/explicit-member-accessibility */
 
+export class BadRequestError extends Error {
+  code: number
+
+  custom: boolean
+
+  parent: any
+
+  constructor(parentError: any) {
+    super('Request is not valid')
+    this.parent = parentError
+    this.name = 'BadRequestError'
+    this.code = 400
+    this.custom = true
+  }
+}
 export class UnAuthenticatedError extends Error {
   code: number
 
