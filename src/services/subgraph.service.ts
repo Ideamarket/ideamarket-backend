@@ -3,8 +3,9 @@
 import config from 'config'
 import { gql, request } from 'graphql-request'
 
-import type { OnchainTokens } from '../types/listing.types'
+import type { OnchainTokens, Web3TokenData } from '../types/listing.types'
 import type { IdeaToken, IdeaTokens } from '../types/subgraph.types'
+import { getTokensByMarketIdAndIdQuery } from '../util/queries'
 import { getAllTokensQuery } from '../util/queries/getAllTokensQuery'
 import { EntityNotFoundError, InternalServerError } from './errors'
 import { updateOnchainListing } from './listing.service'
@@ -86,4 +87,18 @@ export async function copyNewOnchainTokensToWeb2() {
       'Failed to add cloned onchain listings to web2'
     )
   }
+}
+
+export async function fetchSubgraphData({
+  marketId,
+  id,
+}: {
+  marketId: number
+  id: string
+}) {
+  const onchainTokens = await request(
+    SUBGRAPH_URL,
+    getTokensByMarketIdAndIdQuery({ marketId, id })
+  )
+  return onchainTokens.ideaMarkets[0].tokens[0] as Partial<Web3TokenData>
 }

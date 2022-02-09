@@ -58,9 +58,11 @@ export function combineWeb2AndWeb3TokenData({
 export function mapListingResponse({
   listingDoc,
   upVoted,
+  web3TokenData,
 }: {
   listingDoc: ListingDocument | null
   upVoted: boolean | null
+  web3TokenData: Web3TokenData | Partial<Web3TokenData> | null
 }): NewListingResponse | null {
   if (!listingDoc) {
     return null
@@ -89,6 +91,7 @@ export function mapListingResponse({
     yearIncome: listingDoc.yearIncome,
     claimableIncome: listingDoc.claimableIncome,
     upVoted,
+    web3TokenData,
   }
 }
 
