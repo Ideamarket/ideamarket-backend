@@ -32,7 +32,10 @@ import {
   InternalServerError,
   ObjectAlreadyExistsError,
 } from './errors'
-import { fetchAllOnchainTokensFromWeb3 } from './subgraph.service'
+import {
+  fetchAllOnchainTokensFromWeb3,
+  fetchSubgraphData,
+} from './subgraph.service'
 import { checkUpVotedOrNot } from './vote.service'
 
 export type ListingQueryOptions = {
@@ -118,6 +121,7 @@ export async function fetchAllListings({
         listingId: listing.id,
         accountId: account ? account.id : null,
       }),
+      web3TokenData: null,
     })
   )
   return Promise.all(listingsResponse)
@@ -174,6 +178,12 @@ async function fetchListingById({
         listingId: listing.id,
         accountId: account ? account.id : null,
       }),
+      web3TokenData: listing.onchainId
+        ? await fetchSubgraphData({
+            marketId: listing.marketId,
+            id: listing.onchainId,
+          })
+        : null,
     })
   } catch (error) {
     console.error('Error occurred while fetching listing from web2', error)
@@ -226,6 +236,12 @@ async function fetchListingByMarketAndValue({
       listingId: listing.id,
       accountId: account ? account.id : null,
     }),
+    web3TokenData: listing.onchainId
+      ? await fetchSubgraphData({
+          marketId: listing.marketId,
+          id: listing.onchainId,
+        })
+      : null,
   })
 }
 
@@ -270,7 +286,11 @@ export async function addNewGhostListing({
     await ListingModel.create(listingDoc)
   ).populate('ghostListedByAccount')
 
-  return mapListingResponse({ listingDoc: createdGhostListing, upVoted: false })
+  return mapListingResponse({
+    listingDoc: createdGhostListing,
+    upVoted: false,
+    web3TokenData: null,
+  })
 }
 
 export async function updateOrCloneOnchainListing({
@@ -342,6 +362,7 @@ export async function updateOrCloneOnchainListing({
       listingId: updatedOrClonedListing.id,
       accountId: account ? account.id : null,
     }),
+    web3TokenData: null,
   })
 }
 
