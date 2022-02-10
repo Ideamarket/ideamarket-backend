@@ -82,7 +82,7 @@ export async function fetchListing(req: Request, res: Response) {
       account: decodedAccount ?? null,
     })
 
-    return handleSuccess(res, listing)
+    return handleSuccess(res, { listing })
   } catch (error) {
     console.error('Error occurred while fetching the listing', error)
     return handleError(res, error, 'Unable to fetch the listing')
