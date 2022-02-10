@@ -1,6 +1,7 @@
 /* eslint-disable no-await-in-loop */
 /* eslint-disable @typescript-eslint/no-unnecessary-condition */
 /* eslint-disable unicorn/no-await-expression-member */
+import escapeStringRegexp from 'escape-string-regexp'
 import { request } from 'graphql-request'
 import type { FilterQuery } from 'mongoose'
 
@@ -86,7 +87,9 @@ export async function fetchAllListings({
     filterOptions.push({ _id: { $in: filterTokens } })
   }
   if (search) {
-    filterOptions.push({ value: { $regex: search, $options: 'i' } })
+    filterOptions.push({
+      value: { $regex: escapeStringRegexp(search), $options: 'i' },
+    })
   }
 
   // Listings
