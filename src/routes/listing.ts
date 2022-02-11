@@ -16,10 +16,7 @@ import {
   authenticateAndSetAccount,
   optionalAuthenticateAndSetAccount,
 } from '../middleware/authentication'
-import {
-  authorizeAdmin,
-  authorizeModeratorOrAdmin,
-} from '../middleware/authorization'
+import { authorizeModeratorOrAdmin } from '../middleware/authorization'
 import { validateRequest } from '../middleware/validateRequest'
 import {
   addListingToBlacklistValidation,
@@ -64,12 +61,7 @@ listingRouter.post(
   addOnchainListing
 )
 
-listingRouter.patch(
-  '/onchain',
-  authenticateAndSetAccount,
-  authorizeAdmin,
-  updateOnchainListings
-)
+listingRouter.patch('/onchain', updateOnchainListings)
 
 listingRouter.post(
   '/blacklist',
