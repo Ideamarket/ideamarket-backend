@@ -34,6 +34,9 @@ export async function fetchListings(req: Request, res: Response) {
     const earliestPricePointTs =
       Number.parseInt(req.query.earliestPricePointTs as string) || 0
     const search = (req.query.search as string) || null
+    const verified = req.query.verified
+      ? Boolean(req.query.verified as string)
+      : null
 
     const options = {
       marketType: (marketType as 'onchain' | 'ghost' | null) ?? null,
@@ -46,6 +49,7 @@ export async function fetchListings(req: Request, res: Response) {
       isVerifiedFilter,
       earliestPricePointTs,
       search,
+      verified,
     }
 
     const allListings = await fetchAllListings({

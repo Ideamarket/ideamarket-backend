@@ -26,6 +26,7 @@ export type IListing = {
   holders: number | undefined
   yearIncome: number | undefined
   claimableIncome: number | undefined
+  verified: boolean | null | undefined
 }
 
 interface IListingModel
@@ -55,6 +56,7 @@ export interface ListingDocument extends Document {
   holders: number
   yearIncome: number
   claimableIncome: number
+  verified: boolean | null
 }
 
 const ListingSchema = new Schema(
@@ -89,6 +91,7 @@ const ListingSchema = new Schema(
     holders: { type: Number, default: 0, required: true },
     yearIncome: { type: Number, default: 0, required: true },
     claimableIncome: { type: Number, default: 0, required: true },
+    verified: { type: Boolean, default: null, required: true },
   },
   {
     versionKey: false,

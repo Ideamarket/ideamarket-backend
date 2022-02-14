@@ -90,6 +90,7 @@ export function mapListingResponse({
     holders: listingDoc.holders || 0,
     yearIncome: listingDoc.yearIncome || 0,
     claimableIncome: listingDoc.claimableIncome || 0,
+    verified: listingDoc.verified,
     upVoted,
     web3TokenData,
   }
