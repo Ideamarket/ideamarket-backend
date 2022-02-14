@@ -26,6 +26,7 @@ import {
   calculateMarketCap,
   calculatePrice,
   calculateYearIncome,
+  isListingVerified,
   SUBGRAPH_URL,
 } from '../util/web3Util'
 import {
@@ -50,6 +51,7 @@ export type ListingQueryOptions = {
   isVerifiedFilter: boolean
   earliestPricePointTs: number
   search: string | null
+  verified: boolean | null
 }
 
 export async function fetchAllListings({
@@ -59,8 +61,16 @@ export async function fetchAllListings({
   options: ListingQueryOptions
   account: DECODED_ACCOUNT | null
 }) {
-  const { marketType, marketIds, skip, limit, orderBy, filterTokens, search } =
-    options
+  const {
+    marketType,
+    marketIds,
+    skip,
+    limit,
+    orderBy,
+    filterTokens,
+    search,
+    verified,
+  } = options
   const orderDirection = options.orderDirection === 'asc' ? 1 : -1
 
   // Sorting Options
@@ -90,6 +100,9 @@ export async function fetchAllListings({
     filterOptions.push({
       value: { $regex: escapeStringRegexp(search), $options: 'i' },
     })
+  }
+  if (marketType === 'onchain' && verified) {
+    filterOptions.push({ verified })
   }
 
   // Listings
@@ -284,6 +297,7 @@ export async function addNewGhostListing({
     holders: 0,
     yearIncome: 0,
     claimableIncome: 0,
+    verified: null,
   })
   const createdGhostListing = await (
     await ListingModel.create(listingDoc)
@@ -343,6 +357,7 @@ export async function updateOrCloneOnchainListing({
     holders: token.holders,
     yearIncome: calculateYearIncome(token.marketCap),
     claimableIncome: calculateClaimableIncome(),
+    verified: isListingVerified(token.tokenOwner),
   }
 
   const updatedOrClonedListing = await ListingModel.findOneAndUpdate(
@@ -427,6 +442,7 @@ export async function updateOnchainListing({
       holders: ideaToken.holders,
       yearIncome: calculateYearIncome(ideaToken.marketCap),
       claimableIncome: calculateClaimableIncome(),
+      verified: isListingVerified(ideaToken.tokenOwner),
     }
 
     return await ListingModel.findOneAndUpdate(

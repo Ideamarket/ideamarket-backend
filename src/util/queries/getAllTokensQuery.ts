@@ -31,6 +31,7 @@ export function getAllTokensQuery({
             name
           }
           lister
+          tokenOwner
           listedAt
           latestPricePoint {
             timestamp

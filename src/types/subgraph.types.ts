@@ -13,6 +13,7 @@ export type IdeaToken = {
   pricePoints: PricePoint[]
   lister: string
   listedAt: string
+  tokenOwner: string
 }
 
 export type EarliestPricePoint = {

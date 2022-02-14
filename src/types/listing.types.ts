@@ -30,6 +30,7 @@ export type NewListingResponse = {
   holders: number
   yearIncome: number
   claimableIncome: number
+  verified: boolean | null
   upVoted: boolean | null
   web3TokenData: Web3TokenData | Partial<Web3TokenData> | null
 }

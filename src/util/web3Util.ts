@@ -64,3 +64,7 @@ function getCompoundSupplyRate() {
 export function calculateClaimableIncome() {
   return 0
 }
+
+export function isListingVerified(tokenOwner: string) {
+  return tokenOwner !== ZERO_ADDRESS
+}

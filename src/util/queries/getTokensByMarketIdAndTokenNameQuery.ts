@@ -26,6 +26,7 @@ export function getTokensByMarketIdAndTokenNameQuery({
               name
             }
             lister
+            tokenOwner
             listedAt
             latestPricePoint {
               timestamp
