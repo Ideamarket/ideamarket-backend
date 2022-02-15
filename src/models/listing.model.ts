@@ -91,7 +91,7 @@ const ListingSchema = new Schema(
     holders: { type: Number, default: 0, required: true },
     yearIncome: { type: Number, default: 0, required: true },
     claimableIncome: { type: Number, default: 0, required: true },
-    verified: { type: Boolean, default: null, required: true },
+    verified: { type: Boolean, default: null, required: false },
   },
   {
     versionKey: false,
