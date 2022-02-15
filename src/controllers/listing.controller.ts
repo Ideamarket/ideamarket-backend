@@ -81,8 +81,8 @@ export async function fetchListing(req: Request, res: Response) {
     const listing = await fetchSingleListing({
       listingId: listingId ?? null,
       marketId,
-      value: value ? normalize(value) : null,
-      onchainValue: onchainValue ? normalize(onchainValue) : null,
+      value,
+      onchainValue,
       account: decodedAccount ?? null,
     })
 
