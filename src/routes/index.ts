@@ -1,6 +1,7 @@
 import { Router } from 'express'
 
 import { accountRouter } from './account'
+import { categoryRouter } from './category'
 import { commentsRouter } from './comments'
 import { generalRouter } from './general'
 import { listingRouter } from './listing'
@@ -14,6 +15,7 @@ const routes = Router()
 
 // Routers
 routes.use('/account', accountRouter)
+routes.use('/category', categoryRouter)
 routes.use('/comments', commentsRouter)
 routes.use('/fs', switchRouter)
 routes.use('/general', generalRouter)

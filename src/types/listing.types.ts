@@ -15,6 +15,7 @@ export type NewListingResponse = {
   value: string
   marketId: number
   marketName: string
+  category: Category | null
   isOnchain: boolean
   ghostListedBy: string | null
   ghostListedAt: Date | null
@@ -33,6 +34,11 @@ export type NewListingResponse = {
   verified: boolean | null
   upVoted: boolean | null
   web3TokenData: Web3TokenData | Partial<Web3TokenData> | null
+}
+
+export type Category = {
+  id: string
+  name: string
 }
 
 export type Web2TokenData = {

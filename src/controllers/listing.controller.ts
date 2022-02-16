@@ -1,7 +1,7 @@
 import type { Request, Response } from 'express'
-import type { DECODED_ACCOUNT } from 'util/jwtTokenUtil'
 
 import { handleSuccess, handleError } from '../lib/base'
+import type { ListingQueryOptions } from '../services/listing.service'
 import {
   addNewGhostListing,
   updateOrCloneOnchainListing,
@@ -13,6 +13,7 @@ import {
   updateAllOnchainListings,
 } from '../services/listing.service'
 import { normalize } from '../util'
+import type { DECODED_ACCOUNT } from '../util/jwtTokenUtil'
 
 export async function fetchListings(req: Request, res: Response) {
   try {
@@ -37,8 +38,10 @@ export async function fetchListings(req: Request, res: Response) {
     const verified = req.query.verified
       ? (req.query.verified as string) === 'true'
       : null
+    const categories =
+      (req.query.categories as string | undefined)?.split(',') ?? []
 
-    const options = {
+    const options: ListingQueryOptions = {
       marketType: (marketType as 'onchain' | 'ghost' | null) ?? null,
       marketIds,
       skip,
@@ -50,6 +53,7 @@ export async function fetchListings(req: Request, res: Response) {
       earliestPricePointTs,
       search,
       verified,
+      categories,
     }
 
     const allListings = await fetchAllListings({
@@ -101,6 +105,7 @@ export async function addGhostListing(req: Request, res: Response) {
     const ghostListing = await addNewGhostListing({
       marketId: reqBody.marketId as number,
       value: normalize(decodeURI(reqBody.value as string)),
+      categoryId: reqBody.categoryId ?? null,
       account: decodedAccount,
     })
 
