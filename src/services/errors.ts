@@ -33,8 +33,11 @@ export class EntityNotFoundError extends Error {
 
   custom: boolean
 
+  parent: any
+
   constructor(type: any | null, message: string | null) {
     super(message ? message : `Object of type ${type} has not been found`)
+    this.parent = message
     this.name = 'EntityNotFoundError'
     this.code = 404
     this.custom = true

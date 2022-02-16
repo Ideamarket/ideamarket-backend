@@ -1,6 +1,7 @@
-import { body } from 'express-validator'
+import { body, oneOf } from 'express-validator'
 
 import { TriggerType } from '../models/trigger.model'
+import { isMarketIdValid } from '../util/marketUtil'
 
 export const addTriggerValidation = [
   body('type')
@@ -12,6 +13,25 @@ export const addTriggerValidation = [
   body('triggerData')
     .notEmpty()
     .withMessage('Trigger data cannot be null/empty'),
+  oneOf(
+    [
+      [
+        body('triggerData.marketId')
+          .notEmpty()
+          .custom(isMarketIdValid)
+          .withMessage('triggerData.marketId is not valid or null/empty'),
+        body('triggerData.tokenId')
+          .notEmpty()
+          .isInt()
+          .withMessage('triggerData.tokenId is not valid or null/empty'),
+        body('triggerData.categoryId')
+          .optional()
+          .isString()
+          .withMessage('triggerData.categoryId is not valid'),
+      ],
+    ],
+    'triggerData is not valid'
+  ),
 ]
 
 export const resolveTriggersValidation = [

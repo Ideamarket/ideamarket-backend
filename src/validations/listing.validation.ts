@@ -35,6 +35,10 @@ export const addGhostListingValidation = [
     .custom(isMarketIdValid)
     .withMessage('marketId is invalid'),
   body('value').notEmpty().withMessage('Token value cannot be empty'),
+  body('categoryId')
+    .optional()
+    .isString()
+    .withMessage('categoryId is not valid'),
 ]
 
 export const addOnchainListingValidation = [
