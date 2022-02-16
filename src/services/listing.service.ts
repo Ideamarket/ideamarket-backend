@@ -234,11 +234,17 @@ async function fetchListingByMarketAndValue({
         tokenName: onchainValue,
       })
     )
-    const onchainIdeaToken = onchainTokens.ideaMarkets[0].tokens[0] as IdeaToken
-    listing = await updateOnchainListing({
-      ideaToken: onchainIdeaToken,
-      updateIfExists: false,
-    })
+    if (
+      onchainTokens?.ideaMarkets?.length > 0 &&
+      onchainTokens.ideaMarkets[0].tokens.length > 0
+    ) {
+      const onchainIdeaToken = onchainTokens.ideaMarkets[0]
+        .tokens[0] as IdeaToken
+      listing = await updateOnchainListing({
+        ideaToken: onchainIdeaToken,
+        updateIfExists: false,
+      })
+    }
   }
 
   if (!listing) {
