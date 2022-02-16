@@ -444,8 +444,16 @@ export async function updateOnchainListing({
       tokenName: ideaToken.name,
     })
     const listing = await ListingModel.findOne({
-      marketId: ideaToken.market.id,
-      value,
+      $or: [
+        {
+          marketId: ideaToken.market.id,
+          onchainValue: ideaToken.name,
+        },
+        {
+          marketId: ideaToken.market.id,
+          value,
+        },
+      ],
     })
 
     if (!updateIfExists && listing?.onchainValue) {
@@ -479,8 +487,16 @@ export async function updateOnchainListing({
 
     return await ListingModel.findOneAndUpdate(
       {
-        marketId: listingDoc.marketId,
-        onchainValue: listingDoc.onchainValue,
+        $or: [
+          {
+            marketId: listingDoc.marketId,
+            onchainValue: listingDoc.onchainValue,
+          },
+          {
+            marketId: listingDoc.marketId,
+            value,
+          },
+        ],
       },
       { $set: listingDoc },
       {
