@@ -12,7 +12,6 @@ import {
   fetchAllListings,
   updateAllOnchainListings,
 } from '../services/listing.service'
-import { normalize } from '../util'
 import type { DECODED_ACCOUNT } from '../util/jwtTokenUtil'
 
 export async function fetchListings(req: Request, res: Response) {
@@ -104,7 +103,7 @@ export async function addGhostListing(req: Request, res: Response) {
 
     const ghostListing = await addNewGhostListing({
       marketId: reqBody.marketId as number,
-      value: normalize(decodeURI(reqBody.value as string)),
+      value: decodeURI(reqBody.value as string),
       categoryId: reqBody.categoryId ?? null,
       account: decodedAccount,
     })
@@ -125,7 +124,7 @@ export async function addOnchainListing(req: Request, res: Response) {
 
     const listing = await updateOrCloneOnchainListing({
       marketId: reqBody.marketId as number,
-      value: normalize(decodeURI(reqBody.value as string)),
+      value: decodeURI(reqBody.value as string),
       onchainValue: decodeURIComponent(reqBody.onchainValue as string),
       account: decodedAccount ?? null,
     })
