@@ -24,10 +24,10 @@ export const addTriggerValidation = [
           .notEmpty()
           .isInt()
           .withMessage('triggerData.tokenId is not valid or null/empty'),
-        body('triggerData.categoryId')
+        body('triggerData.categories')
           .optional()
           .isString()
-          .withMessage('triggerData.categoryId is not valid'),
+          .withMessage('triggerData.categories is not valid'),
       ],
     ],
     'triggerData is not valid'

@@ -73,12 +73,10 @@ export function mapListingResponse({
     value: listingDoc.value,
     marketId: listingDoc.marketId,
     marketName: listingDoc.marketName,
-    category: listingDoc.category
-      ? {
-          id: listingDoc.category._id,
-          name: listingDoc.category.name,
-        }
-      : null,
+    categories: listingDoc.categories.map((category) => ({
+      id: category._id,
+      name: category.name,
+    })),
     isOnchain: listingDoc.isOnchain,
     ghostListedBy:
       listingDoc.ghostListedByAccount?.username ?? listingDoc.ghostListedBy,

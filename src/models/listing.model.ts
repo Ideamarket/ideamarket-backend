@@ -10,7 +10,7 @@ export type IListing = {
   value: string | undefined
   marketId: number | undefined
   marketName: string | undefined
-  category: string | null
+  categories: string[]
   isOnchain: boolean
   ghostListedBy: string | null | undefined
   ghostListedByAccount: string | null | undefined
@@ -41,7 +41,7 @@ export interface ListingDocument extends Document {
   value: string
   marketId: number
   marketName: string
-  category: CategoryDocument | null
+  categories: CategoryDocument[]
   isOnchain: boolean
   ghostListedBy: string
   ghostListedByAccount: AccountDocument | null
@@ -67,12 +67,16 @@ const ListingSchema = new Schema(
     value: { type: String, required: true },
     marketId: { type: Number, required: true, index: true },
     marketName: { type: String, required: true, maxlength: 250, index: true },
-    category: {
-      type: mongoose.Types.ObjectId,
-      ref: 'Category',
+    categories: {
+      type: [
+        {
+          type: mongoose.Types.ObjectId,
+          ref: 'Category',
+        },
+      ],
+      default: [],
       required: false,
       index: true,
-      sparse: true,
     },
     isOnchain: { type: Boolean, default: false, index: true },
     ghostListedBy: { type: String },

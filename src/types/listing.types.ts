@@ -15,7 +15,7 @@ export type NewListingResponse = {
   value: string
   marketId: number
   marketName: string
-  category: Category | null
+  categories: Category[]
   isOnchain: boolean
   ghostListedBy: string | null
   ghostListedAt: Date | null

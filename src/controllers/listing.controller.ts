@@ -100,11 +100,13 @@ export async function addGhostListing(req: Request, res: Response) {
   try {
     const reqBody = req.body
     const decodedAccount = (req as any).decodedAccount as DECODED_ACCOUNT
+    const categoryIds =
+      (req.body.categories as string | undefined)?.split(',') ?? []
 
     const ghostListing = await addNewGhostListing({
       marketId: reqBody.marketId as number,
       value: decodeURI(reqBody.value as string),
-      categoryId: reqBody.categoryId ?? null,
+      categoryIds,
       account: decodedAccount,
     })
 

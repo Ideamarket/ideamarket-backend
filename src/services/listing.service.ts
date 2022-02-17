@@ -3,6 +3,7 @@
 /* eslint-disable unicorn/no-await-expression-member */
 import escapeStringRegexp from 'escape-string-regexp'
 import { request } from 'graphql-request'
+import mongoose from 'mongoose'
 import type { FilterQuery } from 'mongoose'
 
 import { BlacklistedListingModel } from '../models/blacklisted-listings.model'
@@ -108,7 +109,13 @@ export async function fetchAllListings({
     filterOptions.push({ verified })
   }
   if (categories.length > 0) {
-    filterOptions.push({ category: { $in: categories } })
+    filterOptions.push({
+      categories: {
+        $in: categories.map(
+          (category) => new mongoose.Types.ObjectId(category)
+        ),
+      },
+    })
   }
 
   // Listings
@@ -118,7 +125,7 @@ export async function fetchAllListings({
     .limit(limit)
     .populate('ghostListedByAccount')
     .populate('onchainListedByAccount')
-    .populate('category')
+    .populate('categories')
 
   // Filtering blacklisted listings
   const listingIds = listings.map((listing) => listing._id)
@@ -190,7 +197,7 @@ async function fetchListingById({
     const listing = await ListingModel.findById(listingId)
       .populate('ghostListedByAccount')
       .populate('onchainListedByAccount')
-      .populate('category')
+      .populate('categories')
 
     if (!listing) {
       return null
@@ -232,7 +239,7 @@ async function fetchListingByMarketAndValue({
   listing = await ListingModel.findOne({ marketId, value })
     .populate('ghostListedByAccount')
     .populate('onchainListedByAccount')
-    .populate('category')
+    .populate('categories')
 
   // Pull data from subgraph if web3 data is not present in web2 db
   if (!listing || !listing.isOnchain) {
@@ -279,12 +286,12 @@ async function fetchListingByMarketAndValue({
 export async function addNewGhostListing({
   marketId,
   value,
-  categoryId,
+  categoryIds,
   account,
 }: {
   marketId: number
   value: string
-  categoryId: string | null
+  categoryIds: string[]
   account: DECODED_ACCOUNT
 }) {
   const marketName = getAllMarkets()[marketId]
@@ -294,10 +301,15 @@ export async function addNewGhostListing({
     throw new ObjectAlreadyExistsError(null, 'Token has already been listed')
   }
 
-  if (categoryId) {
-    const category = await CategoryModel.findById(categoryId)
-    if (!category) {
-      throw new EntityNotFoundError(null, 'Category does not exist')
+  if (categoryIds.length > 0) {
+    for await (const categoryId of categoryIds) {
+      const category = await CategoryModel.findById(categoryId)
+      if (!category) {
+        throw new EntityNotFoundError(
+          null,
+          `Category-${categoryId} does not exist`
+        )
+      }
     }
   }
 
@@ -305,7 +317,7 @@ export async function addNewGhostListing({
     value,
     marketId,
     marketName,
-    category: categoryId,
+    categories: categoryIds,
     isOnchain: false,
     ghostListedBy: account.walletAddress,
     ghostListedByAccount: account.id,
@@ -329,7 +341,7 @@ export async function addNewGhostListing({
     await (
       await ListingModel.create(listingDoc)
     ).populate('ghostListedByAccount')
-  ).populate('category')
+  ).populate('categories')
 
   return mapListingResponse({
     listingDoc: createdGhostListing,
@@ -368,7 +380,7 @@ export async function updateOrCloneOnchainListing({
     value,
     marketId,
     marketName,
-    category: listing?.category?._id ?? null,
+    categories: listing?.categories?.map((category) => category._id) ?? [],
     isOnchain: true,
     ghostListedBy: listing ? listing.ghostListedBy : null,
     ghostListedByAccount: listing ? listing.ghostListedByAccount?._id : null,
@@ -432,11 +444,11 @@ export async function updateAllOnchainListings() {
 export async function updateOnchainListing({
   ideaToken,
   updateIfExists,
-  categoryId,
+  categoryIds,
 }: {
   ideaToken: IdeaToken
   updateIfExists: boolean
-  categoryId?: string | null
+  categoryIds?: string[]
 }) {
   try {
     const value = getTokenNameUrl({
@@ -464,7 +476,10 @@ export async function updateOnchainListing({
       value: listing ? listing.value : value,
       marketId: ideaToken.market.id,
       marketName: ideaToken.market.name,
-      category: listing?.category?._id ?? categoryId ?? null,
+      categories:
+        listing?.categories?.map((category) => category._id) ??
+        categoryIds ??
+        [],
       isOnchain: true,
       ghostListedBy: listing ? listing.ghostListedBy : null,
       ghostListedByAccount: listing ? listing.ghostListedByAccount?._id : null,
@@ -533,7 +548,8 @@ export async function resolveOnchainListingTrigger(trigger: TriggerDocument) {
     console.info(`Resolving trigger - ${trigger._id as string}`)
     const marketId = Number.parseInt(trigger.triggerData.marketId as string)
     const tokenId = Number.parseInt(trigger.triggerData.tokenId as string)
-    const categoryId = (trigger.triggerData.categoryId as string) ?? null
+    const categoryIds =
+      (trigger.triggerData.categories as string | undefined)?.split(',') ?? []
     if (!marketId || !tokenId) {
       console.error(
         `TriggerData is not valid for type = ${TriggerType.ONCHAIN_LISTING}`
@@ -547,7 +563,7 @@ export async function resolveOnchainListingTrigger(trigger: TriggerDocument) {
     )
     const ideaToken = onchainTokens.ideaMarkets[0].tokens[0] as IdeaToken
 
-    await updateOnchainListing({ ideaToken, updateIfExists: true, categoryId })
+    await updateOnchainListing({ ideaToken, updateIfExists: true, categoryIds })
     await TriggerModel.findByIdAndDelete(trigger._id)
     console.info(`Trigger - ${trigger._id as string} resolved`)
   } catch (error) {
