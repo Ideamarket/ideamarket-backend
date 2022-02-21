@@ -571,6 +571,68 @@ export async function resolveOnchainListingTrigger(trigger: TriggerDocument) {
   }
 }
 
+export async function addCategoryToListing({
+  listingId,
+  categoryId,
+}: {
+  listingId: string
+  categoryId: string
+}) {
+  const listing = await ListingModel.findById(listingId)
+  if (!listing) {
+    throw new EntityNotFoundError(null, 'Listing does not exist')
+  }
+
+  const category = await CategoryModel.findById(categoryId)
+  if (!category) {
+    throw new EntityNotFoundError(null, 'Category does not exist')
+  }
+
+  if (!listing.categories) {
+    listing.categories = []
+  }
+  if (
+    listing.categories
+      .map((category) => category._id.toString())
+      .includes(category._id.toString())
+  ) {
+    console.info('Category has already been added to the listing')
+    return
+  }
+
+  listing.categories = [...listing.categories, category]
+  await listing.save()
+}
+
+export async function removeCategoryFromListing({
+  listingId,
+  categoryId,
+}: {
+  listingId: string
+  categoryId: string
+}) {
+  const listing = await ListingModel.findById(listingId)
+  if (!listing) {
+    throw new EntityNotFoundError(null, 'Listing does not exist')
+  }
+
+  const category = await CategoryModel.findById(categoryId)
+  if (!category) {
+    throw new EntityNotFoundError(null, 'Category does not exist')
+  }
+
+  if (!listing.categories) {
+    listing.categories = []
+  }
+  const updatedCategories = listing.categories.filter(
+    (listingCategory) =>
+      category._id.toString() !== listingCategory._id.toString()
+  )
+
+  listing.categories = updatedCategories
+  await listing.save()
+}
+
 export async function addBlacklistListing({
   listingId,
   onchainId,

@@ -3,6 +3,7 @@ import type { Request, Response } from 'express'
 import { handleSuccess, handleError } from '../lib/base'
 import type { ListingQueryOptions } from '../services/listing.service'
 import {
+  addCategoryToListing,
   addNewGhostListing,
   updateOrCloneOnchainListing,
   fetchSingleListing,
@@ -11,6 +12,7 @@ import {
   deleteBlacklistedListing,
   fetchAllListings,
   updateAllOnchainListings,
+  removeCategoryFromListing,
 } from '../services/listing.service'
 import type { DECODED_ACCOUNT } from '../util/jwtTokenUtil'
 
@@ -148,6 +150,43 @@ export async function updateOnchainListings(req: Request, res: Response) {
   } catch (error) {
     console.error('Error occurred while updating all onchain listings', error)
     return handleError(res, error, 'Unable to add update all onchain listings')
+  }
+}
+
+export async function addCategory(req: Request, res: Response) {
+  try {
+    const reqBody = req.body
+    await addCategoryToListing({
+      listingId: reqBody.listingId as string,
+      categoryId: reqBody.categoryId as string,
+    })
+
+    return handleSuccess(res, {
+      message: 'Category has been added to the listing',
+    })
+  } catch (error) {
+    console.error('Error occurred while adding category to the listing', error)
+    return handleError(res, error, 'Unable to add category to the listing')
+  }
+}
+
+export async function removeCategory(req: Request, res: Response) {
+  try {
+    const reqBody = req.body
+    await removeCategoryFromListing({
+      listingId: reqBody.listingId as string,
+      categoryId: reqBody.categoryId as string,
+    })
+
+    return handleSuccess(res, {
+      message: 'Category has been removed from the listing',
+    })
+  } catch (error) {
+    console.error(
+      'Error occurred while removing category from the listing',
+      error
+    )
+    return handleError(res, error, 'Unable to remove category from the listing')
   }
 }
 

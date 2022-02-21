@@ -3,12 +3,14 @@
 import express from 'express'
 
 import {
+  addCategory,
   addGhostListing,
   addListingToBlacklist,
   addOnchainListing,
   fetchBlacklistedListings,
   fetchListing,
   fetchListings,
+  removeCategory,
   removeListingFromBlacklist,
   updateOnchainListings,
 } from '../controllers/listing.controller'
@@ -25,6 +27,8 @@ import {
   removeListingFromBlacklistValidation,
   fetchListingsValidation,
   fetchListingValidation,
+  addCategoryValidation,
+  removeCategoryValidation,
 } from '../validations/listing.validation'
 
 const listingRouter = express.Router()
@@ -62,6 +66,24 @@ listingRouter.post(
 )
 
 listingRouter.patch('/onchain', updateOnchainListings)
+
+listingRouter.post(
+  '/category',
+  authenticateAndSetAccount,
+  authorizeModeratorOrAdmin,
+  addCategoryValidation,
+  validateRequest,
+  addCategory
+)
+
+listingRouter.delete(
+  '/category',
+  authenticateAndSetAccount,
+  authorizeModeratorOrAdmin,
+  removeCategoryValidation,
+  validateRequest,
+  removeCategory
+)
 
 listingRouter.post(
   '/blacklist',

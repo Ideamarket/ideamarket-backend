@@ -53,6 +53,32 @@ export const addOnchainListingValidation = [
     .withMessage('Onchain token value cannot be empty'),
 ]
 
+export const addCategoryValidation = [
+  body('listingId')
+    .notEmpty()
+    .withMessage('listingId cannot be empty/null')
+    .isString()
+    .withMessage('listingId is invalid'),
+  body('categoryId')
+    .notEmpty()
+    .withMessage('categoryId cannot be empty/null')
+    .isString()
+    .withMessage('categoryId is invalid'),
+]
+
+export const removeCategoryValidation = [
+  body('listingId')
+    .notEmpty()
+    .withMessage('listingId cannot be empty/null')
+    .isString()
+    .withMessage('listingId is invalid'),
+  body('categoryId')
+    .notEmpty()
+    .withMessage('categoryId cannot be empty/null')
+    .isString()
+    .withMessage('categoryId is invalid'),
+]
+
 export const addListingToBlacklistValidation = [
   oneOf(
     [
