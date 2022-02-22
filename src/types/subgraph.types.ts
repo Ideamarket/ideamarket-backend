@@ -33,3 +33,9 @@ export type PricePoint = {
   oldPrice: string
   price: string
 }
+
+export type SubgraphTokenInfoQueryResult = {
+  tokenName: string
+  tokenOwner: string
+  marketName: string
+}

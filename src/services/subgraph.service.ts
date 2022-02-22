@@ -1,10 +1,15 @@
+/* eslint-disable @typescript-eslint/no-throw-literal */
 /* eslint-disable no-await-in-loop */
 import config from 'config'
 import { gql, request } from 'graphql-request'
 
+import { getSubgraph } from '../../config/default'
 import { ListingModel } from '../models/listing.model'
-import type { OnchainTokens } from '../types/listing.types'
-import type { IdeaToken, IdeaTokens } from '../types/subgraph.types'
+import type {
+  IdeaToken,
+  IdeaTokens,
+  SubgraphTokenInfoQueryResult,
+} from '../types/subgraph.types'
 import { getTokenNameUrl } from '../util/marketUtil'
 import { getAllTokensQuery } from '../util/queries/getAllTokensQuery'
 import { EntityNotFoundError, InternalServerError } from './errors'
@@ -12,15 +17,65 @@ import { EntityNotFoundError, InternalServerError } from './errors'
 const NETWORK: string = config.get('web3.network')
 const SUBGRAPH_URL: string = config.get(`web3.subgraphUrls.${NETWORK}`)
 
-export async function executeSubgraphQuery(
-  query: string
-): Promise<OnchainTokens> {
+export async function executeSubgraphQuery<T>(query: string): Promise<T> {
   return request(
     SUBGRAPH_URL,
     gql`
       ${query}
     `
   )
+}
+
+export async function executeSubgraphTokenInfoQuery(
+  tokenAddress: string,
+  chain: string
+): Promise<SubgraphTokenInfoQueryResult> {
+  const gqlRequest = gql`
+    {
+      ideaToken(id:${`"${tokenAddress}"`}) {
+        name
+        tokenOwner
+          market {
+            name
+        }
+      }
+    }
+  `
+
+  const endpoint = getSubgraph(chain)
+
+  let result
+  try {
+    result = await request(endpoint, gqlRequest)
+  } catch {
+    throw 'Failed to query subgraph.'
+  }
+
+  if (!result.ideaToken) {
+    throw 'Token not found in Subgraph.'
+  }
+
+  if (!result.ideaToken.name) {
+    throw 'No token name in Subgraph response.'
+  }
+
+  if (!result.ideaToken.tokenOwner) {
+    throw 'No token owner in Subgraph response.'
+  }
+
+  if (!result.ideaToken.market) {
+    throw 'No market in Subgraph response.'
+  }
+
+  if (!result.ideaToken.market.name) {
+    throw 'No market name in Subgraph response.'
+  }
+
+  return {
+    tokenName: result.ideaToken.name,
+    tokenOwner: result.ideaToken.tokenOwner,
+    marketName: result.ideaToken.market.name,
+  }
 }
 
 export async function cloneOnchainTokensToWeb2() {

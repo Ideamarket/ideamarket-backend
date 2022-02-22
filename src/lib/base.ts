@@ -22,6 +22,12 @@ export const handleError = (res: Response, error: any, message: string) => {
   return res.status(500).json(resBody)
 }
 
+export const handleFailed = (res: Response, message: string) => {
+  const resBody = { success: false, message }
+  logResponse({ res, resBody })
+  return res.status(500).json(resBody)
+}
+
 export const handleSuccess = (res: Response, data: any) => {
   const resBody = {
     success: true,
