@@ -1,2 +1,6 @@
 export { getTokensQuery } from './getTokensQuery'
-export { getSingleTokenQuery } from './getSingleTokenQuery'
+export { getTokenQuery } from './getTokenQuery'
+export { getTokensByMarketIdAndTokenNameQuery } from './getTokensByMarketIdAndTokenNameQuery'
+export { getTokensByMarketIdAndTokenIdQuery } from './getTokensByMarketIdAndTokenIdQuery'
+export { getAllTokensQuery } from './getAllTokensQuery'
+export { getTokensByMarketIdAndIdQuery } from './getTokensByMarketIdAndIdQuery'

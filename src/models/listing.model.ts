@@ -4,11 +4,13 @@ import mongoose, { Schema } from 'mongoose'
 import mongoosePagination from 'mongoose-paginate'
 
 import type { AccountDocument } from './account.model'
+import type { CategoryDocument } from './category.model'
 
 export type IListing = {
   value: string | undefined
   marketId: number | undefined
   marketName: string | undefined
+  categories: string[]
   isOnchain: boolean
   ghostListedBy: string | null | undefined
   ghostListedByAccount: string | null | undefined
@@ -19,6 +21,14 @@ export type IListing = {
   onchainListedByAccount: string | null | undefined
   onchainListedAt: Date | null | undefined
   totalVotes: number | undefined
+  price: number | undefined
+  dayChange: number | undefined
+  weekChange: number | undefined
+  deposits: number | undefined
+  holders: number | undefined
+  yearIncome: number | undefined
+  claimableIncome: number | undefined
+  verified: boolean | null | undefined
 }
 
 interface IListingModel
@@ -31,6 +41,7 @@ export interface ListingDocument extends Document {
   value: string
   marketId: number
   marketName: string
+  categories: CategoryDocument[]
   isOnchain: boolean
   ghostListedBy: string
   ghostListedByAccount: AccountDocument | null
@@ -41,6 +52,14 @@ export interface ListingDocument extends Document {
   onchainListedByAccount: AccountDocument | null
   onchainListedAt: Date
   totalVotes: number
+  price: number
+  dayChange: number
+  weekChange: number
+  deposits: number
+  holders: number
+  yearIncome: number
+  claimableIncome: number
+  verified: boolean | null
 }
 
 const ListingSchema = new Schema(
@@ -48,6 +67,17 @@ const ListingSchema = new Schema(
     value: { type: String, required: true },
     marketId: { type: Number, required: true, index: true },
     marketName: { type: String, required: true, maxlength: 250, index: true },
+    categories: {
+      type: [
+        {
+          type: mongoose.Types.ObjectId,
+          ref: 'Category',
+        },
+      ],
+      default: [],
+      required: false,
+      index: true,
+    },
     isOnchain: { type: Boolean, default: false, index: true },
     ghostListedBy: { type: String },
     ghostListedByAccount: {
@@ -68,6 +98,14 @@ const ListingSchema = new Schema(
     },
     onchainListedAt: { type: Date, default: null, required: false },
     totalVotes: { type: Number, default: 0, required: true },
+    price: { type: Number, default: 0, required: true },
+    dayChange: { type: Number, default: 0, required: true },
+    weekChange: { type: Number, default: 0, required: true },
+    deposits: { type: Number, default: 0, required: true },
+    holders: { type: Number, default: 0, required: true },
+    yearIncome: { type: Number, default: 0, required: true },
+    claimableIncome: { type: Number, default: 0, required: true },
+    verified: { type: Boolean, default: null, required: false },
   },
   {
     versionKey: false,
@@ -81,6 +119,27 @@ ListingSchema.index(
   { marketId: 1, value: 1, onchainValue: 1 },
   { unique: true }
 )
+
+ListingSchema.index({ marketId: 1, price: -1 })
+ListingSchema.index({ isOnchain: 1, marketId: 1, price: -1 })
+
+ListingSchema.index({ marketId: 1, dayChange: -1 })
+ListingSchema.index({ isOnchain: 1, marketId: 1, dayChange: -1 })
+
+ListingSchema.index({ marketId: 1, weekChange: -1 })
+ListingSchema.index({ isOnchain: 1, marketId: 1, weekChange: -1 })
+
+ListingSchema.index({ marketId: 1, deposits: -1 })
+ListingSchema.index({ isOnchain: 1, marketId: 1, deposits: -1 })
+
+ListingSchema.index({ marketId: 1, holders: -1 })
+ListingSchema.index({ isOnchain: 1, marketId: 1, holders: -1 })
+
+ListingSchema.index({ marketId: 1, yearIncome: -1 })
+ListingSchema.index({ isOnchain: 1, marketId: 1, yearIncome: -1 })
+
+ListingSchema.index({ marketId: 1, totalVotes: -1 })
+ListingSchema.index({ isOnchain: 1, marketId: 1, totalVotes: -1 })
 
 ListingSchema.statics.build = (attr: IListingModel) => {
   return new ListingModel(attr)

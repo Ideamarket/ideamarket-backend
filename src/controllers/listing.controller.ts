@@ -1,26 +1,27 @@
 import type { Request, Response } from 'express'
-import type { DECODED_ACCOUNT } from 'util/jwtTokenUtil'
 
 import { handleSuccess, handleError } from '../lib/base'
+import type { ListingQueryOptions } from '../services/listing.service'
 import {
-  fetchOnchainListings,
-  fetchGhostListings,
-  fetchAllListings,
+  addCategoryToListing,
   addNewGhostListing,
   updateOrCloneOnchainListing,
   fetchSingleListing,
   addBlacklistListing,
   fetchAllBlacklistedListings,
   deleteBlacklistedListing,
+  fetchAllListings,
+  updateAllOnchainListings,
+  removeCategoryFromListing,
 } from '../services/listing.service'
-import { normalize } from '../util'
+import type { DECODED_ACCOUNT } from '../util/jwtTokenUtil'
 
 export async function fetchListings(req: Request, res: Response) {
   try {
     const decodedAccount = (req as any).decodedAccount as
       | DECODED_ACCOUNT
       | undefined
-    const marketType = req.query.marketType as string
+    const marketType = req.query.marketType as string | null | undefined
     const marketIds = (req.query.marketIds as string)
       .split(',')
       .map((id) => Number.parseInt(id))
@@ -35,8 +36,14 @@ export async function fetchListings(req: Request, res: Response) {
     const earliestPricePointTs =
       Number.parseInt(req.query.earliestPricePointTs as string) || 0
     const search = (req.query.search as string) || null
+    const verified = req.query.verified
+      ? (req.query.verified as string) === 'true'
+      : null
+    const categories =
+      (req.query.categories as string | undefined)?.split(',') ?? []
 
-    const options = {
+    const options: ListingQueryOptions = {
+      marketType: (marketType as 'onchain' | 'ghost' | null) ?? null,
       marketIds,
       skip,
       limit,
@@ -46,28 +53,15 @@ export async function fetchListings(req: Request, res: Response) {
       isVerifiedFilter,
       earliestPricePointTs,
       search,
-    }
-
-    if (marketType === 'onchain') {
-      const onchainListings = await fetchOnchainListings({
-        options,
-        account: decodedAccount ?? null,
-      })
-      return handleSuccess(res, { listings: onchainListings })
-    }
-
-    if (marketType === 'ghost') {
-      const ghostListings = await fetchGhostListings({
-        options,
-        account: decodedAccount ?? null,
-      })
-      return handleSuccess(res, { listings: ghostListings })
+      verified,
+      categories,
     }
 
     const allListings = await fetchAllListings({
       options,
       account: decodedAccount ?? null,
     })
+
     return handleSuccess(res, { listings: allListings })
   } catch (error) {
     console.error('Error occurred while fetching the listings', error)
@@ -80,16 +74,24 @@ export async function fetchListing(req: Request, res: Response) {
     const decodedAccount = (req as any).decodedAccount as
       | DECODED_ACCOUNT
       | undefined
-    const marketId = Number.parseInt(req.query.marketId as string)
-    const value = decodeURI(req.query.value as string)
+    const listingId = req.query.listingId as string | null | undefined
+    const marketId = req.query.marketId
+      ? Number.parseInt(req.query.marketId as string)
+      : null
+    const value = req.query.value ? decodeURI(req.query.value as string) : null
+    const onchainValue = req.query.onchainValue
+      ? decodeURI(req.query.onchainValue as string)
+      : null
 
     const listing = await fetchSingleListing({
+      listingId: listingId ?? null,
       marketId,
-      value: normalize(value),
+      value,
+      onchainValue,
       account: decodedAccount ?? null,
     })
 
-    return handleSuccess(res, listing)
+    return handleSuccess(res, { listing })
   } catch (error) {
     console.error('Error occurred while fetching the listing', error)
     return handleError(res, error, 'Unable to fetch the listing')
@@ -100,10 +102,13 @@ export async function addGhostListing(req: Request, res: Response) {
   try {
     const reqBody = req.body
     const decodedAccount = (req as any).decodedAccount as DECODED_ACCOUNT
+    const categoryIds =
+      (req.body.categories as string | undefined)?.split(',') ?? []
 
     const ghostListing = await addNewGhostListing({
       marketId: reqBody.marketId as number,
-      value: normalize(decodeURI(reqBody.value as string)),
+      value: decodeURI(reqBody.value as string),
+      categoryIds,
       account: decodedAccount,
     })
 
@@ -114,7 +119,7 @@ export async function addGhostListing(req: Request, res: Response) {
   }
 }
 
-export async function addOnChainListing(req: Request, res: Response) {
+export async function addOnchainListing(req: Request, res: Response) {
   try {
     const reqBody = req.body
     const decodedAccount = (req as any).decodedAccount as
@@ -123,7 +128,7 @@ export async function addOnChainListing(req: Request, res: Response) {
 
     const listing = await updateOrCloneOnchainListing({
       marketId: reqBody.marketId as number,
-      value: normalize(decodeURI(reqBody.value as string)),
+      value: decodeURI(reqBody.value as string),
       onchainValue: decodeURIComponent(reqBody.onchainValue as string),
       account: decodedAccount ?? null,
     })
@@ -132,6 +137,56 @@ export async function addOnChainListing(req: Request, res: Response) {
   } catch (error) {
     console.error('Error occurred while adding onchain listing', error)
     return handleError(res, error, 'Unable to add onchain listing')
+  }
+}
+
+export async function updateOnchainListings(req: Request, res: Response) {
+  try {
+    await updateAllOnchainListings()
+
+    return handleSuccess(res, {
+      message: 'All onchain listings have been updated',
+    })
+  } catch (error) {
+    console.error('Error occurred while updating all onchain listings', error)
+    return handleError(res, error, 'Unable to add update all onchain listings')
+  }
+}
+
+export async function addCategory(req: Request, res: Response) {
+  try {
+    const reqBody = req.body
+    await addCategoryToListing({
+      listingId: reqBody.listingId as string,
+      categoryId: reqBody.categoryId as string,
+    })
+
+    return handleSuccess(res, {
+      message: 'Category has been added to the listing',
+    })
+  } catch (error) {
+    console.error('Error occurred while adding category to the listing', error)
+    return handleError(res, error, 'Unable to add category to the listing')
+  }
+}
+
+export async function removeCategory(req: Request, res: Response) {
+  try {
+    const reqBody = req.body
+    await removeCategoryFromListing({
+      listingId: reqBody.listingId as string,
+      categoryId: reqBody.categoryId as string,
+    })
+
+    return handleSuccess(res, {
+      message: 'Category has been removed from the listing',
+    })
+  } catch (error) {
+    console.error(
+      'Error occurred while removing category from the listing',
+      error
+    )
+    return handleError(res, error, 'Unable to remove category from the listing')
   }
 }
 

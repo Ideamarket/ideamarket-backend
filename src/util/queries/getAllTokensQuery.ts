@@ -1,5 +1,6 @@
 import { gql } from 'graphql-request'
 
+import { WEEK_SECONDS } from '..'
 import { getAllMarketIds } from '../marketUtil'
 
 export function getAllTokensQuery({
@@ -15,17 +16,34 @@ export function getAllTokensQuery({
   const marketsQuery = inMarkets ? `market_in:[${inMarkets}],` : ''
   const queries = marketsQuery.length > 0 ? `where:{${marketsQuery}},` : ''
 
+  const currentTs = Math.floor(Date.now() / 1000)
+  const weekBack = currentTs - WEEK_SECONDS
+
   return gql`
     {
       ideaTokens(${queries} skip:${skip}, first:${limit}) {
           id
           name
+          holders
+          marketCap
           market {
             id: marketID
             name
           }
           lister
+          tokenOwner
           listedAt
+          latestPricePoint {
+            timestamp
+            counter
+            oldPrice
+            price
+          }
+          dayChange
+          pricePoints(where:{timestamp_gt:${weekBack}} orderBy:timestamp) {
+              oldPrice
+              price
+            }
         }
     }
   `

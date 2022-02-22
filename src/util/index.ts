@@ -1,4 +1,7 @@
-// eslint-disable-next-line import/no-extraneous-dependencies
+/* eslint-disable import/no-extraneous-dependencies */
+
+import BigNumber from 'bignumber.js'
+import type BN from 'bn.js'
 import chalk from 'chalk'
 import normalizeUrl from 'normalize-url'
 import { SHA3 } from 'sha3'
@@ -27,6 +30,7 @@ function coloredLogLevel(level: string) {
       return `[${level}]`
   }
 }
+export const bigNumberTenPow18 = new BigNumber('10').pow(new BigNumber('18'))
 
 export function getDateAfterXDays(x: number) {
   const date = new Date()
@@ -45,7 +49,7 @@ export function uuidToSHA3(uuid: string): string {
 
 export function log(level: string, msg: string) {
   const now = new Date().toISOString()
-   
+
   const output = `${coloredLogLevel(level)} [${now}] ${msg}`
   if (level === LOG_LEVEL.ERROR) {
     console.error(output)
@@ -60,4 +64,15 @@ export async function sleep(ms: number) {
       resolve()
     }, ms)
   })
+}
+
+export function web3BNToFloatString(
+  bn: BN,
+  divideBy: BigNumber,
+  decimals: number,
+  roundingMode = BigNumber.ROUND_DOWN
+): string {
+  const converted = new BigNumber(bn.toString())
+  const divided = converted.div(divideBy)
+  return divided.toFixed(decimals, roundingMode)
 }

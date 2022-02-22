@@ -3,6 +3,7 @@ import type { ListingDocument } from '../models/listing.model'
 import type {
   BlacklistedListingResponse,
   ListingResponse,
+  NewListingResponse,
   Web2TokenData,
   Web3TokenData,
 } from '../types/listing.types'
@@ -23,7 +24,7 @@ export function mapWeb2Data({
     value: listingDoc.value,
     marketId: listingDoc.marketId,
     marketName: listingDoc.marketName,
-    isOnChain: listingDoc.isOnchain,
+    isOnchain: listingDoc.isOnchain,
     ghostListedBy:
       listingDoc.ghostListedByAccount?.username ?? listingDoc.ghostListedBy,
     ghostListedAt: listingDoc.ghostListedAt,
@@ -51,6 +52,51 @@ export function combineWeb2AndWeb3TokenData({
   return {
     web2TokenData: mapWeb2Data({ listingDoc, upVoted }),
     web3TokenData: web3TokenData ?? null,
+  }
+}
+
+export function mapListingResponse({
+  listingDoc,
+  upVoted,
+  web3TokenData,
+}: {
+  listingDoc: ListingDocument | null
+  upVoted: boolean | null
+  web3TokenData: Web3TokenData | Partial<Web3TokenData> | null
+}): NewListingResponse | null {
+  if (!listingDoc) {
+    return null
+  }
+
+  return {
+    listingId: listingDoc.id,
+    value: listingDoc.value,
+    marketId: listingDoc.marketId,
+    marketName: listingDoc.marketName,
+    categories: listingDoc.categories.map((category) => ({
+      id: category._id,
+      name: category.name,
+    })),
+    isOnchain: listingDoc.isOnchain,
+    ghostListedBy:
+      listingDoc.ghostListedByAccount?.username ?? listingDoc.ghostListedBy,
+    ghostListedAt: listingDoc.ghostListedAt,
+    onchainValue: listingDoc.onchainValue,
+    onchainId: listingDoc.onchainId,
+    onchainListedBy:
+      listingDoc.onchainListedByAccount?.username ?? listingDoc.onchainListedBy,
+    onchainListedAt: listingDoc.onchainListedAt,
+    totalVotes: listingDoc.totalVotes,
+    price: listingDoc.price || 0,
+    dayChange: listingDoc.dayChange || 0,
+    weekChange: listingDoc.weekChange || 0,
+    deposits: listingDoc.deposits || 0,
+    holders: listingDoc.holders || 0,
+    yearIncome: listingDoc.yearIncome || 0,
+    claimableIncome: listingDoc.claimableIncome || 0,
+    verified: listingDoc.verified,
+    upVoted,
+    web3TokenData,
   }
 }
 

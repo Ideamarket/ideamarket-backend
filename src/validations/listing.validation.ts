@@ -1,4 +1,3 @@
-/* eslint-disable sonarjs/no-duplicate-string */
 import { body, oneOf, query } from 'express-validator'
 
 import { isMarketIdValid } from '../util/marketUtil'
@@ -16,12 +15,17 @@ export const fetchListingsValidation = [
 ]
 
 export const fetchListingValidation = [
-  query('marketId')
-    .notEmpty()
-    .isString()
-    .custom(isMarketIdValid)
-    .withMessage('marketId is invalid'),
-  query('value').notEmpty().withMessage('Token value cannot be empty'),
+  oneOf(
+    [
+      query('listingId').notEmpty().isString(),
+      [
+        query('marketId').notEmpty().isString().custom(isMarketIdValid),
+        query('value').notEmpty().isString(),
+        query('onchainValue').notEmpty().isString(),
+      ],
+    ],
+    'Atleast one of listingId (or) [marketId, value, onchainValue] are mandatory'
+  ),
 ]
 
 export const addGhostListingValidation = [
@@ -31,9 +35,13 @@ export const addGhostListingValidation = [
     .custom(isMarketIdValid)
     .withMessage('marketId is invalid'),
   body('value').notEmpty().withMessage('Token value cannot be empty'),
+  body('categories')
+    .optional()
+    .isString()
+    .withMessage('categories is not valid'),
 ]
 
-export const addOnChainListingValidation = [
+export const addOnchainListingValidation = [
   body('marketId')
     .notEmpty()
     .isInt()
@@ -43,6 +51,32 @@ export const addOnChainListingValidation = [
   body('onchainValue')
     .notEmpty()
     .withMessage('Onchain token value cannot be empty'),
+]
+
+export const addCategoryValidation = [
+  body('listingId')
+    .notEmpty()
+    .withMessage('listingId cannot be empty/null')
+    .isString()
+    .withMessage('listingId is invalid'),
+  body('categoryId')
+    .notEmpty()
+    .withMessage('categoryId cannot be empty/null')
+    .isString()
+    .withMessage('categoryId is invalid'),
+]
+
+export const removeCategoryValidation = [
+  body('listingId')
+    .notEmpty()
+    .withMessage('listingId cannot be empty/null')
+    .isString()
+    .withMessage('listingId is invalid'),
+  body('categoryId')
+    .notEmpty()
+    .withMessage('categoryId cannot be empty/null')
+    .isString()
+    .withMessage('categoryId is invalid'),
 ]
 
 export const addListingToBlacklistValidation = [
