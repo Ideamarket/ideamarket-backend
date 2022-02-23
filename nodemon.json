@@ -37,7 +37,8 @@
     "MARKET4": "Substack",
     "MARKET5": "Showtime",
     "MARKET6": "URL",
-    "LOCKING_MONGODB_DATABASE": "ideamarket-locking-dev"
+    "LOCKING_MONGODB_DATABASE": "ideamarket-locking-dev",
+    "GOOGLE_CLIENT_ID": "934819696551-jsc5vmpnq9p3f8bgekeiqtodo2ls8ujm.apps.googleusercontent.com"
   },
   "ext": "js,json,ts"
 }

@@ -18,13 +18,12 @@ export enum AccountRole {
 export interface IAccount {
   name?: string
   username?: string
-  email?: string
+  email?: string | null
   bio?: string
   profilePhoto?: string | null
-  walletAddress: string
+  walletAddress?: string | null
   visibilityOptions?: VisibilityOptions
   role?: AccountRole
-  code?: string | null
 }
 
 interface IAccountModel extends mongoose.Model<AccountDocument> {
@@ -32,15 +31,14 @@ interface IAccountModel extends mongoose.Model<AccountDocument> {
 }
 
 interface AccountDocument extends mongoose.Document {
-  name?: string
+  name: string
   username: string
-  email?: string
-  bio?: string
-  profilePhoto?: string | null
-  walletAddress: string
-  visibilityOptions?: VisibilityOptions
+  email: string | null
+  bio: string
+  profilePhoto: string | null
+  walletAddress: string | null
+  visibilityOptions: VisibilityOptions
   role: AccountRole
-  code?: string | null
   createdAt: Date
   updatedAt: Date
 }
@@ -53,12 +51,30 @@ const VisibilityOptionsSchema = new mongoose.Schema({
 
 const AccountSchema = new mongoose.Schema(
   {
-    name: { type: String },
-    username: { type: String, unique: [true, 'Username is not available'] },
-    email: { type: String },
-    bio: { type: String },
+    name: { type: String, required: false },
+    username: {
+      type: String,
+      required: false,
+      index: true,
+      unique: true,
+      sparse: true,
+    },
+    email: {
+      type: String,
+      required: false,
+      index: true,
+      unique: true,
+      sparse: true,
+    },
+    bio: { type: String, required: false },
     profilePhoto: { type: String, default: null },
-    walletAddress: { type: String, required: true, index: { unique: true } },
+    walletAddress: {
+      type: String,
+      required: false,
+      index: true,
+      unique: true,
+      sparse: true,
+    },
     visibilityOptions: {
       type: VisibilityOptionsSchema,
       default: DefaultVisibilityOptions,
@@ -68,10 +84,10 @@ const AccountSchema = new mongoose.Schema(
       enum: Object.values(AccountRole),
       default: AccountRole.USER,
     },
-    code: { type: String, default: null },
   },
   {
     timestamps: true,
+    versionKey: false,
   }
 )
 

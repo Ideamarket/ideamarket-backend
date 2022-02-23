@@ -10,6 +10,7 @@ import {
   authenticateAccount,
   checkAccountEmailVerificationCode,
   sendAccountEmailVerificationCode,
+  linkAccount,
 } from '../controllers/account.controller'
 import {
   authenticate,
@@ -21,6 +22,7 @@ import {
   checkAccountEmailVerificationCodeValidation,
   createAccountValidation,
   fetchPublicAccountProfileValidation,
+  linkAccountValidation,
   sendAccountEmailVerificationCodeValidation,
   updateAccountValidation,
 } from '../validations/account.validation'
@@ -36,8 +38,18 @@ accountRouter.post(
   validateRequest,
   authenticateAccount
 )
+
 // Create Account
 accountRouter.post('', createAccountValidation, validateRequest, createAccount)
+
+// Link Account
+accountRouter.post(
+  '/link',
+  authenticateAndSetAccount,
+  linkAccountValidation,
+  validateRequest,
+  linkAccount
+)
 
 // Update Account
 accountRouter.patch(
@@ -65,7 +77,6 @@ accountRouter.post('/profilePhoto', authenticate, uploadAccountProfilePhoto)
 // Send Email Verification Code
 accountRouter.get(
   '/emailVerification',
-  authenticateAndSetAccount,
   sendAccountEmailVerificationCodeValidation,
   validateRequest,
   sendAccountEmailVerificationCode

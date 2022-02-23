@@ -34,6 +34,7 @@ const config = {
     region: process.env.AWS_REGION ?? '',
   },
   account: {
+    googleClientId: process.env.GOOGLE_CLIENT_ID ?? '',
     s3Bucket: process.env.ACCOUNTS_S3_BUCKET ?? '',
     cloudFrontDomain: process.env.ACCOUNTS_CLOUDFRONT_DOMAIN ?? '',
   },

@@ -7,25 +7,25 @@ const jwtSecretKey: string = config.get('jwt.secretKey')
 const jwtExpiry: number = config.get('jwt.expiry')
 
 export type PAYLOAD = {
-  walletAddress: string
+  accountId: string
   exp: number
 }
 
 type DECODED_PAYLOAD = {
-  walletAddress: string
+  accountId: string
   iat: number
   exp: number
 }
 
 /**
- * Generates the auth token with wallet address in the payload
+ * Generates the auth token with accountId in the payload
  */
-export function generateAuthToken(walletAddress: string) {
+export function generateAuthToken(accountId: string) {
   let authToken = null
   const exp = Math.floor(Date.now() / 1000) + jwtExpiry
 
   try {
-    const payload: PAYLOAD = { walletAddress, exp }
+    const payload: PAYLOAD = { accountId, exp }
     authToken = jwt.sign(payload, jwtSecretKey, {
       algorithm: 'HS256',
     })
@@ -46,7 +46,7 @@ export function verifyAuthToken(token: string) {
       algorithms: ['HS256'],
     }) as DECODED_PAYLOAD
     console.info('Decoded payload :', JSON.stringify(decodedPayload))
-    return !!decodedPayload.walletAddress
+    return !!decodedPayload.accountId
   } catch (error) {
     console.error('Error occurred while verifying the auth token', error)
     return false
@@ -62,7 +62,7 @@ function decodeAuthToken(token: string) {
       algorithms: ['HS256'],
     }) as DECODED_PAYLOAD
     console.info('Decoded payload :', JSON.stringify(decodedPayload))
-    return decodedPayload.walletAddress
+    return decodedPayload.accountId
   } catch (error) {
     console.error('Error occurred while decoding the auth token', error)
     return null
@@ -76,12 +76,12 @@ export async function verifyAuthTokenAndReturnAccount(
   token: string
 ): Promise<DECODED_ACCOUNT | null> {
   try {
-    const walletAddress = decodeAuthToken(token)
-    if (!walletAddress) {
+    const accountId = decodeAuthToken(token)
+    if (!accountId) {
       return null
     }
 
-    const account = await AccountModel.findOne({ walletAddress })
+    const account = await AccountModel.findById(accountId)
     if (!account) {
       return null
     }
@@ -89,7 +89,8 @@ export async function verifyAuthTokenAndReturnAccount(
     return {
       id: account._id,
       username: account.username || null,
-      walletAddress: account.walletAddress,
+      email: account.email ?? null,
+      walletAddress: account.walletAddress ?? null,
       role: account.role,
     }
   } catch (error) {
@@ -104,6 +105,7 @@ export async function verifyAuthTokenAndReturnAccount(
 export type DECODED_ACCOUNT = {
   id: string
   username: string | null
-  walletAddress: string
+  email: string | null
+  walletAddress: string | null
   role: string
 }
