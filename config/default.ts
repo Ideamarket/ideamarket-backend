@@ -5,7 +5,11 @@ const HOUR_SECONDS = 3600
 const DAY_SECONDS = 24 * HOUR_SECONDS
 
 const config = {
+  client: {
+    hostUrl: process.env.CLIENT_HOST_URL ?? 'http://localhost:3000',
+  },
   server: {
+    hostUrl: process.env.SERVER_HOST_URL ?? 'http://localhost:3300',
     port: process.env.PORT ? Number.parseInt(process.env.PORT) : 3300,
   },
   mongodb: {
@@ -33,8 +37,20 @@ const config = {
     secretKey: process.env.AWS_SECRET_KEY ?? '',
     region: process.env.AWS_REGION ?? '',
   },
+  auth: {
+    google: {
+      clientId: process.env.GOOGLE_CLIENT_ID ?? '',
+    },
+    twitter: {
+      consumerKey: process.env.TWITTER_CONSUMER_KEY ?? '',
+      consumerSecret: process.env.TWITTER_CONSUMER_SECRET ?? '',
+      accessToken: process.env.TWITTER_ACCESS_TOKEN ?? '',
+      accessTokenSecret: process.env.TWITTER_ACCESS_TOKEN_SECRET ?? '',
+      bearerToken: process.env.TWITTER_BEARER_TOKEN ?? '',
+      callbackUrlSuffix: '/twitter_verify',
+    },
+  },
   account: {
-    googleClientId: process.env.GOOGLE_CLIENT_ID ?? '',
     s3Bucket: process.env.ACCOUNTS_S3_BUCKET ?? '',
     cloudFrontDomain: process.env.ACCOUNTS_CLOUDFRONT_DOMAIN ?? '',
   },

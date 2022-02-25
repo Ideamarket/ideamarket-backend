@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/restrict-template-expressions */
 import axios from 'axios'
 import cheerio from 'cheerio'
 
@@ -19,8 +20,9 @@ export async function checkAndReturnValidUrl(url: string) {
     })
   } catch (error: any) {
     console.error(
-      // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
-      `Error occurred with status code - ${error.response?.status} while fetching url`
+      `Error occurred while fetching url :: status=${
+        error.response?.status
+      }, data=${JSON.stringify(error.response?.data)}`
     )
     return null
   }

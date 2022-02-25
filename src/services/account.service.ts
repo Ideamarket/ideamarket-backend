@@ -20,7 +20,7 @@ import type { SignedWalletAddress } from '../util/web3Util'
 import { recoverEthAddresses } from '../util/web3Util'
 import { BadRequestError, InternalServerError } from './errors'
 
-const GOOGLE_CLIENT_ID = config.get<string>('account.googleClientId')
+const GOOGLE_CLIENT_ID = config.get<string>('auth.google.clientId')
 const s3Bucket: string = config.get('account.s3Bucket')
 const cloudFrontDomain: string = config.get('account.cloudFrontDomain')
 
