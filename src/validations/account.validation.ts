@@ -50,9 +50,7 @@ const accountValidation = [
     .withMessage('googleIdToken cannot be empty/null and should be valid'),
 ]
 
-export const authenticateAccountValidation = accountValidation
-
-export const createAccountValidation = accountValidation
+export const signInAccountValidation = accountValidation
 
 export const linkAccountValidation = accountValidation
 

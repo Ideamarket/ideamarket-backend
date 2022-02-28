@@ -34,143 +34,52 @@ const EMAIL_VERIFICATION_CODE_NOT_VALID_MSG = 'Your code is not valid'
 const GOOGLE_ID_TOKEN_NOT_VALID_MSG =
   'GoogleIdToken is either expired or invalid'
 
-export async function authenticateAccountAndReturnToken(
+export type SignInAccount = {
+  account: AccountDocument
+  accountCreated: boolean
+}
+
+export async function signInAccountAndReturnToken(
   accountRequest: AccountRequest
 ) {
-  let account: AccountDocument | null
+  let signInAccount: SignInAccount
   const { source, signedWalletAddress, email, code, googleIdToken } =
     accountRequest
   switch (source) {
     case AccountSource.WALLET:
-      account = await authenticateAccountFromWalletSource({
+      signInAccount = await signInAccountFromWalletSource({
         signedWalletAddress,
       })
       break
     case AccountSource.EMAIL:
-      account = await authenticateAccountFromEmailSource({ email, code })
+      signInAccount = await signInAccountFromEmailSource({ email, code })
       break
     case AccountSource.GOOGLE:
-      account = await authenticateAccountFromGoogleSource({ googleIdToken })
+      signInAccount = await signInAccountFromGoogleSource({ googleIdToken })
       break
     default:
       throw new BadRequestError(`Account source - ${source} is not valid `)
   }
 
-  if (!account) {
-    console.log('Account does not exist')
-    return null
-  }
-
-  const { authToken, validUntil } = generateAuthToken(account._id.toString())
+  const { authToken, validUntil } = generateAuthToken(
+    signInAccount.account._id.toString()
+  )
   if (!authToken) {
     throw new InternalServerError('Error occured while genrating auth token')
   }
 
-  return { token: authToken, validUntil }
+  return {
+    token: authToken,
+    validUntil,
+    accountCreated: signInAccount.accountCreated,
+  }
 }
 
-async function authenticateAccountFromWalletSource({
+async function signInAccountFromWalletSource({
   signedWalletAddress,
 }: {
   signedWalletAddress: SignedWalletAddress | null
-}) {
-  if (!signedWalletAddress) {
-    throw new BadRequestError(REQ_NOT_VALID_WALLET_SOURCE_MSG)
-  }
-  const walletAddress = recoverEthAddresses(signedWalletAddress)
-
-  return AccountModel.findOne({ walletAddress })
-}
-
-async function authenticateAccountFromEmailSource({
-  email,
-  code,
-}: {
-  email: string | null
-  code: string | null
-}) {
-  if (!email || !code) {
-    throw new BadRequestError(REQ_NOT_VALID_EMAIL_SOURCE_MSG)
-  }
-  const emailVerificationDoc = await EmailVerificationModel.findOne({ email })
-
-  if (
-    !emailVerificationDoc ||
-    !emailVerificationDoc.code ||
-    emailVerificationDoc.code !== code
-  ) {
-    throw new InternalServerError(EMAIL_VERIFICATION_CODE_NOT_VALID_MSG)
-  }
-  await EmailVerificationModel.findOneAndDelete({ email })
-
-  return AccountModel.findOne({ email })
-}
-
-async function authenticateAccountFromGoogleSource({
-  googleIdToken,
-}: {
-  googleIdToken: string | null
-}) {
-  if (!googleIdToken) {
-    throw new BadRequestError(REQ_NOT_VALID_GOOGLE_SOURCE_MSG)
-  }
-
-  const googleClient = new OAuth2Client(GOOGLE_CLIENT_ID)
-  let payload: TokenPayload | null | undefined = null
-  try {
-    const ticket = await googleClient.verifyIdToken({
-      idToken: googleIdToken,
-      audience: GOOGLE_CLIENT_ID,
-    })
-    payload = ticket.getPayload()
-  } catch (error) {
-    console.error(error)
-    throw new InternalServerError(GOOGLE_ID_TOKEN_NOT_VALID_MSG)
-  }
-
-  if (!payload) {
-    throw new InternalServerError(GOOGLE_ID_TOKEN_NOT_VALID_MSG)
-  }
-  const { email } = payload
-
-  return AccountModel.findOne({ email })
-}
-
-export async function createAccountAndReturnToken(
-  accountRequest: AccountRequest
-) {
-  let account: AccountDocument
-  const { source, signedWalletAddress, email, code, googleIdToken } =
-    accountRequest
-  switch (source) {
-    case AccountSource.WALLET:
-      account = await createAccountFromWalletSource({
-        signedWalletAddress,
-      })
-      break
-    case AccountSource.EMAIL:
-      account = await createAccountFromEmailSource({ email, code })
-      break
-    case AccountSource.GOOGLE:
-      account = await createAccountFromGoogleSource({ googleIdToken })
-      break
-    default:
-      throw new BadRequestError(`Account source - ${source} is not valid `)
-  }
-
-  const { authToken, validUntil } = generateAuthToken(account._id.toString())
-  if (!authToken) {
-    throw new InternalServerError('Error occured while genrating auth token')
-  }
-
-  return { token: authToken, validUntil }
-}
-
-async function createAccountFromWalletSource({
-  signedWalletAddress,
-}: {
-  signedWalletAddress: SignedWalletAddress | null
-}) {
+}): Promise<SignInAccount> {
   if (!signedWalletAddress) {
     throw new BadRequestError(REQ_NOT_VALID_WALLET_SOURCE_MSG)
   }
@@ -179,22 +88,23 @@ async function createAccountFromWalletSource({
   const account = await AccountModel.findOne({ walletAddress })
   if (account) {
     console.info('Account already exists for this wallet address')
-    return account
+    return { account, accountCreated: false }
   }
 
   const accountDoc = AccountModel.build({
     walletAddress,
   })
-  return AccountModel.create(accountDoc)
+  const createdAccount = await AccountModel.create(accountDoc)
+  return { account: createdAccount, accountCreated: true }
 }
 
-async function createAccountFromEmailSource({
+async function signInAccountFromEmailSource({
   email,
   code,
 }: {
   email: string | null
   code: string | null
-}) {
+}): Promise<SignInAccount> {
   if (!email || !code) {
     throw new BadRequestError(REQ_NOT_VALID_EMAIL_SOURCE_MSG)
   }
@@ -212,18 +122,19 @@ async function createAccountFromEmailSource({
   const account = await AccountModel.findOne({ email })
   if (account) {
     console.info('Account already exists for this email')
-    return account
+    return { account, accountCreated: false }
   }
 
   const accountDoc = AccountModel.build({ email })
-  return AccountModel.create(accountDoc)
+  const createdAccount = await AccountModel.create(accountDoc)
+  return { account: createdAccount, accountCreated: true }
 }
 
-async function createAccountFromGoogleSource({
+async function signInAccountFromGoogleSource({
   googleIdToken,
 }: {
   googleIdToken: string | null
-}) {
+}): Promise<SignInAccount> {
   if (!googleIdToken) {
     throw new BadRequestError(REQ_NOT_VALID_GOOGLE_SOURCE_MSG)
   }
@@ -249,13 +160,12 @@ async function createAccountFromGoogleSource({
   const account = await AccountModel.findOne({ email })
   if (account) {
     console.info('Account already exists for this email')
-    return account
+    return { account, accountCreated: false }
   }
 
-  const accountDoc = AccountModel.build({
-    email,
-  })
-  return AccountModel.create(accountDoc)
+  const accountDoc = AccountModel.build({ email })
+  const createdAccount = await AccountModel.create(accountDoc)
+  return { account: createdAccount, accountCreated: true }
 }
 
 export async function linkAccountAndEmail({

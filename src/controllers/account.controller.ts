@@ -9,18 +9,17 @@ import {
   sendEmailVerificationCode,
   updateAccountInDB,
   uploadProfilePhoto,
-  createAccountAndReturnToken,
-  authenticateAccountAndReturnToken,
   linkAccountAndEmail,
+  signInAccountAndReturnToken,
 } from '../services/account.service'
 import type { DECODED_ACCOUNT } from '../util/jwtTokenUtil'
 
-// Authenticate Account
-export async function authenticateAccount(req: Request, res: Response) {
+// Sign In Account
+export async function signInAccount(req: Request, res: Response) {
   try {
     const reqBody = req.body
 
-    const data = await authenticateAccountAndReturnToken({
+    const signedInAccount = await signInAccountAndReturnToken({
       source: reqBody.source,
       signedWalletAddress: reqBody.signedWalletAddress ?? null,
       email: reqBody.email ?? null,
@@ -28,30 +27,10 @@ export async function authenticateAccount(req: Request, res: Response) {
       googleIdToken: reqBody.googleIdToken ?? null,
     })
 
-    return handleSuccess(res, data)
+    return handleSuccess(res, signedInAccount)
   } catch (error) {
     console.error(error)
     return handleError(res, error, 'Unable to authenticate the account')
-  }
-}
-
-// Create Account
-export async function createAccount(req: Request, res: Response) {
-  try {
-    const reqBody = req.body
-
-    const createdAccount = await createAccountAndReturnToken({
-      source: reqBody.source,
-      signedWalletAddress: reqBody.signedWalletAddress ?? null,
-      email: reqBody.email ?? null,
-      code: reqBody.code ?? null,
-      googleIdToken: reqBody.googleIdToken ?? null,
-    })
-
-    return handleSuccess(res, createdAccount)
-  } catch (error) {
-    console.error(error)
-    return handleError(res, error, 'Unable to create the account')
   }
 }
 

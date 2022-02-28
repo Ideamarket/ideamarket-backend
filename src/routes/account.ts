@@ -2,15 +2,14 @@
 import express from 'express'
 
 import {
-  createAccount,
   fetchPublicAccountProfile,
   fetchAccount,
   updateAccount,
   uploadAccountProfilePhoto,
-  authenticateAccount,
   checkAccountEmailVerificationCode,
   sendAccountEmailVerificationCode,
   linkAccount,
+  signInAccount,
 } from '../controllers/account.controller'
 import {
   authenticate,
@@ -18,12 +17,11 @@ import {
 } from '../middleware/authentication'
 import { validateRequest } from '../middleware/validateRequest'
 import {
-  authenticateAccountValidation,
   checkAccountEmailVerificationCodeValidation,
-  createAccountValidation,
   fetchPublicAccountProfileValidation,
   linkAccountValidation,
   sendAccountEmailVerificationCodeValidation,
+  signInAccountValidation,
   updateAccountValidation,
 } from '../validations/account.validation'
 
@@ -31,16 +29,13 @@ const accountRouter = express.Router()
 
 // -------------------- ROUTES -------------------- //
 
-// Authenticate Account
+// SignIn Account
 accountRouter.post(
-  '/authenticate',
-  authenticateAccountValidation,
+  '/signIn',
+  signInAccountValidation,
   validateRequest,
-  authenticateAccount
+  signInAccount
 )
-
-// Create Account
-accountRouter.post('', createAccountValidation, validateRequest, createAccount)
 
 // Link Account
 accountRouter.post(
