@@ -3,6 +3,7 @@ import express from 'express'
 
 import {
   fetchTwitterAccessToken,
+  fetchTwitterProfile,
   fetchTwitterRequestToken,
   postTweet,
 } from '../controllers/oauth.controller'
@@ -10,6 +11,7 @@ import { optionalAuthenticateAndSetAccount } from '../middleware'
 import { validateRequest } from '../middleware/validateRequest'
 import {
   fetchTwitterAccessTokenValidation,
+  fetchTwitterProfileValidation,
   fetchTwitterRequestTokenValidation,
   postTweetValidation,
 } from '../validations/oauth.validation'
@@ -43,4 +45,12 @@ oauthRouter.post(
   postTweetValidation,
   validateRequest,
   postTweet
+)
+
+// Fetch Twitter Profile
+oauthRouter.get(
+  '/twitter/:username',
+  fetchTwitterProfileValidation,
+  validateRequest,
+  fetchTwitterProfile
 )

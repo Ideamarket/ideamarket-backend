@@ -5,7 +5,12 @@ import request from 'request'
 import util from 'util'
 
 import { OAuthModel, OAuthPlatform } from '../models/oauth.model'
-import { twitterOAuth } from '../util/oauthUtil'
+import type {
+  Tweet,
+  TwitterAccessTokenResponse,
+  TwitterProfile,
+} from '../types/oauth.types'
+import { twitterAccessToken, twitterOAuth } from '../util/oauthUtil'
 import { InternalServerError } from './errors'
 
 const requestPromise = util.promisify(request)
@@ -72,7 +77,7 @@ export async function fetchAccessTokenForTwitter({
 }: {
   requestToken: string
   oAuthVerifier: string
-}) {
+}): Promise<TwitterAccessTokenResponse> {
   const requestData = {
     url: `https://api.twitter.com/oauth/access_token?oauth_token=${requestToken}&oauth_verifier=${oAuthVerifier}`,
     method: 'POST',
@@ -94,6 +99,8 @@ export async function fetchAccessTokenForTwitter({
   const results = new URLSearchParams(body)
   const accessToken = results.get('oauth_token')
   const accessTokenSecret = results.get('oauth_token_secret')
+  const userId = results.get('user_id')
+  const username = results.get('screen_name')
 
   if (!accessToken || !accessTokenSecret) {
     console.error(
@@ -110,7 +117,7 @@ export async function fetchAccessTokenForTwitter({
     { $set: { accessToken, accessTokenSecret } }
   )
 
-  return requestToken
+  return { requestToken, twitterUserId: userId, twitterUsername: username }
 }
 
 export async function postTweetOnBehalfOfUser({
@@ -119,7 +126,7 @@ export async function postTweetOnBehalfOfUser({
 }: {
   requestToken: string
   text: string
-}) {
+}): Promise<Tweet> {
   const oAuthDoc = await OAuthModel.findOne({
     platform: OAuthPlatform.TWITTER,
     requestToken,
@@ -142,8 +149,9 @@ export async function postTweetOnBehalfOfUser({
     twitterOAuth.authorize(requestData, oAuthToken)
   )
 
+  let response: any = null
   try {
-    await axios.post('https://api.twitter.com/2/tweets', data, {
+    response = await axios.post(requestData.url, data, {
       headers: {
         Authorization: authHeader.Authorization,
         'Content-Type': 'application/json',
@@ -159,5 +167,42 @@ export async function postTweetOnBehalfOfUser({
     throw new InternalServerError('Failed to post the tweet')
   }
 
-  return null
+  return {
+    id: response.data.data.id ?? null,
+    text: response.data.data.text ?? null,
+  }
+}
+
+export async function fetchTwitterProfileByUsername(
+  username: string
+): Promise<TwitterProfile> {
+  const requestData = {
+    url: `https://api.twitter.com/2/users/by/username/${username}?user.fields=profile_image_url,description`,
+    method: 'GET',
+  }
+  const authHeader = twitterOAuth.toHeader(
+    twitterOAuth.authorize(requestData, twitterAccessToken)
+  )
+
+  let response: any = null
+  try {
+    response = await axios.get(requestData.url, {
+      headers: { Authorization: authHeader.Authorization },
+    })
+  } catch (error: any) {
+    console.error(
+      `Error occurred while fetching the twitter profile :: status=${
+        error.response?.status
+      }, data=${JSON.stringify(error.response?.data)}`
+    )
+    throw new InternalServerError('Failed to fetch the twitter profile')
+  }
+
+  return {
+    id: response.data.data.id ?? null,
+    username: response.data.data.username ?? null,
+    name: response.data.data.name ?? null,
+    bio: response.data.data.description ?? null,
+    profileImageUrl: response.data.data.profile_image_url ?? null,
+  }
 }
