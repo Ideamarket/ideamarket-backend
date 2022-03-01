@@ -7,10 +7,14 @@ import {
   fetchTwitterProfileByUsername,
   postTweetOnBehalfOfUser,
 } from '../services/oauth.service'
+import type { TwitterCallbackType } from '../types/oauth.types'
 
 export async function fetchTwitterRequestToken(req: Request, res: Response) {
   try {
-    const requestToken = await fetchRequestTokenForTwitter()
+    const reqBody = req.body
+    const requestToken = await fetchRequestTokenForTwitter(
+      reqBody.callbackType as TwitterCallbackType
+    )
     return handleSuccess(res, {
       message: 'Request token has been generated',
       requestToken,

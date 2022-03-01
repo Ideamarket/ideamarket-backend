@@ -5,6 +5,7 @@ import request from 'request'
 import util from 'util'
 
 import { OAuthModel, OAuthPlatform } from '../models/oauth.model'
+import { TwitterCallbackType } from '../types/oauth.types'
 import type {
   Tweet,
   TwitterAccessTokenResponse,
@@ -16,14 +17,24 @@ import { InternalServerError } from './errors'
 const requestPromise = util.promisify(request)
 
 const clientHostUrl = config.get<string>('client.hostUrl')
-const twitterCallbackUrlSuffix = config.get<string>(
-  'auth.twitter.callbackUrlSuffix'
+const twitterCallbackSuffixForAccount = config.get<string>(
+  'auth.twitter.callbackSuffixForAccount'
 )
-const twitterCallbackUrl = `${clientHostUrl}${twitterCallbackUrlSuffix}`
+const twitterCallbackUrlForAccount = `${clientHostUrl}${twitterCallbackSuffixForAccount}`
+const twitterCallbackSuffixForListing = config.get<string>(
+  'auth.twitter.callbackSuffixForListing'
+)
+const twitterCallbackUrlForListing = `${clientHostUrl}${twitterCallbackSuffixForListing}`
 
-export async function fetchRequestTokenForTwitter() {
+export async function fetchRequestTokenForTwitter(
+  callbackType: TwitterCallbackType
+) {
+  const callbackUrl =
+    callbackType === TwitterCallbackType.ACCOUNT
+      ? twitterCallbackUrlForAccount
+      : twitterCallbackUrlForListing
   const requestData = {
-    url: `https://api.twitter.com/oauth/request_token?oauth_callback=${twitterCallbackUrl}`,
+    url: `https://api.twitter.com/oauth/request_token?oauth_callback=${callbackUrl}`,
     method: 'POST',
   }
 

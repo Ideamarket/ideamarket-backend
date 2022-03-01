@@ -1,6 +1,14 @@
 import { body, param } from 'express-validator'
 
-export const fetchTwitterRequestTokenValidation = []
+import { TwitterCallbackType } from '../types/oauth.types'
+
+export const fetchTwitterRequestTokenValidation = [
+  body('callbackType')
+    .notEmpty()
+    .isString()
+    .isIn(Object.keys(TwitterCallbackType))
+    .withMessage('CallbackType is not valid or null/empty'),
+]
 
 export const fetchTwitterAccessTokenValidation = [
   body('requestToken')

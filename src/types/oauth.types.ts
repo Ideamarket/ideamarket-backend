@@ -1,3 +1,8 @@
+export enum TwitterCallbackType {
+  ACCOUNT = 'ACCOUNT',
+  LISTING = 'LISTING',
+}
+
 export type TwitterAccessTokenResponse = {
   requestToken: string
   twitterUserId: string | null
