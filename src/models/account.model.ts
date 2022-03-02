@@ -24,6 +24,7 @@ export interface IAccount {
   walletAddress?: string | null
   visibilityOptions?: VisibilityOptions
   role?: AccountRole
+  verified?: boolean
 }
 
 interface IAccountModel extends mongoose.Model<AccountDocument> {
@@ -39,6 +40,7 @@ interface AccountDocument extends mongoose.Document {
   walletAddress: string | null
   visibilityOptions: VisibilityOptions
   role: AccountRole
+  verified: boolean
   createdAt: Date
   updatedAt: Date
 }
@@ -84,6 +86,7 @@ const AccountSchema = new mongoose.Schema(
       enum: Object.values(AccountRole),
       default: AccountRole.USER,
     },
+    verified: { type: Boolean, required: false, default: false },
   },
   {
     timestamps: true,

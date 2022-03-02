@@ -8,6 +8,7 @@ import {
   postTweetOnBehalfOfUser,
 } from '../services/oauth.service'
 import type { TwitterCallbackType } from '../types/oauth.types'
+import type { DECODED_ACCOUNT } from '../util/jwtTokenUtil'
 
 export async function fetchTwitterRequestToken(req: Request, res: Response) {
   try {
@@ -46,9 +47,12 @@ export async function fetchTwitterAccessToken(req: Request, res: Response) {
 export async function postTweet(req: Request, res: Response) {
   try {
     const reqBody = req.body
+    const decodedAccount = (req as any).decodedAccount as DECODED_ACCOUNT
+
     const tweet = await postTweetOnBehalfOfUser({
       requestToken: reqBody.requestToken,
       text: reqBody.text,
+      decodedAccount,
     })
 
     return handleSuccess(res, { tweet })

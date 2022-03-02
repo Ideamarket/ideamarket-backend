@@ -7,7 +7,10 @@ import {
   fetchTwitterRequestToken,
   postTweet,
 } from '../controllers/oauth.controller'
-import { optionalAuthenticateAndSetAccount } from '../middleware'
+import {
+  authenticateAndSetAccount,
+  optionalAuthenticateAndSetAccount,
+} from '../middleware'
 import { validateRequest } from '../middleware/validateRequest'
 import {
   fetchTwitterAccessTokenValidation,
@@ -41,7 +44,7 @@ oauthRouter.post(
 // Twitter OAuth - Post Tweet
 oauthRouter.post(
   '/twitter/tweet',
-  optionalAuthenticateAndSetAccount,
+  authenticateAndSetAccount,
   postTweetValidation,
   validateRequest,
   postTweet

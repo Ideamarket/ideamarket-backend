@@ -11,6 +11,8 @@ export interface IOAuth {
   requestTokenSecret: string
   accessToken?: string
   accessTokenSecret?: string
+  userId?: string
+  username?: string
 }
 
 interface IOAuthModel extends mongoose.Model<OAuthDocument> {
@@ -23,6 +25,8 @@ export interface OAuthDocument extends mongoose.Document {
   requestTokenSecret: string
   accessToken: string
   accessTokenSecret: string
+  userId: string
+  username: string
 }
 
 export const OAuthSchema = new mongoose.Schema(
@@ -36,6 +40,8 @@ export const OAuthSchema = new mongoose.Schema(
     requestTokenSecret: { type: String, required: true },
     accessToken: { type: String, required: false },
     accessTokenSecret: { type: String, required: false },
+    userId: { type: String, required: false },
+    username: { type: String, required: false },
   },
   {
     versionKey: false,

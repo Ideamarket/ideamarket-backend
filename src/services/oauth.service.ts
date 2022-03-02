@@ -11,7 +11,9 @@ import type {
   TwitterAccessTokenResponse,
   TwitterProfile,
 } from '../types/oauth.types'
+import type { DECODED_ACCOUNT } from '../util/jwtTokenUtil'
 import { twitterAccessToken, twitterOAuth } from '../util/oauthUtil'
+import { markAccountVerifiedAndUpdateUsername } from './account.service'
 import { InternalServerError } from './errors'
 
 const requestPromise = util.promisify(request)
@@ -125,7 +127,7 @@ export async function fetchAccessTokenForTwitter({
       platform: OAuthPlatform.TWITTER,
       requestToken,
     },
-    { $set: { accessToken, accessTokenSecret } }
+    { $set: { accessToken, accessTokenSecret, userId, username } }
   )
 
   return { requestToken, twitterUserId: userId, twitterUsername: username }
@@ -134,9 +136,11 @@ export async function fetchAccessTokenForTwitter({
 export async function postTweetOnBehalfOfUser({
   requestToken,
   text,
+  decodedAccount,
 }: {
   requestToken: string
   text: string
+  decodedAccount: DECODED_ACCOUNT
 }): Promise<Tweet> {
   const oAuthDoc = await OAuthModel.findOne({
     platform: OAuthPlatform.TWITTER,
@@ -146,6 +150,7 @@ export async function postTweetOnBehalfOfUser({
     console.error('OAuth token data is missing')
     throw new InternalServerError('OAuth token data is not present')
   }
+  const twitterUsername = oAuthDoc.username || null
 
   const requestData = {
     url: 'https://api.twitter.com/2/tweets',
@@ -177,6 +182,11 @@ export async function postTweetOnBehalfOfUser({
     )
     throw new InternalServerError('Failed to post the tweet')
   }
+
+  await markAccountVerifiedAndUpdateUsername({
+    accountId: decodedAccount.id,
+    username: twitterUsername?.toLowerCase(),
+  })
 
   return {
     id: response.data.data.id ?? null,

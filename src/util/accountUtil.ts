@@ -102,6 +102,8 @@ export function mapAccount(
 
   account.role = accountDoc.role
 
+  account.verified = accountDoc.verified ?? false
+
   return account
 }
 

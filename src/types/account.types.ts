@@ -25,6 +25,7 @@ export type AccountResponse = {
   walletAddress?: string
   visibilityOptions?: VisibilityOptions
   role?: string
+  verified?: boolean
 }
 
 export type VisibilityOptions = {

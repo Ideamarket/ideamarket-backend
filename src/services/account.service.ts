@@ -333,9 +333,17 @@ export async function fetchPublicAccountProfileFromDB(username: string) {
   }
 
   const publicAccountProfile: Partial<AccountDocument> = {}
-  const { visibilityOptions, email, bio, walletAddress, profilePhoto, name } =
-    accountDoc
+  const {
+    visibilityOptions,
+    email,
+    bio,
+    walletAddress,
+    profilePhoto,
+    name,
+    verified,
+  } = accountDoc
 
+  publicAccountProfile.verified = verified
   publicAccountProfile.name = name
   publicAccountProfile.username = accountDoc.username
   publicAccountProfile.profilePhoto = profilePhoto
@@ -448,4 +456,22 @@ export async function checkEmailVerificationCode({
     console.error('Error occurred while checking verification code', error)
     throw new Error('Error occurred while checking verification code')
   }
+}
+
+export async function markAccountVerifiedAndUpdateUsername({
+  accountId,
+  username,
+}: {
+  accountId: string
+  username: string | null | undefined
+}) {
+  if (username) {
+    return AccountModel.findByIdAndUpdate(accountId, {
+      $set: { verified: true, username },
+    })
+  }
+
+  return AccountModel.findByIdAndUpdate(accountId, {
+    $set: { verified: true },
+  })
 }
