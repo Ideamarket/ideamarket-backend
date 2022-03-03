@@ -30,6 +30,7 @@ import {
   calculateYearIncome,
   isListingVerified,
   SUBGRAPH_URL,
+  ZERO_ADDRESS,
 } from '../util/web3Util'
 import {
   EntityNotFoundError,
@@ -328,6 +329,7 @@ export async function addNewGhostListing({
     onchainListedByAccount: null,
     onchainListedAt: null,
     totalVotes: 0,
+    onchainOwner: ZERO_ADDRESS,
     price: 0,
     dayChange: 0,
     weekChange: 0,
@@ -391,6 +393,7 @@ export async function updateOrCloneOnchainListing({
     onchainListedByAccount: account?.id ?? null,
     onchainListedAt: new Date(Number.parseInt(token.listedAt) * 1000),
     totalVotes: listing ? listing.totalVotes : 0,
+    onchainOwner: token.tokenOwner,
     price: calculatePrice(token.latestPricePoint.price),
     dayChange: calculateDayChange(token.dayChange),
     weekChange: calculateWeekChange(token.pricePoints),
@@ -490,6 +493,7 @@ export async function updateOnchainListing({
       onchainListedByAccount: listing?.onchainListedByAccount?._id ?? null,
       onchainListedAt: new Date(Number.parseInt(ideaToken.listedAt) * 1000),
       totalVotes: listing ? listing.totalVotes : 0,
+      onchainOwner: ideaToken.tokenOwner,
       price: calculatePrice(ideaToken.latestPricePoint.price),
       dayChange: calculateDayChange(ideaToken.dayChange),
       weekChange: calculateWeekChange(ideaToken.pricePoints),

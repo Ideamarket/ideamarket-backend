@@ -24,6 +24,7 @@ export type NewListingResponse = {
   onchainListedBy: string | null
   onchainListedAt: Date | null
   totalVotes: number
+  onchainOwner: string
   price: number
   dayChange: number
   weekChange: number

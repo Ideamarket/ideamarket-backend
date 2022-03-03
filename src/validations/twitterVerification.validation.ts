@@ -1,16 +1,20 @@
 import { body, param } from 'express-validator'
 
-import { TwitterCallbackType } from '../types/oauth.types'
+import { TwitterVerificationType } from '../models/twitterVerification.model'
 
-export const fetchTwitterRequestTokenValidation = [
-  body('callbackType')
+export const generateAuthorizationUrlValidation = [
+  body('verificationType')
     .notEmpty()
     .isString()
-    .isIn(Object.keys(TwitterCallbackType))
-    .withMessage('CallbackType is not valid or null/empty'),
+    .isIn(Object.keys(TwitterVerificationType))
+    .withMessage('VerificationType is not valid or null/empty'),
+  body('listingId')
+    .if(body('verificationType').equals(TwitterVerificationType.LISTING))
+    .notEmpty()
+    .withMessage('ListingId is required'),
 ]
 
-export const fetchTwitterAccessTokenValidation = [
+export const initiateVerificationValidation = [
   body('requestToken')
     .notEmpty()
     .isString()
@@ -21,7 +25,7 @@ export const fetchTwitterAccessTokenValidation = [
     .withMessage('oAuthVerifier is not valid or null/empty'),
 ]
 
-export const postTweetValidation = [
+export const completeVerificationValidation = [
   body('requestToken')
     .notEmpty()
     .isString()

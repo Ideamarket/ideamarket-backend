@@ -47,8 +47,7 @@ const config = {
       accessToken: process.env.TWITTER_ACCESS_TOKEN ?? '',
       accessTokenSecret: process.env.TWITTER_ACCESS_TOKEN_SECRET ?? '',
       bearerToken: process.env.TWITTER_BEARER_TOKEN ?? '',
-      callbackSuffixForAccount: '/account',
-      callbackSuffixForListing: '/listing',
+      callbackSuffix: '/twitterVerification',
     },
   },
   account: {
