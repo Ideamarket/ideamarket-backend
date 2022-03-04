@@ -21,7 +21,7 @@ import type {
 } from '../types/twitterVerification.types'
 import type { DECODED_ACCOUNT } from '../util/jwtTokenUtil'
 import { twitterAccessToken, twitterOAuth } from '../util/oauthUtil'
-import { ZERO_ADDRESS } from '../util/web3Util'
+import { setTokenOwner, ZERO_ADDRESS } from '../util/web3Util'
 import { markAccountVerifiedAndUpdateUsername } from './account.service'
 import { InternalServerError } from './errors'
 
@@ -268,6 +268,7 @@ export async function completeTwitterVerification({
   const tokenName = listingDoc?.onchainValue
     ? listingDoc.onchainValue.replace(regex, '')
     : null
+  const tokenAddress = listingDoc?.onchainId ?? null
 
   const accountDoc = await AccountModel.findById(decodedAccount.id)
   const isAccountVerified = accountDoc?.verified ?? false
@@ -314,16 +315,27 @@ export async function completeTwitterVerification({
     tweet = await postTweet({ text, oAuthToken })
   }
 
+  if (!isListingVerified) {
+    if (!tokenAddress || !walletAddress) {
+      console.error('TokenAddress or WalletAddress is null')
+      throw new InternalServerError('Failed to set token owner - Missing data')
+    }
+    // Update token owner
+    const isTokenOwnerUpdated = await setTokenOwner({
+      tokenAddress,
+      ownerAddress: walletAddress,
+    })
+    if (!isTokenOwnerUpdated) {
+      throw new InternalServerError('Failed to set token owner')
+    }
+  }
+
   if (!isAccountVerified) {
     // Mark account as verified
     await markAccountVerifiedAndUpdateUsername({
       accountId: decodedAccount.id,
       username: twitterUsername?.toLowerCase(),
     })
-  }
-
-  if (!isListingVerified) {
-    // Update token owner
   }
 
   return { verificationCompleted: true, tweet }

@@ -72,6 +72,22 @@ const config = {
       'test-avm-l2': process.env.SUBGRAPH_URL_TEST_AVM_L2 ?? '',
       test: process.env.SUBGRAPH_URL_TEST ?? '',
     },
+    privateKeys: {
+      avm: process.env.PRIVATE_KEY_AVM ?? '',
+      mainnet: process.env.PRIVATE_KEY_MAINNET ?? '',
+      rinkeby: process.env.PRIVATE_KEY_RINKEBY ?? '',
+      'test-avm-l1': process.env.PRIVATE_KEY_TEST_AVM_L1 ?? '',
+      'test-avm-l2': process.env.PRIVATE_KEY_TEST_AVM_L2 ?? '',
+      test: process.env.PRIVATE_KEY_TEST ?? '',
+    },
+    contractAddresses: {
+      avm: process.env.CONTRACT_ADDRESS_AVM ?? '',
+      mainnet: process.env.CONTRACT_ADDRESS_MAINNET ?? '',
+      rinkeby: process.env.CONTRACT_ADDRESS_RINKEBY ?? '',
+      'test-avm-l1': process.env.CONTRACT_ADDRESS_TEST_AVM_L1 ?? '',
+      'test-avm-l2': process.env.CONTRACT_ADDRESS_TEST_AVM_L2 ?? '',
+      test: process.env.CONTRACT_ADDRESS_TEST ?? '',
+    },
   },
   sendgrid: {
     apiKey: process.env.SENDGRID_API_KEY ?? '',

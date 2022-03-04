@@ -99,7 +99,7 @@ export async function fetchPublicAccountProfile(req: Request, res: Response) {
     const username = req.query.username as string
     const publicAccountProfile = await fetchPublicAccountProfileFromDB(username)
 
-    return handleSuccess(res, publicAccountProfile)
+    return handleSuccess(res, { account: publicAccountProfile })
   } catch (error) {
     console.error(error)
     return handleError(res, error, 'Unable to fetch the public account profile')
