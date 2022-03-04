@@ -44,7 +44,9 @@ function validateTriggerData({
   triggerData: any
 }) {
   if (type === TriggerType.ONCHAIN_LISTING) {
-    return triggerData?.marketId && triggerData.tokenId
+    return (
+      triggerData?.marketId && (triggerData.tokenId || triggerData.tokenName)
+    )
   }
   return false
 }

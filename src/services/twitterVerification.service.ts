@@ -8,6 +8,7 @@ import util from 'util'
 import { AccountModel } from '../models/account.model'
 import type { ListingDocument } from '../models/listing.model'
 import { ListingModel } from '../models/listing.model'
+import { TriggerModel, TriggerType } from '../models/trigger.model'
 import {
   TwitterVerificationModel,
   TwitterVerificationType,
@@ -259,10 +260,11 @@ export async function completeTwitterVerification({
     listingDoc = await ListingModel.findById(listingId)
   } else {
     listingDoc = await ListingModel.findOne({
-      onchainValue: `@${twitterUsername}`,
+      onchainValue: `@${twitterUsername?.toLowerCase()}`,
     })
   }
   const isListingVerified = listingDoc?.verified ?? false
+  const marketId = listingDoc?.marketId ?? 0
   const tokenOwner = listingDoc?.onchainOwner ?? ZERO_ADDRESS
   const regex = /^@/u
   const tokenName = listingDoc?.onchainValue
@@ -328,6 +330,12 @@ export async function completeTwitterVerification({
     if (!isTokenOwnerUpdated) {
       throw new InternalServerError('Failed to set token owner')
     }
+    await TriggerModel.create(
+      TriggerModel.build({
+        type: TriggerType.ONCHAIN_LISTING,
+        triggerData: { marketId, tokenName: `@${tokenName}` },
+      })
+    )
   }
 
   if (!isAccountVerified) {

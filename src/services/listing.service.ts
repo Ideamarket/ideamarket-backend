@@ -551,20 +551,24 @@ export async function resolveOnchainListingTrigger(trigger: TriggerDocument) {
   try {
     console.info(`Resolving trigger - ${trigger._id as string}`)
     const marketId = Number.parseInt(trigger.triggerData.marketId as string)
-    const tokenId = Number.parseInt(trigger.triggerData.tokenId as string)
+    const tokenId = trigger.triggerData.tokenId
+      ? Number.parseInt(trigger.triggerData.tokenId as string)
+      : null
+    const tokenName = (trigger.triggerData.tokenName as string) ?? null
     const categoryIds =
       (trigger.triggerData.categories as string | undefined)?.split(',') ?? []
-    if (!marketId || !tokenId) {
+    if (!marketId || !(tokenId || tokenName)) {
       console.error(
         `TriggerData is not valid for type = ${TriggerType.ONCHAIN_LISTING}`
       )
       return
     }
 
-    const onchainTokens = await request(
-      SUBGRAPH_URL,
-      getTokensByMarketIdAndTokenIdQuery({ marketId, tokenId })
-    )
+    const onchainTokens = await fetchOnchainTokens({
+      marketId,
+      tokenId,
+      tokenName,
+    })
     const ideaToken = onchainTokens.ideaMarkets[0].tokens[0] as IdeaToken
 
     await updateOnchainListing({ ideaToken, updateIfExists: true, categoryIds })
@@ -573,6 +577,32 @@ export async function resolveOnchainListingTrigger(trigger: TriggerDocument) {
   } catch (error) {
     console.error('Error occurred while resolving ghost listing trigger', error)
   }
+}
+
+function fetchOnchainTokens({
+  marketId,
+  tokenId,
+  tokenName,
+}: {
+  marketId: number
+  tokenId: number | null
+  tokenName: string | null
+}) {
+  if (tokenId) {
+    return request(
+      SUBGRAPH_URL,
+      getTokensByMarketIdAndTokenIdQuery({ marketId, tokenId })
+    )
+  }
+
+  if (tokenName) {
+    return request(
+      SUBGRAPH_URL,
+      getTokensByMarketIdAndTokenNameQuery({ marketId, tokenName })
+    )
+  }
+
+  return null
 }
 
 export async function addCategoryToListing({
