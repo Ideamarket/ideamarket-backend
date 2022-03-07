@@ -246,9 +246,13 @@ export async function completeTwitterVerification({
     console.error('OAuth token data is missing')
     throw new InternalServerError('OAuth token data is not present')
   }
-  const { verificationType, listingId, accessToken, accessTokenSecret } =
-    twitterVerificationDoc
-  const twitterUsername = twitterVerificationDoc.twitterUsername || null
+  const {
+    verificationType,
+    listingId,
+    accessToken,
+    accessTokenSecret,
+    twitterUsername,
+  } = twitterVerificationDoc
 
   if (verificationType === TwitterVerificationType.LISTING && !listingId) {
     console.error('ListingId is necessary for LISTING verification type')
@@ -260,7 +264,7 @@ export async function completeTwitterVerification({
     listingDoc = await ListingModel.findById(listingId)
   } else {
     listingDoc = await ListingModel.findOne({
-      onchainValue: `@${twitterUsername?.toLowerCase()}`,
+      onchainValue: `@${twitterUsername.toLowerCase()}`,
     })
   }
   const isListingVerified = listingDoc?.verified ?? false
@@ -276,6 +280,14 @@ export async function completeTwitterVerification({
   const isAccountVerified = accountDoc?.verified ?? false
   const walletAddress = accountDoc?.walletAddress ?? null
   const imUsername = accountDoc?.username ?? null
+
+  if (tokenName && tokenName.toLowerCase() !== twitterUsername.toLowerCase()) {
+    return {
+      verificationCompleted: false,
+      tokenNameMismatch: true,
+      mismatchData: { tokenName, twitterUsername },
+    }
+  }
 
   // Wallets do not match
   if (
@@ -342,7 +354,7 @@ export async function completeTwitterVerification({
     // Mark account as verified
     await markAccountVerifiedAndUpdateUsername({
       accountId: decodedAccount.id,
-      username: twitterUsername?.toLowerCase(),
+      username: twitterUsername.toLowerCase(),
     })
   }
 

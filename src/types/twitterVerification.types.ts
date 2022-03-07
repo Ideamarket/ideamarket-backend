@@ -22,14 +22,23 @@ export type TwitterVerificationInitiation = {
 export type TwitterVerificationCompletion = {
   verificationCompleted: boolean
   tweet?: Tweet | null
+  tokenNameMismatch?: boolean
   walletMismatch?: boolean
   usernameMismatch?: boolean
-  mismatchData?: WalletMismatchData | UsernameMismatchData
+  mismatchData?:
+    | TokenNameMismatchData
+    | WalletMismatchData
+    | UsernameMismatchData
 }
 
 export type Tweet = {
   id: string | null
   text: string | null
+}
+
+export type TokenNameMismatchData = {
+  tokenName: string
+  twitterUsername: string
 }
 
 export type WalletMismatchData = {
