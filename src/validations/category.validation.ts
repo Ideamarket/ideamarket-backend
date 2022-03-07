@@ -6,6 +6,10 @@ export const addCategoryValidation = [
     .optional()
     .isBoolean()
     .withMessage('enabled should be either true/false'),
+  body('hidden')
+    .optional()
+    .isBoolean()
+    .withMessage('hidden should be either true/false'),
   body('startDate')
     .optional()
     .isDate()
@@ -26,6 +30,10 @@ export const updateCategoryValidation = [
     .optional()
     .isBoolean()
     .withMessage('enabled should be either true/false'),
+  body('hidden')
+    .optional()
+    .isBoolean()
+    .withMessage('hidden should be either true/false'),
   body('startDate')
     .optional()
     .isDate()
