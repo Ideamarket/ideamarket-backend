@@ -39,6 +39,23 @@ export type SignInAccount = {
   accountCreated: boolean
 }
 
+export async function removeAllUsernamesFromDB(verified: boolean | null) {
+  if (verified === null) {
+    for await (const accountDoc of AccountModel.find()) {
+      await AccountModel.findByIdAndUpdate(accountDoc.id, {
+        $unset: { username: '' },
+      })
+    }
+    return
+  }
+
+  for await (const accountDoc of AccountModel.find({ verified })) {
+    await AccountModel.findByIdAndUpdate(accountDoc.id, {
+      $unset: { username: '' },
+    })
+  }
+}
+
 export async function signInAccountAndReturnToken(
   accountRequest: AccountRequest
 ) {

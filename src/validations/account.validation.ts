@@ -11,6 +11,10 @@ const SIGNATURE_REQ = 'Signature  is required'
 const SIGNATURE_NOT_VALID = 'Signature is not valid'
 
 // Validators
+export const removeAllUsernamesValidation = [
+  body('verified').optional().isBoolean().withMessage('Verified is not valid'),
+]
+
 const accountValidation = [
   body('source')
     .notEmpty()

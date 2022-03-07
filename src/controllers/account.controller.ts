@@ -11,8 +11,23 @@ import {
   uploadProfilePhoto,
   linkAccountAndEmail,
   signInAccountAndReturnToken,
+  removeAllUsernamesFromDB,
 } from '../services/account.service'
 import type { DECODED_ACCOUNT } from '../util/jwtTokenUtil'
+
+export async function removeAllUsernames(req: Request, res: Response) {
+  try {
+    const verified = req.body.verified ?? null
+
+    await removeAllUsernamesFromDB(verified)
+    return handleSuccess(res, {
+      message: 'All usernames have been removed from DB',
+    })
+  } catch (error) {
+    console.error('Error occurred while removing all the usernames', error)
+    return handleError(res, error, 'Unable to remove all the usernames')
+  }
+}
 
 // Sign In Account
 export async function signInAccount(req: Request, res: Response) {

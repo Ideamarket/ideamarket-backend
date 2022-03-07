@@ -10,7 +10,9 @@ import {
   sendAccountEmailVerificationCode,
   linkAccount,
   signInAccount,
+  removeAllUsernames,
 } from '../controllers/account.controller'
+import { authorizeAdmin } from '../middleware'
 import {
   authenticate,
   authenticateAndSetAccount,
@@ -20,6 +22,7 @@ import {
   checkAccountEmailVerificationCodeValidation,
   fetchPublicAccountProfileValidation,
   linkAccountValidation,
+  removeAllUsernamesValidation,
   sendAccountEmailVerificationCodeValidation,
   signInAccountValidation,
   updateAccountValidation,
@@ -28,6 +31,16 @@ import {
 const accountRouter = express.Router()
 
 // -------------------- ROUTES -------------------- //
+
+// Remove All Usernames
+accountRouter.post(
+  '/removeUsernames',
+  authenticateAndSetAccount,
+  authorizeAdmin,
+  removeAllUsernamesValidation,
+  validateRequest,
+  removeAllUsernames
+)
 
 // SignIn Account
 accountRouter.post(
