@@ -1,8 +1,7 @@
-/* eslint-disable sonarjs/no-duplicate-string */
-
 import { body, query } from 'express-validator'
 
-import { isUsernameAvailable, isValidUsername } from '../util/accountUtil'
+import { AccountSource } from '../types/account.types'
+import { isValidAccountSource, isValidUsername } from '../util/accountUtil'
 
 // Error Messages
 const SIGNED_WALLET_ADDRESS_REQ = 'Signed Wallet Address is required'
@@ -12,46 +11,52 @@ const SIGNATURE_REQ = 'Signature  is required'
 const SIGNATURE_NOT_VALID = 'Signature is not valid'
 
 // Validators
-export const authenticateAccountValidation = [
-  body('signedWalletAddress').notEmpty().withMessage(SIGNED_WALLET_ADDRESS_REQ),
-  body('signedWalletAddress.message')
-    .notEmpty()
-    .withMessage(MESSAGE_REQ)
-    .isString()
-    .withMessage(MESSAGE_NOT_VALID),
-  body('signedWalletAddress.signature')
-    .notEmpty()
-    .withMessage(SIGNATURE_REQ)
-    .isString()
-    .withMessage(SIGNATURE_NOT_VALID),
+export const removeAllUsernamesValidation = [
+  body('verified').optional().isBoolean().withMessage('Verified is not valid'),
 ]
 
-export const createAccountValidation = [
-  body('signedWalletAddress').notEmpty().withMessage(SIGNED_WALLET_ADDRESS_REQ),
+const accountValidation = [
+  body('source')
+    .notEmpty()
+    .isString()
+    .custom(isValidAccountSource)
+    .withMessage('source cannot be empty/null and should be valid'),
+  body('signedWalletAddress')
+    .if(body('source').equals(AccountSource.WALLET))
+    .notEmpty()
+    .withMessage(SIGNED_WALLET_ADDRESS_REQ),
   body('signedWalletAddress.message')
+    .if(body('source').equals(AccountSource.WALLET))
     .notEmpty()
     .withMessage(MESSAGE_REQ)
     .isString()
     .withMessage(MESSAGE_NOT_VALID),
   body('signedWalletAddress.signature')
+    .if(body('source').equals(AccountSource.WALLET))
     .notEmpty()
     .withMessage(SIGNATURE_REQ)
     .isString()
     .withMessage(SIGNATURE_NOT_VALID),
-  body('username')
-    .optional()
-    .toLowerCase()
-    .custom(isValidUsername)
-    .withMessage('Username is not valid')
-    .custom(isUsernameAvailable)
-    .withMessage('Username is not available'),
-  body('name').optional().isString().withMessage('Name is not valid'),
-  body('bio').optional().isString().withMessage('Bio is not valid'),
-  body('profilePhoto')
-    .optional()
+  body('email')
+    .if(body('source').equals(AccountSource.EMAIL))
+    .notEmpty()
     .isString()
-    .withMessage('Profile photo is not valid'),
+    .isEmail()
+    .withMessage('email cannot be empty/null and should be valid'),
+  body('code')
+    .if(body('source').equals(AccountSource.EMAIL))
+    .notEmpty()
+    .withMessage('code cannot be empty/null'),
+  body('googleIdToken')
+    .if(body('source').equals(AccountSource.GOOGLE))
+    .notEmpty()
+    .isString()
+    .withMessage('googleIdToken cannot be empty/null and should be valid'),
 ]
+
+export const signInAccountValidation = accountValidation
+
+export const linkAccountValidation = accountValidation
 
 export const updateAccountValidation = [
   body('username')

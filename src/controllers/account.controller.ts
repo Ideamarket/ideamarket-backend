@@ -1,58 +1,74 @@
-/* eslint-disable prefer-destructuring */
 import type { Request, Response } from 'express'
 
 import { handleError, handleSuccess } from '../lib/base'
 import type { IAccount } from '../models/account.model'
 import {
-  authenticateAccountAndReturnToken,
   checkEmailVerificationCode,
-  createAccountInDB,
   fetchPublicAccountProfileFromDB,
   fetchAccountFromDB,
   sendEmailVerificationCode,
   updateAccountInDB,
   uploadProfilePhoto,
+  linkAccountAndEmail,
+  signInAccountAndReturnToken,
+  removeAllUsernamesFromDB,
 } from '../services/account.service'
 import type { DECODED_ACCOUNT } from '../util/jwtTokenUtil'
-import type { SignedWalletAddress } from '../util/web3Util'
-import { recoverEthAddresses } from '../util/web3Util'
 
-// Authenticate Account
-export async function authenticateAccount(req: Request, res: Response) {
+export async function removeAllUsernames(req: Request, res: Response) {
   try {
-    const signedWalletAddress: SignedWalletAddress =
-      req.body.signedWalletAddress
-    const walletAddress = recoverEthAddresses(signedWalletAddress)
+    const verified = req.body.verified ?? null
 
-    const data = await authenticateAccountAndReturnToken(walletAddress)
+    await removeAllUsernamesFromDB(verified)
+    return handleSuccess(res, {
+      message: 'All usernames have been removed from DB',
+    })
+  } catch (error) {
+    console.error('Error occurred while removing all the usernames', error)
+    return handleError(res, error, 'Unable to remove all the usernames')
+  }
+}
 
-    return handleSuccess(res, data)
+// Sign In Account
+export async function signInAccount(req: Request, res: Response) {
+  try {
+    const reqBody = req.body
+
+    const signedInAccount = await signInAccountAndReturnToken({
+      source: reqBody.source,
+      signedWalletAddress: reqBody.signedWalletAddress ?? null,
+      email: reqBody.email ?? null,
+      code: reqBody.code ?? null,
+      googleIdToken: reqBody.googleIdToken ?? null,
+    })
+
+    return handleSuccess(res, signedInAccount)
   } catch (error) {
     console.error(error)
     return handleError(res, error, 'Unable to authenticate the account')
   }
 }
 
-// Create Account
-export async function createAccount(req: Request, res: Response) {
+export async function linkAccount(req: Request, res: Response) {
   try {
     const reqBody = req.body
-    const signedWalletAddress: SignedWalletAddress = reqBody.signedWalletAddress
-    const walletAddress = recoverEthAddresses(signedWalletAddress)
+    const decodedAccount = (req as any).decodedAccount as DECODED_ACCOUNT
 
-    const accountRequest: IAccount = {
-      walletAddress,
-      name: reqBody.name as string,
-      username: reqBody.username as string,
-      bio: reqBody.bio as string,
-      profilePhoto: reqBody.profilePhoto as string,
-    }
-    const createdAccount = await createAccountInDB(accountRequest)
+    const account = await linkAccountAndEmail({
+      accountId: decodedAccount.id,
+      accountRequest: {
+        source: reqBody.source,
+        signedWalletAddress: reqBody.signedWalletAddress ?? null,
+        email: reqBody.email ?? null,
+        code: reqBody.code ?? null,
+        googleIdToken: reqBody.googleIdToken ?? null,
+      },
+    })
 
-    return handleSuccess(res, createdAccount)
+    return handleSuccess(res, { account })
   } catch (error) {
-    console.error(error)
-    return handleError(res, error, 'Unable to create the account')
+    console.error('Error occurred while linking the accounts', error)
+    return handleError(res, error, 'Unable to link the account')
   }
 }
 
@@ -63,6 +79,7 @@ export async function updateAccount(req: Request, res: Response) {
     const decodedAccount = (req as any).decodedAccount as DECODED_ACCOUNT
 
     const accountRequest: IAccount = {
+      email: null,
       walletAddress: decodedAccount.walletAddress,
       name: reqBody.name as string,
       username: reqBody.username as string,
@@ -71,7 +88,7 @@ export async function updateAccount(req: Request, res: Response) {
     }
     const updatedAccount = await updateAccountInDB(accountRequest)
 
-    return handleSuccess(res, updatedAccount)
+    return handleSuccess(res, { account: updatedAccount })
   } catch (error) {
     console.error(error)
     return handleError(res, error, 'Unable to update the account')
@@ -82,9 +99,9 @@ export async function updateAccount(req: Request, res: Response) {
 export async function fetchAccount(req: Request, res: Response) {
   try {
     const decodedAccount = (req as any).decodedAccount as DECODED_ACCOUNT
-    const account = await fetchAccountFromDB(decodedAccount.walletAddress)
+    const account = await fetchAccountFromDB(decodedAccount.id)
 
-    return handleSuccess(res, account)
+    return handleSuccess(res, { account })
   } catch (error) {
     console.error(error)
     return handleError(res, error, 'Unable to fetch the account')
@@ -97,7 +114,7 @@ export async function fetchPublicAccountProfile(req: Request, res: Response) {
     const username = req.query.username as string
     const publicAccountProfile = await fetchPublicAccountProfileFromDB(username)
 
-    return handleSuccess(res, publicAccountProfile)
+    return handleSuccess(res, { account: publicAccountProfile })
   } catch (error) {
     console.error(error)
     return handleError(res, error, 'Unable to fetch the public account profile')
@@ -150,7 +167,7 @@ export async function checkAccountEmailVerificationCode(
     const decodedAccount = (req as any).decodedAccount as DECODED_ACCOUNT
 
     const verificationResponse = await checkEmailVerificationCode({
-      walletAddress: decodedAccount.walletAddress,
+      walletAddress: decodedAccount.walletAddress ?? '',
       email: reqBody.email,
       code: reqBody.code,
     })

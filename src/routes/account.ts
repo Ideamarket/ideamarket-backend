@@ -2,26 +2,29 @@
 import express from 'express'
 
 import {
-  createAccount,
   fetchPublicAccountProfile,
   fetchAccount,
   updateAccount,
   uploadAccountProfilePhoto,
-  authenticateAccount,
   checkAccountEmailVerificationCode,
   sendAccountEmailVerificationCode,
+  linkAccount,
+  signInAccount,
+  removeAllUsernames,
 } from '../controllers/account.controller'
+import { authorizeAdmin } from '../middleware'
 import {
   authenticate,
   authenticateAndSetAccount,
 } from '../middleware/authentication'
 import { validateRequest } from '../middleware/validateRequest'
 import {
-  authenticateAccountValidation,
   checkAccountEmailVerificationCodeValidation,
-  createAccountValidation,
   fetchPublicAccountProfileValidation,
+  linkAccountValidation,
+  removeAllUsernamesValidation,
   sendAccountEmailVerificationCodeValidation,
+  signInAccountValidation,
   updateAccountValidation,
 } from '../validations/account.validation'
 
@@ -29,15 +32,32 @@ const accountRouter = express.Router()
 
 // -------------------- ROUTES -------------------- //
 
-// Authenticate Account
+// Remove All Usernames
 accountRouter.post(
-  '/authenticate',
-  authenticateAccountValidation,
+  '/removeUsernames',
+  authenticateAndSetAccount,
+  authorizeAdmin,
+  removeAllUsernamesValidation,
   validateRequest,
-  authenticateAccount
+  removeAllUsernames
 )
-// Create Account
-accountRouter.post('', createAccountValidation, validateRequest, createAccount)
+
+// SignIn Account
+accountRouter.post(
+  '/signIn',
+  signInAccountValidation,
+  validateRequest,
+  signInAccount
+)
+
+// Link Account
+accountRouter.post(
+  '/link',
+  authenticateAndSetAccount,
+  linkAccountValidation,
+  validateRequest,
+  linkAccount
+)
 
 // Update Account
 accountRouter.patch(
@@ -65,7 +85,6 @@ accountRouter.post('/profilePhoto', authenticate, uploadAccountProfilePhoto)
 // Send Email Verification Code
 accountRouter.get(
   '/emailVerification',
-  authenticateAndSetAccount,
   sendAccountEmailVerificationCodeValidation,
   validateRequest,
   sendAccountEmailVerificationCode

@@ -29,6 +29,20 @@ export const addTriggerValidation = [
           .isString()
           .withMessage('triggerData.categories is not valid'),
       ],
+      [
+        body('triggerData.marketId')
+          .notEmpty()
+          .custom(isMarketIdValid)
+          .withMessage('triggerData.marketId is not valid or null/empty'),
+        body('triggerData.tokenName')
+          .notEmpty()
+          .isString()
+          .withMessage('triggerData.tokenName is not valid or null/empty'),
+        body('triggerData.categories')
+          .optional()
+          .isString()
+          .withMessage('triggerData.categories is not valid'),
+      ],
     ],
     'triggerData is not valid'
   ),

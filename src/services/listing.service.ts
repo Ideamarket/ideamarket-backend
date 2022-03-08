@@ -30,6 +30,7 @@ import {
   calculateYearIncome,
   isListingVerified,
   SUBGRAPH_URL,
+  ZERO_ADDRESS,
 } from '../util/web3Util'
 import {
   EntityNotFoundError,
@@ -328,6 +329,7 @@ export async function addNewGhostListing({
     onchainListedByAccount: null,
     onchainListedAt: null,
     totalVotes: 0,
+    onchainOwner: ZERO_ADDRESS,
     price: 0,
     dayChange: 0,
     weekChange: 0,
@@ -391,6 +393,7 @@ export async function updateOrCloneOnchainListing({
     onchainListedByAccount: account?.id ?? null,
     onchainListedAt: new Date(Number.parseInt(token.listedAt) * 1000),
     totalVotes: listing ? listing.totalVotes : 0,
+    onchainOwner: token.tokenOwner,
     price: calculatePrice(token.latestPricePoint.price),
     dayChange: calculateDayChange(token.dayChange),
     weekChange: calculateWeekChange(token.pricePoints),
@@ -490,6 +493,7 @@ export async function updateOnchainListing({
       onchainListedByAccount: listing?.onchainListedByAccount?._id ?? null,
       onchainListedAt: new Date(Number.parseInt(ideaToken.listedAt) * 1000),
       totalVotes: listing ? listing.totalVotes : 0,
+      onchainOwner: ideaToken.tokenOwner,
       price: calculatePrice(ideaToken.latestPricePoint.price),
       dayChange: calculateDayChange(ideaToken.dayChange),
       weekChange: calculateWeekChange(ideaToken.pricePoints),
@@ -547,20 +551,24 @@ export async function resolveOnchainListingTrigger(trigger: TriggerDocument) {
   try {
     console.info(`Resolving trigger - ${trigger._id as string}`)
     const marketId = Number.parseInt(trigger.triggerData.marketId as string)
-    const tokenId = Number.parseInt(trigger.triggerData.tokenId as string)
+    const tokenId = trigger.triggerData.tokenId
+      ? Number.parseInt(trigger.triggerData.tokenId as string)
+      : null
+    const tokenName = (trigger.triggerData.tokenName as string) ?? null
     const categoryIds =
       (trigger.triggerData.categories as string | undefined)?.split(',') ?? []
-    if (!marketId || !tokenId) {
+    if (!marketId || !(tokenId || tokenName)) {
       console.error(
         `TriggerData is not valid for type = ${TriggerType.ONCHAIN_LISTING}`
       )
       return
     }
 
-    const onchainTokens = await request(
-      SUBGRAPH_URL,
-      getTokensByMarketIdAndTokenIdQuery({ marketId, tokenId })
-    )
+    const onchainTokens = await fetchOnchainTokens({
+      marketId,
+      tokenId,
+      tokenName,
+    })
     const ideaToken = onchainTokens.ideaMarkets[0].tokens[0] as IdeaToken
 
     await updateOnchainListing({ ideaToken, updateIfExists: true, categoryIds })
@@ -569,6 +577,32 @@ export async function resolveOnchainListingTrigger(trigger: TriggerDocument) {
   } catch (error) {
     console.error('Error occurred while resolving ghost listing trigger', error)
   }
+}
+
+function fetchOnchainTokens({
+  marketId,
+  tokenId,
+  tokenName,
+}: {
+  marketId: number
+  tokenId: number | null
+  tokenName: string | null
+}) {
+  if (tokenId) {
+    return request(
+      SUBGRAPH_URL,
+      getTokensByMarketIdAndTokenIdQuery({ marketId, tokenId })
+    )
+  }
+
+  if (tokenName) {
+    return request(
+      SUBGRAPH_URL,
+      getTokensByMarketIdAndTokenNameQuery({ marketId, tokenName })
+    )
+  }
+
+  return null
 }
 
 export async function addCategoryToListing({

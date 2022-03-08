@@ -2,16 +2,62 @@ import BN from 'bn.js'
 import config from 'config'
 import Web3 from 'web3'
 
+import ABI from './abi.json'
+
 import { bigNumberTenPow18, web3BNToFloatString } from '.'
 
 export const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000'
 export const COMPOUND_SUPPLY_RATE = 0.06
+const weiFastestGasPrice = new BN(2_000_000_000)
 
-export const NETWORK: string = config.get('web3.network')
-const RPC_URL: string = config.get(`web3.rpcUrls.${NETWORK}`)
-export const SUBGRAPH_URL: string = config.get(`web3.subgraphUrls.${NETWORK}`)
+export const NETWORK = config.get<string>('web3.network')
+const RPC_URL = config.get<string>(`web3.rpcUrls.${NETWORK}`)
+export const SUBGRAPH_URL = config.get<string>(`web3.subgraphUrls.${NETWORK}`)
+const PRIVATE_KEY = config.get<string>(`web3.privateKeys.${NETWORK}`)
+const CONTRACT_ADDRESS = config.get<string>(`web3.contractAddresses.${NETWORK}`)
 
 const web3 = new Web3(RPC_URL)
+
+/**
+ * This functions generates the contract
+ */
+export function getContract() {
+  const account = web3.eth.accounts.privateKeyToAccount(PRIVATE_KEY)
+  web3.eth.accounts.wallet.add(account)
+  return new web3.eth.Contract(ABI as any, CONTRACT_ADDRESS, {
+    from: account.address,
+  })
+}
+
+/**
+ * This function sets the tokenOwner in the blockchain
+ */
+export async function setTokenOwner({
+  tokenAddress,
+  ownerAddress,
+}: {
+  tokenAddress: string
+  ownerAddress: string
+}) {
+  const contract = getContract()
+  try {
+    const res = await contract.methods
+      .setTokenOwner(tokenAddress, ownerAddress)
+      .send({
+        gasLimit: '5000000', // This is ArbGas, not normal gas
+        gasPrice: weiFastestGasPrice,
+      })
+    console.info(
+      `TransactionHash=${
+        res.transactionHash as string
+      } :: Updated owner=${ownerAddress} for token=${tokenAddress}`
+    )
+    return true
+  } catch (error) {
+    console.error('Error occurred while setting token owner', error)
+  }
+  return false
+}
 
 /**
  * Returns whether the eth address is valid or not

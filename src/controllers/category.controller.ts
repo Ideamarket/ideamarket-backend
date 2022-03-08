@@ -14,6 +14,7 @@ export async function addCategory(req: Request, res: Response) {
     const createdCategory = await addNewCategory({
       name: reqBody.name,
       enabled: reqBody.enabled ? (reqBody.enabled as string) === 'true' : true,
+      hidden: reqBody.hidden ? (reqBody.hidden as string) === 'true' : false,
       startDate: reqBody.startDate ? new Date(reqBody.startDate) : null,
       endDate: reqBody.endDate ? new Date(reqBody.endDate) : null,
     })
@@ -35,6 +36,7 @@ export async function updateCategory(req: Request, res: Response) {
         enabled: reqBody.enabled
           ? (reqBody.enabled as string) === 'true'
           : true,
+        hidden: reqBody.hidden ? (reqBody.hidden as string) === 'true' : false,
         startDate: reqBody.startDate ? new Date(reqBody.startDate) : null,
         endDate: reqBody.endDate ? new Date(reqBody.endDate) : null,
       },

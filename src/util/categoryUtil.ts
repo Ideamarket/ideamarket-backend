@@ -12,6 +12,7 @@ export function mapCategory(
     id: categoryDoc._id,
     name: categoryDoc.name,
     enabled: categoryDoc.enabled,
+    hidden: categoryDoc.hidden,
     startDate: categoryDoc.startDate,
     endDate: categoryDoc.endDate,
   }

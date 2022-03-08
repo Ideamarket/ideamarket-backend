@@ -3,6 +3,7 @@ import type { Document, PaginateModel } from 'mongoose'
 import mongoose, { Schema } from 'mongoose'
 import mongoosePagination from 'mongoose-paginate'
 
+import { ZERO_ADDRESS } from '../util/web3Util'
 import type { AccountDocument } from './account.model'
 import type { CategoryDocument } from './category.model'
 
@@ -21,6 +22,7 @@ export type IListing = {
   onchainListedByAccount: string | null | undefined
   onchainListedAt: Date | null | undefined
   totalVotes: number | undefined
+  onchainOwner: string | null | undefined
   price: number | undefined
   dayChange: number | undefined
   weekChange: number | undefined
@@ -52,6 +54,7 @@ export interface ListingDocument extends Document {
   onchainListedByAccount: AccountDocument | null
   onchainListedAt: Date
   totalVotes: number
+  onchainOwner: string
   price: number
   dayChange: number
   weekChange: number
@@ -98,6 +101,7 @@ const ListingSchema = new Schema(
     },
     onchainListedAt: { type: Date, default: null, required: false },
     totalVotes: { type: Number, default: 0, required: true },
+    onchainOwner: { type: String, default: ZERO_ADDRESS, required: false },
     price: { type: Number, default: 0, required: true },
     dayChange: { type: Number, default: 0, required: true },
     weekChange: { type: Number, default: 0, required: true },

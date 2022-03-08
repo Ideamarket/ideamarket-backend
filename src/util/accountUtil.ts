@@ -1,15 +1,20 @@
+/* eslint-disable prefer-promise-reject-errors */
 import config from 'config'
 
 import type { AccountDocument } from '../models/account.model'
 import { AccountModel } from '../models/account.model'
 import type { AccountResponse } from '../types/account.types'
+import { AccountSource } from '../types/account.types'
 import { sendMailWithDynamicTemplate } from './emailUtil'
 import { getRandomString } from './randomUtil'
 
 const templateId: string = config.get('sendgrid.emailVerificationTemplateId')
 const cloudFrontDomain: string = config.get('account.cloudFrontDomain')
 
-/* eslint-disable prefer-promise-reject-errors */
+export function isValidAccountSource(source: string) {
+  return Object.keys(AccountSource).includes(source)
+}
+
 export function isValidUsername(username: string) {
   const pattern = '^[a-z0-9_]{3,15}$'
   const usernameRegex = new RegExp(pattern, 'u')
@@ -59,9 +64,15 @@ export async function checkUsernameCanBeUpdatedOrNot({
 }
 
 export function mapAccount(
-  accountDoc: AccountDocument | Partial<AccountDocument>
-): AccountResponse {
+  accountDoc: AccountDocument | Partial<AccountDocument> | null
+): AccountResponse | null {
+  if (!accountDoc) {
+    return null
+  }
+
   const account: AccountResponse = {}
+
+  account.id = accountDoc.id
 
   if (accountDoc.name) {
     account.name = accountDoc.name
@@ -90,6 +101,8 @@ export function mapAccount(
   }
 
   account.role = accountDoc.role
+
+  account.verified = accountDoc.verified ?? false
 
   return account
 }

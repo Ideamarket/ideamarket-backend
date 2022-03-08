@@ -8,6 +8,7 @@ import { listingRouter } from './listing'
 import { subgraphRouter } from './subgraph'
 import { switchRouter } from './switch'
 import { triggerRouter } from './trigger'
+import { twitterVerificationRouter } from './twitterVerification'
 import { verificationRouter } from './verification'
 import { versionRouter } from './version'
 import { votesRouter } from './vote'
@@ -23,6 +24,7 @@ routes.use('/general', generalRouter)
 routes.use('/listing', listingRouter)
 routes.use('/subgraph', subgraphRouter)
 routes.use('/trigger', triggerRouter)
+routes.use('/twitterVerification', twitterVerificationRouter)
 routes.use('/version', versionRouter)
 routes.use('/votes', votesRouter)
 routes.use('/verification', verificationRouter)

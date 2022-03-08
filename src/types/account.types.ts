@@ -1,4 +1,21 @@
+import type { SignedWalletAddress } from '../util/web3Util'
+
+export enum AccountSource {
+  WALLET = 'WALLET',
+  EMAIL = 'EMAIL',
+  GOOGLE = 'GOOGLE',
+}
+
+export type AccountRequest = {
+  source: string
+  signedWalletAddress: SignedWalletAddress | null
+  email: string | null
+  code: string | null
+  googleIdToken: string | null
+}
+
 export type AccountResponse = {
+  id?: string
   name?: string
   username?: string
   email?: string
@@ -8,6 +25,7 @@ export type AccountResponse = {
   walletAddress?: string
   visibilityOptions?: VisibilityOptions
   role?: string
+  verified?: boolean
 }
 
 export type VisibilityOptions = {

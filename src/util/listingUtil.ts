@@ -7,6 +7,7 @@ import type {
   Web2TokenData,
   Web3TokenData,
 } from '../types/listing.types'
+import { ZERO_ADDRESS } from './web3Util'
 
 export function mapWeb2Data({
   listingDoc,
@@ -87,6 +88,7 @@ export function mapListingResponse({
       listingDoc.onchainListedByAccount?.username ?? listingDoc.onchainListedBy,
     onchainListedAt: listingDoc.onchainListedAt,
     totalVotes: listingDoc.totalVotes,
+    onchainOwner: listingDoc.onchainOwner || ZERO_ADDRESS,
     price: listingDoc.price || 0,
     dayChange: listingDoc.dayChange || 0,
     weekChange: listingDoc.weekChange || 0,
