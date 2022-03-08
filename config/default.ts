@@ -3,12 +3,12 @@
 /* eslint-disable import/no-default-export */
 import mongoUriBuilder from 'mongo-uri-builder'
 
-import { CHAIN } from '../src/eth'
 import type {
   MarketConfig,
   TwitchConfig,
   TwitterConfig,
 } from '../src/types/verification-config'
+import { CHAIN } from '../src/verification-eth'
 
 const HOUR_SECONDS = 3600
 const DAY_SECONDS = 24 * HOUR_SECONDS

@@ -3,7 +3,6 @@
 /* eslint-disable no-await-in-loop */
 /* eslint-disable unicorn/consistent-destructuring */
 
-/* eslint-disable import/no-extraneous-dependencies */
 /* eslint-disable @typescript-eslint/no-throw-literal */
 /* eslint-disable require-unicode-regexp */
 import BN from 'bn.js'

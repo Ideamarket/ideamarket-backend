@@ -27,8 +27,8 @@ export interface VerificationRequestDocument extends Document {
 const VerificationRequestSchema = new Schema(
   {
     state: { type: String },
-    token_address: { type: String, required: true, index: true },
-    owner_address: { type: String, required: true, index: true },
+    tokenAddress: { type: String, required: true, index: true },
+    ownerAddress: { type: String, required: true, index: true },
     chain: { type: String },
     uuid: { type: String },
     weiFee: { type: String },

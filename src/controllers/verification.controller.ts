@@ -1,21 +1,9 @@
- 
 /* eslint-disable no-await-in-loop */
 /* eslint-disable sonarjs/no-duplicate-string */
 /* eslint-disable @typescript-eslint/restrict-template-expressions */
 
-import {
-  calculateTxWeiCost,
-  checkFeeTx,
-  getAddress,
-  isAddress,
-  isTxHash,
-  stringToChain,
-  verify,
-  ZERO_ADDRESS,
-} from 'eth'
 import type { Request, Response } from 'express'
 import { v4 as uuidv4, validate } from 'uuid'
-import { checkVerification } from 'verifiers'
 
 import { getMarketConfig } from '../../config/default'
 import { handleSuccess, handleError, handleFailed } from '../lib/base'
@@ -30,6 +18,17 @@ import type { SubgraphTokenInfoQueryResult } from '../types/subgraph.types'
 import type { VerificationRequest } from '../types/verification-request'
 import { VERIFICATION_STATE } from '../types/verification-request'
 import { log, LOG_LEVEL, sleep, uuidToSHA3 } from '../util'
+import {
+  calculateTxWeiCost,
+  checkFeeTx,
+  getAddress,
+  isAddress,
+  isTxHash,
+  stringToChain,
+  verify,
+  ZERO_ADDRESS,
+} from '../verification-eth'
+import { checkVerification } from '../verifiers'
 
 export async function request(req: Request, res: Response) {
   const {
@@ -103,7 +102,7 @@ export async function request(req: Request, res: Response) {
       return handleFailed(res, 'Database communication failed.')
     }
 
-    return handleSuccess(res, { data: { uuid } })
+    return handleSuccess(res, { uuid })
   } catch (error) {
     return handleError(res, error, 'Unable to handle fetching comments')
   }

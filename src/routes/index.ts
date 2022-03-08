@@ -8,6 +8,7 @@ import { listingRouter } from './listing'
 import { subgraphRouter } from './subgraph'
 import { switchRouter } from './switch'
 import { triggerRouter } from './trigger'
+import { verificationRouter } from './verification'
 import { versionRouter } from './version'
 import { votesRouter } from './vote'
 
@@ -24,5 +25,6 @@ routes.use('/subgraph', subgraphRouter)
 routes.use('/trigger', triggerRouter)
 routes.use('/version', versionRouter)
 routes.use('/votes', votesRouter)
+routes.use('/verification', verificationRouter)
 
 export { routes }

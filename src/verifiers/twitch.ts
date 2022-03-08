@@ -1,5 +1,5 @@
 /* eslint-disable sonarjs/cognitive-complexity */
- 
+
 /* eslint-disable @typescript-eslint/no-unnecessary-condition */
 /* eslint-disable prefer-destructuring */
 /* eslint-disable @typescript-eslint/restrict-template-expressions */
