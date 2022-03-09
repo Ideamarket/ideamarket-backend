@@ -6,7 +6,14 @@ import { OAuth2Client } from 'google-auth-library'
 import type { IAccount, AccountDocument } from '../models/account.model'
 import { AccountModel } from '../models/account.model'
 import { EmailVerificationModel } from '../models/emailVerification.model'
-import type { AccountRequest } from '../types/account.types'
+import {
+  MergeAccountModel,
+  MergeAccountStatus,
+} from '../models/merge-account.model'
+import type {
+  AccountRequest,
+  LinkAccountResponse,
+} from '../types/account.types'
 import { AccountSource } from '../types/account.types'
 import {
   checkUsernameCanBeUpdatedOrNot,
@@ -33,10 +40,20 @@ const REQ_NOT_VALID_GOOGLE_SOURCE_MSG =
 const EMAIL_VERIFICATION_CODE_NOT_VALID_MSG = 'Your code is not valid'
 const GOOGLE_ID_TOKEN_NOT_VALID_MSG =
   'GoogleIdToken is either expired or invalid'
+const MERGE_ACCOUNTS_MSG =
+  'You need to merge your current account with other account'
 
-export type SignInAccount = {
+type SignInAccount = {
   account: AccountDocument
   accountCreated: boolean
+}
+
+type LinkAccountCheck = {
+  linked: boolean
+  mergeRequired: boolean
+  emailAccountId?: string
+  walletAccountId?: string
+  message: string
 }
 
 export async function removeAllUsernamesFromDB(verified: boolean | null) {
@@ -191,28 +208,62 @@ export async function linkAccountAndEmail({
 }: {
   accountId: string
   accountRequest: AccountRequest
-}) {
-  let account: AccountDocument | null
+}): Promise<LinkAccountResponse> {
+  let linkAccountCheck: LinkAccountCheck
   const { source, signedWalletAddress, email, code, googleIdToken } =
     accountRequest
   switch (source) {
     case AccountSource.WALLET:
-      account = await linkAccountFromWalletSource({
+      linkAccountCheck = await linkAccountFromWalletSource({
         accountId,
         signedWalletAddress,
       })
       break
     case AccountSource.EMAIL:
-      account = await linkAccountFromEmailSource({ accountId, email, code })
+      linkAccountCheck = await linkAccountFromEmailSource({
+        accountId,
+        email,
+        code,
+      })
       break
     case AccountSource.GOOGLE:
-      account = await linkAccountFromGoogleSource({ accountId, googleIdToken })
+      linkAccountCheck = await linkAccountFromGoogleSource({
+        accountId,
+        googleIdToken,
+      })
       break
     default:
       throw new BadRequestError(`Account source - ${source} is not valid `)
   }
 
-  return mapAccount(account)
+  // Merging accounts is not required
+  if (!linkAccountCheck.mergeRequired) {
+    return {
+      linked: linkAccountCheck.linked,
+      mergeRequired: linkAccountCheck.mergeRequired,
+      message: linkAccountCheck.message,
+    }
+  }
+
+  // Merging accounts is required, so add a record in mergeaccounts collection
+  if (!linkAccountCheck.emailAccountId || !linkAccountCheck.walletAccountId) {
+    console.error('EmailAccountId/WalletAccountId is null to merge accounts')
+    throw new InternalServerError('Failed to link the account')
+  }
+  const mergeAccount = await MergeAccountModel.create(
+    MergeAccountModel.build({
+      emailAccount: linkAccountCheck.emailAccountId,
+      walletAccount: linkAccountCheck.walletAccountId,
+      status: MergeAccountStatus.PENDING,
+    })
+  )
+
+  return {
+    linked: linkAccountCheck.linked,
+    mergeRequired: linkAccountCheck.mergeRequired,
+    message: linkAccountCheck.message,
+    mergeAccountId: mergeAccount._id.toString(),
+  }
 }
 
 async function linkAccountFromWalletSource({
@@ -221,23 +272,52 @@ async function linkAccountFromWalletSource({
 }: {
   accountId: string
   signedWalletAddress: SignedWalletAddress | null
-}) {
+}): Promise<LinkAccountCheck> {
   if (!signedWalletAddress) {
     throw new BadRequestError(REQ_NOT_VALID_WALLET_SOURCE_MSG)
   }
+  const currentAccount = await AccountModel.findById(accountId)
   const walletAddress = recoverEthAddresses(signedWalletAddress)
-  const account = await AccountModel.findById(accountId)
-  if (account?.walletAddress === walletAddress) {
-    throw new InternalServerError(
-      'Different wallet is already linked to this account'
-    )
+
+  if (currentAccount?.walletAddress) {
+    // Different wallet is already linked to the account
+    if (currentAccount.walletAddress !== walletAddress) {
+      return {
+        linked: false,
+        mergeRequired: false,
+        message: 'Different wallet is already linked to this account',
+      }
+    }
+    // Same wallet is already linked to the account
+    return {
+      linked: true,
+      mergeRequired: false,
+      message: 'Same wallet is already linked to this account',
+    }
   }
 
-  return AccountModel.findByIdAndUpdate(
+  const walletAddressAccount = await AccountModel.findOne({ walletAddress })
+  // Wallet address is linked to another account, need to merge accounts
+  if (walletAddressAccount) {
+    return {
+      linked: false,
+      mergeRequired: true,
+      emailAccountId: accountId.toString(),
+      walletAccountId: walletAddressAccount._id.toString(),
+      message: MERGE_ACCOUNTS_MSG,
+    }
+  }
+
+  await AccountModel.findByIdAndUpdate(
     accountId,
     { $set: { walletAddress } },
     { $new: true }
   )
+  return {
+    linked: true,
+    mergeRequired: false,
+    message: 'Your wallet is now linked to your account',
+  }
 }
 
 async function linkAccountFromEmailSource({
@@ -248,26 +328,65 @@ async function linkAccountFromEmailSource({
   accountId: string
   email: string | null
   code: string | null
-}) {
+}): Promise<LinkAccountCheck> {
   if (!email || !code) {
     throw new BadRequestError(REQ_NOT_VALID_EMAIL_SOURCE_MSG)
   }
-  const emailVerificationDoc = await EmailVerificationModel.findOne({ email })
 
+  const emailVerificationDoc = await EmailVerificationModel.findOne({ email })
   if (
     !emailVerificationDoc ||
     !emailVerificationDoc.code ||
     emailVerificationDoc.code !== code
   ) {
-    throw new InternalServerError(EMAIL_VERIFICATION_CODE_NOT_VALID_MSG)
+    return {
+      linked: false,
+      mergeRequired: false,
+      message: EMAIL_VERIFICATION_CODE_NOT_VALID_MSG,
+    }
   }
   await EmailVerificationModel.findOneAndDelete({ email })
 
-  return AccountModel.findByIdAndUpdate(
+  const currentAccount = await AccountModel.findById(accountId)
+  if (currentAccount?.email) {
+    // Different email is already linked to the account
+    if (currentAccount.email !== email) {
+      return {
+        linked: false,
+        mergeRequired: false,
+        message: 'Different email is already linked to this account',
+      }
+    }
+    // Same email is already linked to the account
+    return {
+      linked: true,
+      mergeRequired: false,
+      message: 'Same email is already linked to this account',
+    }
+  }
+
+  const emailAccount = await AccountModel.findOne({ email })
+  // Email is linked to another account, need to merge accounts
+  if (emailAccount) {
+    return {
+      linked: false,
+      mergeRequired: true,
+      emailAccountId: emailAccount._id.toString(),
+      walletAccountId: accountId.toString(),
+      message: MERGE_ACCOUNTS_MSG,
+    }
+  }
+
+  await AccountModel.findByIdAndUpdate(
     accountId,
     { $set: { email } },
     { $new: true }
   )
+  return {
+    linked: true,
+    mergeRequired: false,
+    message: 'Your email is now linked to your account',
+  }
 }
 
 async function linkAccountFromGoogleSource({
@@ -276,7 +395,7 @@ async function linkAccountFromGoogleSource({
 }: {
   accountId: string
   googleIdToken: string | null
-}) {
+}): Promise<LinkAccountCheck> {
   if (!googleIdToken) {
     throw new BadRequestError(REQ_NOT_VALID_GOOGLE_SOURCE_MSG)
   }
@@ -291,19 +410,61 @@ async function linkAccountFromGoogleSource({
     payload = ticket.getPayload()
   } catch (error) {
     console.error(error)
-    throw new InternalServerError(GOOGLE_ID_TOKEN_NOT_VALID_MSG)
+    return {
+      linked: false,
+      mergeRequired: false,
+      message: GOOGLE_ID_TOKEN_NOT_VALID_MSG,
+    }
   }
-
   if (!payload || !payload.email) {
-    throw new InternalServerError(GOOGLE_ID_TOKEN_NOT_VALID_MSG)
+    return {
+      linked: false,
+      mergeRequired: false,
+      message: GOOGLE_ID_TOKEN_NOT_VALID_MSG,
+    }
   }
   const { email } = payload
 
-  return AccountModel.findByIdAndUpdate(
+  const currentAccount = await AccountModel.findById(accountId)
+  if (currentAccount?.email) {
+    // Different email is already linked to the account
+    if (currentAccount.email !== email) {
+      return {
+        linked: false,
+        mergeRequired: false,
+        message: 'Different email is already linked to this account',
+      }
+    }
+    // Same email is already linked to the account
+    return {
+      linked: true,
+      mergeRequired: false,
+      message: 'Same email is already linked to this account',
+    }
+  }
+
+  const emailAccount = await AccountModel.findOne({ email })
+  // Email is linked to another account, need to merge accounts
+  if (emailAccount) {
+    return {
+      linked: false,
+      mergeRequired: true,
+      emailAccountId: emailAccount._id.toString(),
+      walletAccountId: accountId.toString(),
+      message: MERGE_ACCOUNTS_MSG,
+    }
+  }
+
+  await AccountModel.findByIdAndUpdate(
     accountId,
     { $set: { email } },
     { $new: true }
   )
+  return {
+    linked: true,
+    mergeRequired: false,
+    message: 'Your email is now linked to your account',
+  }
 }
 
 export async function updateAccountInDB(accountRequest: IAccount) {

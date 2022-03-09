@@ -33,3 +33,10 @@ export type VisibilityOptions = {
   bio: boolean
   ethAddress: boolean
 }
+
+export type LinkAccountResponse = {
+  linked: boolean
+  mergeRequired: boolean
+  message: string
+  mergeAccountId?: string
+}

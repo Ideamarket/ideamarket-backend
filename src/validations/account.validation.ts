@@ -58,6 +58,13 @@ export const signInAccountValidation = accountValidation
 
 export const linkAccountValidation = accountValidation
 
+export const mergeAccountValidation = [
+  body('mergeAccountId')
+    .notEmpty()
+    .isString()
+    .withMessage('mergeAccountId cannot be null/empty'),
+]
+
 export const updateAccountValidation = [
   body('username')
     .optional()

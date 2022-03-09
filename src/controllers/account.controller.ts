@@ -13,6 +13,7 @@ import {
   signInAccountAndReturnToken,
   removeAllUsernamesFromDB,
 } from '../services/account.service'
+import { mergeAccounts } from '../services/merge-account.service'
 import type { DECODED_ACCOUNT } from '../util/jwtTokenUtil'
 
 export async function removeAllUsernames(req: Request, res: Response) {
@@ -69,6 +70,23 @@ export async function linkAccount(req: Request, res: Response) {
   } catch (error) {
     console.error('Error occurred while linking the accounts', error)
     return handleError(res, error, 'Unable to link the account')
+  }
+}
+
+// Merge Account
+export async function mergeAccount(req: Request, res: Response) {
+  try {
+    const reqBody = req.body
+    const decodedAccount = (req as any).decodedAccount as DECODED_ACCOUNT
+    const response = await mergeAccounts({
+      mergeAccountId: reqBody.mergeAccountId,
+      currentAccountId: decodedAccount.id,
+    })
+
+    return handleSuccess(res, response)
+  } catch (error) {
+    console.error('Error occurred while merging the accounts', error)
+    return handleError(res, error, 'Unable to merge the account')
   }
 }
 
