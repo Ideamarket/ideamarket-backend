@@ -117,13 +117,17 @@ export async function mergeAccounts({
     _id: emailAccountId,
     verified: emailAccountVerified,
     username: emailAccountUsername,
+    name: emailAccountName,
+    bio: emailAccountBio,
   } = mergeAccountDoc.emailAccount
   await AccountModel.findByIdAndDelete(emailAccountId)
   await AccountModel.findByIdAndUpdate(mergeAccountDoc.walletAccount._id, {
     $set: {
       email,
-      verified: emailAccountVerified || mergeAccountDoc.walletAccount.verified,
-      username: emailAccountUsername || mergeAccountDoc.walletAccount.username,
+      verified: mergeAccountDoc.walletAccount.verified || emailAccountVerified,
+      username: mergeAccountDoc.walletAccount.username || emailAccountUsername,
+      name: mergeAccountDoc.walletAccount.name || emailAccountName,
+      bio: mergeAccountDoc.walletAccount.bio || emailAccountBio,
     },
   })
 
