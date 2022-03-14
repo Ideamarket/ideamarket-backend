@@ -112,6 +112,11 @@ const config = {
     market5: process.env.MARKET5 ?? '',
     market6: process.env.MARKET6 ?? '',
   },
+  azureStorage: {
+    connectionString: process.env.AZURE_STORAGE_CONNECTION_STRING,
+    image_max_age: process.env.IMAGE_MAX_AGE,
+    cdn: process.env.AZURE_STORAGE_CDN,
+  },
 }
 
 export default config
