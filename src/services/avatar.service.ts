@@ -1,15 +1,11 @@
 /* eslint-disable sonarjs/cognitive-complexity */
-/* eslint-disable require-unicode-regexp */
-/* eslint-disable no-param-reassign */
-/* eslint-disable @typescript-eslint/no-throw-literal */
-/* eslint-disable @typescript-eslint/no-unnecessary-condition */
 import { BlobServiceClient } from '@azure/storage-blob'
 import config from 'config'
 import fetch from 'node-fetch'
 import sharp from 'sharp'
 
-import { getProvider, isValidProvider } from '../avatar-providers'
 import type { Lambdavatar } from '../types/lambda-avatar.types'
+import { getProvider, isValidProvider } from '../util/avatar-providers'
 
 const IMAGE_MAX_AGE = Number.parseInt(config.get('azureStorage.image_max_age'))
 const CDN: string = config.get('azureStorage.cdn')
@@ -18,8 +14,10 @@ export async function getLambdaAvatar(
   providerName: string,
   username: string
 ): Promise<Lambdavatar | null> {
+  let value = username
+
   if (!isValidProvider(providerName)) {
-    throw 'Unknown provider'
+    throw new Error('Unknown provider')
   }
 
   if (providerName === 'wikipedia') {
@@ -27,20 +25,20 @@ export async function getLambdaAvatar(
       `https://ideamarket.io/api/markets/wikipedia/validPageTitle?title=${username}`
     )
     if (!res.ok) {
-      throw 'Invalid username'
+      throw new Error('Invalid username')
     }
 
     const response = await res.json()
-    username = response.data.validPageTitle
+    value = response.data.validPageTitle
   }
 
   // Run a basic sanitycheck on the username
-  if (providerName !== 'wikipedia' && !/^[\w()-]{1,100}$/g.test(username)) {
-    throw 'Invalid username'
+  if (providerName !== 'wikipedia' && !/^[\w()-]{1,100}$/gu.test(value)) {
+    throw new Error('Invalid username')
   }
 
   const lambdavatar = await getLambdaAvatarFromStorage(
-    `${providerName}/${username}`
+    `${providerName}/${value}`
   )
 
   if (lambdavatar && !lambdavatar.expired) {
@@ -59,14 +57,14 @@ export async function getLambdaAvatar(
       return lambdavatar
     }
 
-    throw 'Could not retrieve image from provider'
+    throw new Error('Could not retrieve image from provider')
   }
 
   try {
     lambdavatarImage = await processImage(lambdavatarImage)
   } catch (error) {
     console.log(error)
-    throw 'Could not processed the picture by sharp'
+    throw new Error('Could not processed the picture by sharp')
   }
 
   const latestLambdavatar = await updateLambdaAvatarToStorage(
@@ -78,7 +76,7 @@ export async function getLambdaAvatar(
     return latestLambdavatar ?? lambdavatar
   }
 
-  throw 'Could not update latest lambdavatar to storage'
+  throw new Error('Could not update latest lambdavatar to storage')
 }
 
 export async function getLambdaAvatarFromStorage(
@@ -90,6 +88,7 @@ export async function getLambdaAvatarFromStorage(
       .getBlockBlobClient(`${profileId}.png`)
       .getProperties()
 
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
     if (!properties) {
       return null
     }
