@@ -14,6 +14,6 @@ export async function fetchAvatar(req: Request, res: Response) {
 
     return handleSuccess(res, lambdaAvatarResponse)
   } catch (error) {
-    return handleError(res, error, 'Unable to fetch version')
+    return handleError(res, error, 'Unable to fetch avatar')
   }
 }
