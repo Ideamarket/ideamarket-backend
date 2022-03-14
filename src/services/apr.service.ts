@@ -5,7 +5,7 @@ export function fetchLatestAprFromDB() {
     AprModel.findOne({}, {}, { sort: { createdAt: -1 } })
       // eslint-disable-next-line promise/prefer-await-to-then
       .then((result: any) => {
-        resolve((result.value as number) || 0)
+        resolve(((result.value as number) || 0) / 1.6)
       })
       // eslint-disable-next-line promise/prefer-await-to-then
       .catch(() => {
