@@ -1,6 +1,7 @@
 import { Router } from 'express'
 
 import { accountRouter } from './account'
+import { avatarRouter } from './avatar'
 import { categoryRouter } from './category'
 import { commentsRouter } from './comments'
 import { generalRouter } from './general'
@@ -26,5 +27,6 @@ routes.use('/trigger', triggerRouter)
 routes.use('/twitterVerification', twitterVerificationRouter)
 routes.use('/version', versionRouter)
 routes.use('/votes', votesRouter)
+routes.use('/avatar', avatarRouter)
 
 export { routes }
