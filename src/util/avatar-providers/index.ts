@@ -5,7 +5,7 @@ import twitch from './twitch'
 import twitter from './twitter'
 import wikipedia from './wikipedia'
 
-const providers = new Set([
+export const providers = new Set([
   'twitter',
   'substack',
   'showtime',
