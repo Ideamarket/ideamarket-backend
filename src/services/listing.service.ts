@@ -21,6 +21,7 @@ import {
   getTokensByMarketIdAndTokenNameQuery,
   getTokenQuery,
   getTokensByMarketIdAndTokenIdQuery,
+  getTokensByTokenAddressQuery,
 } from '../util/queries'
 import {
   calculateClaimableIncome,
@@ -172,6 +173,10 @@ export async function fetchSingleListing({
   account: DECODED_ACCOUNT | null
 }) {
   if (listingId) {
+    if (listingId.startsWith('0x')) {
+      return fetchListingByOnchainId({ onchainId: listingId, account })
+    }
+
     return fetchListingById({ listingId, account })
   }
 
@@ -221,6 +226,56 @@ async function fetchListingById({
     console.error('Error occurred while fetching listing from web2', error)
     throw new InternalServerError('Failed to fetch listing')
   }
+}
+
+async function fetchListingByOnchainId({
+  onchainId,
+  account,
+}: {
+  onchainId: string
+  account: DECODED_ACCOUNT | null
+}) {
+  let listing = null
+
+  // Fetch listing data from web2 db
+  listing = await ListingModel.findOne({ onchainId })
+    .populate('ghostListedByAccount')
+    .populate('onchainListedByAccount')
+    .populate('categories')
+
+  // Pull data from subgraph if web3 data is not present in web2 db
+  if (!listing || !listing.isOnchain) {
+    const onchainTokens = await request(
+      SUBGRAPH_URL,
+      getTokensByTokenAddressQuery(onchainId)
+    )
+    if (onchainTokens?.ideaTokens?.length > 0) {
+      const onchainIdeaToken = onchainTokens.ideaTokens[0] as IdeaToken
+      listing = await updateOnchainListing({
+        ideaToken: onchainIdeaToken,
+        updateIfExists: false,
+      })
+    }
+  }
+
+  if (!listing) {
+    console.info('Listing not present in web2 and web3')
+    return null
+  }
+
+  return mapListingResponse({
+    listingDoc: listing,
+    upVoted: await checkUpVotedOrNot({
+      listingId: listing.id,
+      accountId: account ? account.id : null,
+    }),
+    web3TokenData: listing.onchainId
+      ? await fetchSubgraphData({
+          marketId: listing.marketId,
+          id: listing.onchainId,
+        })
+      : null,
+  })
 }
 
 async function fetchListingByMarketAndValue({
@@ -723,4 +778,15 @@ export function calculateWeekChange(weeklyPricePoints: PricePoint[]) {
     ).toFixed(2)
   }
   return Number.parseFloat(weeklyChange)
+}
+
+export async function fetchListingId({
+  marketId,
+  onchainValue,
+}: {
+  marketId: number
+  onchainValue: string
+}) {
+  const listing = await ListingModel.findOne({ marketId, onchainValue })
+  return (listing?._id.toString() as string) ?? null
 }
