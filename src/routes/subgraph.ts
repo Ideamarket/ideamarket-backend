@@ -3,12 +3,18 @@ import express from 'express'
 
 import {
   cloneNewOnchainListingsToWeb2,
+  fetchTrades,
+  fetchWalletHoldings,
   querySubgraph,
 } from '../controllers/subgraph.controller'
 import { authenticateAndSetAccount } from '../middleware/authentication'
 import { authorizeAdmin } from '../middleware/authorization'
 import { validateRequest } from '../middleware/validateRequest'
-import { querySubgraphValidation } from '../validations/subgraph.validation'
+import {
+  fetchTradesValidation,
+  fetchWalletHoldingsValidation,
+  querySubgraphValidation,
+} from '../validations/subgraph.validation'
 
 const subgraphRouter = express.Router()
 
@@ -27,6 +33,22 @@ subgraphRouter.post(
   authenticateAndSetAccount,
   authorizeAdmin,
   cloneNewOnchainListingsToWeb2
+)
+
+// Fetch Wallet Holdings
+subgraphRouter.get(
+  '/walletHoldings',
+  fetchWalletHoldingsValidation,
+  validateRequest,
+  fetchWalletHoldings
+)
+
+// Fetch Trades
+subgraphRouter.get(
+  '/trades',
+  fetchTradesValidation,
+  validateRequest,
+  fetchTrades
 )
 
 export { subgraphRouter }

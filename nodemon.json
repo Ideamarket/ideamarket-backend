@@ -25,12 +25,18 @@
     "RPC_URL_TEST_AVM_L1": "https://rinkeby.infura.io/v3/98ca28d50f234e618a22a8b0d83c40b2",
     "RPC_URL_TEST_AVM_L2": "https://arbitrum-rinkeby.infura.io/v3/98ca28d50f234e618a22a8b0d83c40b2",
     "RPC_URL_TEST": "https://rinkeby.infura.io/v3/98ca28d50f234e618a22a8b0d83c40b2",
+    "SUBGRAPH_URL_L1_AVM": "https://subgraph-l1.backend.ideamarket.io/subgraphs/name/Ideamarket/IdeamarketL1",
+    "SUBGRAPH_URL_L1_MAINNET": "https://subgraph-l1.backend.ideamarket.io/subgraphs/name/Ideamarket/IdeamarketL1",
+    "SUBGRAPH_URL_L1_RINKEBY": "https://subgraph-rinkeby.backend.ideamarket.io/subgraphs/name/Ideamarket/IdeamarketRINKEBY",
+    "SUBGRAPH_URL_L1_TEST_AVM_L1": "https://subgraph-test.backend.ideamarket.io/subgraphs/name/Ideamarket/IdeamarketTESTAVML1",
+    "SUBGRAPH_URL_L1_TEST_AVM_L2": "https://subgraph-test.backend.ideamarket.io/subgraphs/name/Ideamarket/IdeamarketTESTAVML1",
+    "SUBGRAPH_URL_L1_TEST": "https://subgraph-test.backend.ideamarket.io/subgraphs/name/Ideamarket/IdeamarketTEST",
     "SUBGRAPH_URL_AVM": "https://subgraph.backend.ideamarket.io/subgraphs/name/Ideamarket/Ideamarket",
     "SUBGRAPH_URL_MAINNET": "https://subgraph-l1.backend.ideamarket.io/subgraphs/name/Ideamarket/IdeamarketL1",
     "SUBGRAPH_URL_RINKEBY": "https://subgraph-rinkeby.backend.ideamarket.io/subgraphs/name/Ideamarket/IdeamarketRINKEBY",
     "SUBGRAPH_URL_TEST_AVM_L1": "https://subgraph-test.backend.ideamarket.io/subgraphs/name/Ideamarket/IdeamarketTESTAVML1",
     "SUBGRAPH_URL_TEST_AVM_L2": "https://subgraph-test-avm-l2.backend.ideamarket.io/subgraphs/name/Ideamarket/IdeamarketTESTAVML2",
-    "SUBGRAPH_URL_TEST": "https://rinkeby.infura.io/v3/98ca28d50f234e618a22a8b0d83c40b2",
+    "SUBGRAPH_URL_TEST": "https://subgraph-test.backend.ideamarket.io/subgraphs/name/Ideamarket/IdeamarketTEST",
     "PRIVATE_KEY_AVM": "0x91b9d0d2ca55e11bd09eea8239e46833a882d8bdba9a3ae851d5090b695d2058",
     "PRIVATE_KEY_MAINNET": "0x91b9d0d2ca55e11bd09eea8239e46833a882d8bdba9a3ae851d5090b695d2058",
     "PRIVATE_KEY_RINKEBY": "0x3d1d761cafd0b2cf44985af443d46eacc4f44f3d71fea9d5d0ba728645a25b14",
@@ -58,7 +64,11 @@
     "TWITTER_CONSUMER_SECRET": "cBtqXyKNLp25PdL19QhSCHYMzT8iGNBtUGXIbaqsHfXNvd1NnG",
     "TWITTER_ACCESS_TOKEN": "1158526537152339968-duD7clIS0r5P5EfzpyQLZHRIDP1JFU",
     "TWITTER_ACCESS_TOKEN_SECRET": "9Cw0SsGx3qxofFgFf83rsrmu0CH5a2Z8MSuGoHnUEkOO9",
-    "TWITTER_BEARER_TOKEN": "AAAAAAAAAAAAAAAAAAAAAFfPKAEAAAAAat6S8tzrKkk4VhihWfYptopvlN8%3DhICvXQhlGcj0mBNzoBjGwAvCr79e16KwOHytCXcGBtMcCQkXzC"
+    "TWITTER_BEARER_TOKEN": "AAAAAAAAAAAAAAAAAAAAAFfPKAEAAAAAat6S8tzrKkk4VhihWfYptopvlN8%3DhICvXQhlGcj0mBNzoBjGwAvCr79e16KwOHytCXcGBtMcCQkXzC",
+    "IMAGE_MAX_AGE": "86400",
+    "AZURE_STORAGE_CDN": "https://ideamarket.azureedge.net",
+    "AZURE_STORAGE_CONNECTION_STRING": "DefaultEndpointsProtocol=https;AccountName=ideamarket;AccountKey=flr1LTcIV097REtVwtgMXib9qDPghRJ18M3HfCwz7uatgQNeixzmAHQDqvkSoF5e3JSs5TnpSaTzEo6UtCFt8w==;EndpointSuffix=core.windows.net",
+    "IMAGE_WIDTH": "128"
   },
   "ext": "js,json,ts"
 }

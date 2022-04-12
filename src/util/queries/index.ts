@@ -4,3 +4,6 @@ export { getTokensByMarketIdAndTokenNameQuery } from './getTokensByMarketIdAndTo
 export { getTokensByMarketIdAndTokenIdQuery } from './getTokensByMarketIdAndTokenIdQuery'
 export { getAllTokensQuery } from './getAllTokensQuery'
 export { getTokensByMarketIdAndIdQuery } from './getTokensByMarketIdAndIdQuery'
+export { getOwnedTokensMaybeMarketQuery } from './getOwnedTokensMaybeMarketQuery'
+export { getLockedTokensQuery } from './getLockedTokensQuery'
+export { getMyTradesQuery } from './getMyTradesQuery'

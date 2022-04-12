@@ -64,6 +64,14 @@ const config = {
       'test-avm-l2': process.env.RPC_URL_TEST_AVM_L2 ?? '',
       test: process.env.RPC_URL_TEST ?? '',
     },
+    subgraphUrlsL1: {
+      avm: process.env.SUBGRAPH_URL_L1_AVM ?? '',
+      mainnet: process.env.SUBGRAPH_URL_L1_MAINNET ?? '',
+      rinkeby: process.env.SUBGRAPH_URL_L1_RINKEBY ?? '',
+      'test-avm-l1': process.env.SUBGRAPH_URL_L1_TEST_AVM_L1 ?? '',
+      'test-avm-l2': process.env.SUBGRAPH_URL_L1_TEST_AVM_L2 ?? '',
+      test: process.env.SUBGRAPH_URL_L1_TEST ?? '',
+    },
     subgraphUrls: {
       avm: process.env.SUBGRAPH_URL_AVM ?? '',
       mainnet: process.env.SUBGRAPH_URL_MAINNET ?? '',

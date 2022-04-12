@@ -1,3 +1,4 @@
+/* eslint-disable sonarjs/no-duplicate-string */
 import BN from 'bn.js'
 import config from 'config'
 import Web3 from 'web3'
@@ -17,6 +18,25 @@ const PRIVATE_KEY = config.get<string>(`web3.privateKeys.${NETWORK}`)
 const CONTRACT_ADDRESS = config.get<string>(`web3.contractAddresses.${NETWORK}`)
 
 const web3 = new Web3(RPC_URL)
+
+export function getL1Network(network: string) {
+  switch (network) {
+    case 'avm':
+      return 'mainnet'
+    case 'mainnet':
+      return 'mainnet'
+    case 'rinkeby':
+      return 'rinkeby'
+    case 'test-avm-l1':
+      return 'test-avm-l1'
+    case 'test-avm-l2':
+      return 'test-avm-l1'
+    case 'test':
+      return 'test'
+    default:
+      return 'test'
+  }
+}
 
 /**
  * This functions generates the contract
