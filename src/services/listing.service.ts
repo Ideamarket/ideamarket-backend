@@ -33,6 +33,7 @@ import {
   SUBGRAPH_URL,
   ZERO_ADDRESS,
 } from '../util/web3Util'
+import { getOpinionsData } from '../web3/opinions'
 import {
   EntityNotFoundError,
   InternalServerError,
@@ -393,6 +394,9 @@ export async function addNewGhostListing({
     yearIncome: 0,
     claimableIncome: 0,
     verified: null,
+    averageRating: 0,
+    latestRatingsCount: 0,
+    latestCommentsCount: 0,
   })
   const createdGhostListing = await (
     await (
@@ -431,6 +435,7 @@ export async function updateOrCloneOnchainListing({
     console.error('Error occurred while fetching web3 data from subgraph')
     throw new InternalServerError('Failed to get web3 data from subgraph')
   }
+  const opinionsData = await getOpinionsData(token.id)
 
   const listing = await ListingModel.findOne({ marketId, value })
   const listingDoc: IListing = {
@@ -457,6 +462,9 @@ export async function updateOrCloneOnchainListing({
     yearIncome: calculateYearIncome(token.marketCap),
     claimableIncome: calculateClaimableIncome(),
     verified: isListingVerified(token.tokenOwner),
+    averageRating: opinionsData.averageRating,
+    latestRatingsCount: opinionsData.totalLatestOpinions,
+    latestCommentsCount: opinionsData.totalLatestComments,
   }
 
   const updatedOrClonedListing = await ListingModel.findOneAndUpdate(
@@ -537,6 +545,8 @@ export async function updateOnchainListing({
       `UpdateOnchainListing :: Updating the token address : ${ideaToken.id}`
     )
 
+    const opinionsData = await getOpinionsData(ideaToken.id)
+
     const listingDoc: IListing = {
       value: listing ? listing.value : value,
       marketId: ideaToken.market.id,
@@ -564,6 +574,9 @@ export async function updateOnchainListing({
       yearIncome: calculateYearIncome(ideaToken.marketCap),
       claimableIncome: calculateClaimableIncome(),
       verified: isListingVerified(ideaToken.tokenOwner),
+      averageRating: opinionsData.averageRating,
+      latestRatingsCount: opinionsData.totalLatestOpinions,
+      latestCommentsCount: opinionsData.totalLatestComments,
     }
 
     return await ListingModel.findOneAndUpdate(

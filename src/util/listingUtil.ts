@@ -97,6 +97,9 @@ export function mapListingResponse({
     yearIncome: listingDoc.yearIncome || 0,
     claimableIncome: listingDoc.claimableIncome || 0,
     verified: listingDoc.verified,
+    averageRating: listingDoc.averageRating || 0,
+    latestRatingsCount: listingDoc.latestRatingsCount || 0,
+    latestCommentsCount: listingDoc.latestCommentsCount || 0,
     upVoted,
     web3TokenData,
   }

@@ -13,6 +13,19 @@ const PRIVATE_KEY = config.get<string>(`web3.privateKeys.${NETWORK}`)
 const web3 = new Web3(RPC_URL)
 
 /**
+ * Returns opinions base contract
+ */
+export function getOpinionBaseContract() {
+  const account = web3.eth.accounts.privateKeyToAccount(PRIVATE_KEY)
+  web3.eth.accounts.wallet.add(account)
+  return new web3.eth.Contract(
+    getDeployedABIs(NETWORK).opinionBase as any,
+    getDeployedAddresses(NETWORK)?.opinionBase ?? undefined,
+    { from: web3.eth.defaultAccount ?? undefined }
+  )
+}
+
+/**
  * Returns idea token valut contract for L1 layer
  */
 export function getIdeaTokenVaultContractForL1() {

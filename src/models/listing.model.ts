@@ -31,6 +31,9 @@ export type IListing = {
   yearIncome: number | undefined
   claimableIncome: number | undefined
   verified: boolean | null | undefined
+  averageRating: number | undefined
+  latestRatingsCount: number | undefined
+  latestCommentsCount: number | undefined
 }
 
 interface IListingModel
@@ -63,6 +66,9 @@ export interface ListingDocument extends Document {
   yearIncome: number
   claimableIncome: number
   verified: boolean | null
+  averageRating: number
+  latestRatingsCount: number
+  latestCommentsCount: number
 }
 
 const ListingSchema = new Schema(
@@ -110,6 +116,9 @@ const ListingSchema = new Schema(
     yearIncome: { type: Number, default: 0, required: true },
     claimableIncome: { type: Number, default: 0, required: true },
     verified: { type: Boolean, default: null, required: false },
+    averageRating: { type: Number, default: 0, required: true },
+    latestRatingsCount: { type: Number, default: 0, required: true },
+    latestCommentsCount: { type: Number, default: 0, required: true },
   },
   {
     versionKey: false,
