@@ -488,11 +488,9 @@ export async function updateAllOnchainListings() {
     const allOnchainIdeaTokens: IdeaToken[] =
       await fetchAllOnchainTokensFromWeb3()
 
-    const updatedListings = allOnchainIdeaTokens.map((ideaToken) =>
-      updateOnchainListing({ ideaToken, updateIfExists: true })
-    )
-
-    await Promise.all(updatedListings)
+    for await (const ideaToken of allOnchainIdeaTokens) {
+      await updateOnchainListing({ ideaToken, updateIfExists: true })
+    }
   } catch (error) {
     console.error('Error occurred while updating all onchain listings', error)
     throw new InternalServerError('Failed to update all onchain listings')
@@ -509,6 +507,9 @@ export async function updateOnchainListing({
   categoryIds?: string[]
 }) {
   try {
+    console.log(
+      `UpdateOnchainListing :: Handling the token address : ${ideaToken.id}`
+    )
     const value = getTokenNameUrl({
       marketName: ideaToken.market.name,
       tokenName: ideaToken.name,
@@ -527,8 +528,14 @@ export async function updateOnchainListing({
     })
 
     if (!updateIfExists && listing?.onchainValue) {
+      console.log(
+        `UpdateOnchainListing :: Not updating the token address : ${ideaToken.id}`
+      )
       return await Promise.resolve(null)
     }
+    console.log(
+      `UpdateOnchainListing :: Updating the token address : ${ideaToken.id}`
+    )
 
     const listingDoc: IListing = {
       value: listing ? listing.value : value,
