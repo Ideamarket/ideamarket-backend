@@ -90,7 +90,7 @@ export async function verifyAuthTokenAndReturnAccount(
       id: account._id,
       username: account.username || null,
       email: account.email ?? null,
-      walletAddress: account.walletAddress ?? null,
+      walletAddress: account.walletAddress,
       role: account.role,
     }
   } catch (error) {

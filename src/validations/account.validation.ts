@@ -1,7 +1,6 @@
-import { body, query } from 'express-validator'
+import { body, oneOf, query } from 'express-validator'
 
-import { AccountSource } from '../types/account.types'
-import { isValidAccountSource, isValidUsername } from '../util/accountUtil'
+import { isValidUsername } from '../util/accountUtil'
 
 // Error Messages
 const SIGNED_WALLET_ADDRESS_REQ = 'Signed Wallet Address is required'
@@ -15,54 +14,18 @@ export const removeAllUsernamesValidation = [
   body('verified').optional().isBoolean().withMessage('Verified is not valid'),
 ]
 
-const accountValidation = [
-  body('source')
-    .notEmpty()
-    .isString()
-    .custom(isValidAccountSource)
-    .withMessage('source cannot be empty/null and should be valid'),
-  body('signedWalletAddress')
-    .if(body('source').equals(AccountSource.WALLET))
-    .notEmpty()
-    .withMessage(SIGNED_WALLET_ADDRESS_REQ),
+export const signInAccountValidation = [
+  body('signedWalletAddress').notEmpty().withMessage(SIGNED_WALLET_ADDRESS_REQ),
   body('signedWalletAddress.message')
-    .if(body('source').equals(AccountSource.WALLET))
     .notEmpty()
     .withMessage(MESSAGE_REQ)
     .isString()
     .withMessage(MESSAGE_NOT_VALID),
   body('signedWalletAddress.signature')
-    .if(body('source').equals(AccountSource.WALLET))
     .notEmpty()
     .withMessage(SIGNATURE_REQ)
     .isString()
     .withMessage(SIGNATURE_NOT_VALID),
-  body('email')
-    .if(body('source').equals(AccountSource.EMAIL))
-    .notEmpty()
-    .isString()
-    .isEmail()
-    .withMessage('email cannot be empty/null and should be valid'),
-  body('code')
-    .if(body('source').equals(AccountSource.EMAIL))
-    .notEmpty()
-    .withMessage('code cannot be empty/null'),
-  body('googleIdToken')
-    .if(body('source').equals(AccountSource.GOOGLE))
-    .notEmpty()
-    .isString()
-    .withMessage('googleIdToken cannot be empty/null and should be valid'),
-]
-
-export const signInAccountValidation = accountValidation
-
-export const linkAccountValidation = accountValidation
-
-export const mergeAccountValidation = [
-  body('mergeAccountId')
-    .notEmpty()
-    .isString()
-    .withMessage('mergeAccountId cannot be null/empty'),
 ]
 
 export const updateAccountValidation = [
@@ -80,12 +43,20 @@ export const updateAccountValidation = [
 ]
 
 export const fetchPublicAccountProfileValidation = [
-  query('username')
-    .notEmpty()
-    .toLowerCase()
-    .withMessage('Username is required')
-    .custom(isValidUsername)
-    .withMessage('Username is not valid'),
+  oneOf(
+    [
+      query('username')
+        .notEmpty()
+        .toLowerCase()
+        .withMessage('Username is required')
+        .custom(isValidUsername)
+        .withMessage('Username is not valid'),
+      query('walletAddress')
+        .notEmpty()
+        .withMessage('walletAddress is required'),
+    ],
+    'Either username or walletAddress is mandatory'
+  ),
 ]
 
 export const sendAccountEmailVerificationCodeValidation = [

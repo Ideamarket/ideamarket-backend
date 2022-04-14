@@ -4,16 +4,11 @@ import config from 'config'
 import type { AccountDocument } from '../models/account.model'
 import { AccountModel } from '../models/account.model'
 import type { AccountResponse } from '../types/account.types'
-import { AccountSource } from '../types/account.types'
 import { sendMailWithDynamicTemplate } from './emailUtil'
 import { getRandomString } from './randomUtil'
 
 const templateId: string = config.get('sendgrid.emailVerificationTemplateId')
 const cloudFrontDomain: string = config.get('account.cloudFrontDomain')
-
-export function isValidAccountSource(source: string) {
-  return Object.keys(AccountSource).includes(source)
-}
 
 export function isValidUsername(username: string) {
   const pattern = '^[a-z0-9_]{3,15}$'
@@ -101,8 +96,6 @@ export function mapAccount(
   }
 
   account.role = accountDoc.role
-
-  account.verified = accountDoc.verified ?? false
 
   return account
 }

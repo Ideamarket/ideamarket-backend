@@ -8,10 +8,8 @@ import {
   uploadAccountProfilePhoto,
   checkAccountEmailVerificationCode,
   sendAccountEmailVerificationCode,
-  linkAccount,
   signInAccount,
   removeAllUsernames,
-  mergeAccount,
 } from '../controllers/account.controller'
 import { authorizeAdmin } from '../middleware'
 import {
@@ -22,8 +20,6 @@ import { validateRequest } from '../middleware/validateRequest'
 import {
   checkAccountEmailVerificationCodeValidation,
   fetchPublicAccountProfileValidation,
-  linkAccountValidation,
-  mergeAccountValidation,
   removeAllUsernamesValidation,
   sendAccountEmailVerificationCodeValidation,
   signInAccountValidation,
@@ -50,24 +46,6 @@ accountRouter.post(
   signInAccountValidation,
   validateRequest,
   signInAccount
-)
-
-// Link Account
-accountRouter.post(
-  '/link',
-  authenticateAndSetAccount,
-  linkAccountValidation,
-  validateRequest,
-  linkAccount
-)
-
-// Merge Account
-accountRouter.post(
-  '/merge',
-  authenticateAndSetAccount,
-  mergeAccountValidation,
-  validateRequest,
-  mergeAccount
 )
 
 // Update Account

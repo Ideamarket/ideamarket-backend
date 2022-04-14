@@ -9,11 +9,9 @@ import {
   sendEmailVerificationCode,
   updateAccountInDB,
   uploadProfilePhoto,
-  linkAccountAndEmail,
   signInAccountAndReturnToken,
   removeAllUsernamesFromDB,
 } from '../services/account.service'
-import { mergeAccounts } from '../services/merge-account.service'
 import type { DECODED_ACCOUNT } from '../util/jwtTokenUtil'
 
 export async function removeAllUsernames(req: Request, res: Response) {
@@ -34,59 +32,14 @@ export async function removeAllUsernames(req: Request, res: Response) {
 export async function signInAccount(req: Request, res: Response) {
   try {
     const reqBody = req.body
-
-    const signedInAccount = await signInAccountAndReturnToken({
-      source: reqBody.source,
-      signedWalletAddress: reqBody.signedWalletAddress ?? null,
-      email: reqBody.email ?? null,
-      code: reqBody.code ?? null,
-      googleIdToken: reqBody.googleIdToken ?? null,
-    })
+    const signedInAccount = await signInAccountAndReturnToken(
+      reqBody.signedWalletAddress
+    )
 
     return handleSuccess(res, signedInAccount)
   } catch (error) {
     console.error(error)
     return handleError(res, error, 'Unable to authenticate the account')
-  }
-}
-
-export async function linkAccount(req: Request, res: Response) {
-  try {
-    const reqBody = req.body
-    const decodedAccount = (req as any).decodedAccount as DECODED_ACCOUNT
-
-    const account = await linkAccountAndEmail({
-      accountId: decodedAccount.id,
-      accountRequest: {
-        source: reqBody.source,
-        signedWalletAddress: reqBody.signedWalletAddress ?? null,
-        email: reqBody.email ?? null,
-        code: reqBody.code ?? null,
-        googleIdToken: reqBody.googleIdToken ?? null,
-      },
-    })
-
-    return handleSuccess(res, { account })
-  } catch (error) {
-    console.error('Error occurred while linking the accounts', error)
-    return handleError(res, error, 'Unable to link the account')
-  }
-}
-
-// Merge Account
-export async function mergeAccount(req: Request, res: Response) {
-  try {
-    const reqBody = req.body
-    const decodedAccount = (req as any).decodedAccount as DECODED_ACCOUNT
-    const response = await mergeAccounts({
-      mergeAccountId: reqBody.mergeAccountId,
-      currentAccountId: decodedAccount.id,
-    })
-
-    return handleSuccess(res, response)
-  } catch (error) {
-    console.error('Error occurred while merging the accounts', error)
-    return handleError(res, error, 'Unable to merge the account')
   }
 }
 
@@ -97,7 +50,6 @@ export async function updateAccount(req: Request, res: Response) {
     const decodedAccount = (req as any).decodedAccount as DECODED_ACCOUNT
 
     const accountRequest: IAccount = {
-      email: null,
       walletAddress: decodedAccount.walletAddress,
       name: reqBody.name as string,
       username: reqBody.username as string,
@@ -129,8 +81,14 @@ export async function fetchAccount(req: Request, res: Response) {
 // Fetch Public Account Profile
 export async function fetchPublicAccountProfile(req: Request, res: Response) {
   try {
-    const username = req.query.username as string
-    const publicAccountProfile = await fetchPublicAccountProfileFromDB(username)
+    const username = req.query.username ? (req.query.username as string) : null
+    const walletAddress = req.query.walletAddress
+      ? (req.query.walletAddress as string)
+      : null
+    const publicAccountProfile = await fetchPublicAccountProfileFromDB({
+      username,
+      walletAddress,
+    })
 
     return handleSuccess(res, { account: publicAccountProfile })
   } catch (error) {
