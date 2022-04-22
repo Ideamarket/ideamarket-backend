@@ -5,6 +5,7 @@ import mongoosePagination from 'mongoose-paginate'
 
 import { ZERO_ADDRESS } from '../util/web3Util'
 import type { AccountDocument } from './account.model'
+import type { AddressOpinionsSummaryDocument } from './address-opinions-summary.model'
 import type { CategoryDocument } from './category.model'
 
 export type IListing = {
@@ -31,6 +32,7 @@ export type IListing = {
   yearIncome: number | undefined
   claimableIncome: number | undefined
   verified: boolean | null | undefined
+  addressOpinionsSummary: AddressOpinionsSummaryDocument | null | undefined
 }
 
 interface IListingModel
@@ -63,6 +65,7 @@ export interface ListingDocument extends Document {
   yearIncome: number
   claimableIncome: number
   verified: boolean | null
+  addressOpinionsSummary: AddressOpinionsSummaryDocument | null
 }
 
 const ListingSchema = new Schema(
@@ -110,6 +113,12 @@ const ListingSchema = new Schema(
     yearIncome: { type: Number, default: 0, required: true },
     claimableIncome: { type: Number, default: 0, required: true },
     verified: { type: Boolean, default: null, required: false },
+    addressOpinionsSummary: {
+      type: mongoose.Types.ObjectId,
+      ref: 'AddressOpinionsSummary',
+      required: false,
+      index: true,
+    },
   },
   {
     versionKey: false,

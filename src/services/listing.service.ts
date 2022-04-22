@@ -1,3 +1,4 @@
+/* eslint-disable unicorn/no-keyword-prefix */
 /* eslint-disable no-await-in-loop */
 /* eslint-disable @typescript-eslint/no-unnecessary-condition */
 /* eslint-disable unicorn/no-await-expression-member */
@@ -6,6 +7,7 @@ import { request } from 'graphql-request'
 import mongoose from 'mongoose'
 import type { FilterQuery } from 'mongoose'
 
+import { AddressOpinionsSummaryModel } from '../models/address-opinions-summary.model'
 import { BlacklistedListingModel } from '../models/blacklisted-listings.model'
 import { CategoryModel } from '../models/category.model'
 import type { IListing, ListingDocument } from '../models/listing.model'
@@ -51,6 +53,7 @@ export type ListingQueryOptions = {
   limit: number
   orderBy: string
   orderDirection: string
+  filterListings: string[]
   filterTokens: string[]
   isVerifiedFilter: boolean
   earliestPricePointTs: number
@@ -72,6 +75,7 @@ export async function fetchAllListings({
     skip,
     limit,
     orderBy,
+    filterListings,
     filterTokens,
     search,
     verified,
@@ -99,8 +103,17 @@ export async function fetchAllListings({
   if (marketType === 'ghost') {
     filterOptions.push({ isOnchain: false })
   }
+  if (filterListings.length > 0) {
+    filterOptions.push({
+      _id: {
+        $in: filterListings.map(
+          (listingId) => new mongoose.Types.ObjectId(listingId)
+        ),
+      },
+    })
+  }
   if (filterTokens.length > 0) {
-    filterOptions.push({ _id: { $in: filterTokens } })
+    filterOptions.push({ onchainId: { $in: filterTokens } })
   }
   if (search) {
     filterOptions.push({
@@ -121,16 +134,40 @@ export async function fetchAllListings({
   }
 
   // Listings
-  const listings = await ListingModel.find({ $and: filterOptions })
-    .sort(sortOptions)
-    .skip(skip)
-    .limit(limit)
-    .populate('ghostListedByAccount')
-    .populate('onchainListedByAccount')
-    .populate('categories')
+  const listings = await ListingModel.aggregate([
+    { $match: { $and: filterOptions } },
+    {
+      $lookup: {
+        from: 'opinionssummaries',
+        localField: 'opinionsSummary',
+        foreignField: '_id',
+        as: 'fromItems',
+      },
+    },
+    { $set: { opinionsSummary: { $arrayElemAt: ['$fromItems', 0] } } },
+    {
+      $replaceRoot: {
+        newRoot: {
+          $mergeObjects: [{ $arrayElemAt: ['$fromItems', 0] }, '$$ROOT'],
+        },
+      },
+    },
+    { $project: { fromItems: 0 } },
+    { $sort: sortOptions },
+    { $skip: skip },
+    { $limit: limit },
+    {
+      $lookup: {
+        from: 'categories',
+        localField: 'categories',
+        foreignField: '_id',
+        as: 'categories',
+      },
+    },
+  ])
 
   // Filtering blacklisted listings
-  const listingIds = listings.map((listing) => listing._id)
+  const listingIds = listings.map((listing: any) => listing._id)
   const blacklistedListings = await BlacklistedListingModel.find({
     listing: { $in: listingIds },
   })
@@ -138,19 +175,19 @@ export async function fetchAllListings({
     .populate({ path: 'listing', select: ['id'] })
   const blackListedListingIds = new Set(
     blacklistedListings.map(
-      (blacklistedListing) => blacklistedListing.listing.id
+      (blacklistedListing) => blacklistedListing.listing._id
     )
   )
   const filteredListings = listings.filter(
-    (listing) => !blackListedListingIds.has(listing.id)
+    (listing: any) => !blackListedListingIds.has(listing._id)
   )
 
   // Formatting listings
-  const listingsResponse = filteredListings.map(async (listing) =>
+  const listingsResponse = filteredListings.map(async (listing: any) =>
     mapListingResponse({
       listingDoc: listing,
       upVoted: await checkUpVotedOrNot({
-        listingId: listing.id,
+        listingId: listing._id,
         accountId: account ? account.id : null,
       }),
       web3TokenData: null,
@@ -201,6 +238,7 @@ async function fetchListingById({
 }) {
   try {
     const listing = await ListingModel.findById(listingId)
+      .populate('opinionsSummary')
       .populate('ghostListedByAccount')
       .populate('onchainListedByAccount')
       .populate('categories')
@@ -239,6 +277,7 @@ async function fetchListingByOnchainId({
 
   // Fetch listing data from web2 db
   listing = await ListingModel.findOne({ onchainId })
+    .populate('opinionsSummary')
     .populate('ghostListedByAccount')
     .populate('onchainListedByAccount')
     .populate('categories')
@@ -293,6 +332,7 @@ async function fetchListingByMarketAndValue({
 
   // Fetch listing data from web2 db
   listing = await ListingModel.findOne({ marketId, value })
+    .populate('opinionsSummary')
     .populate('ghostListedByAccount')
     .populate('onchainListedByAccount')
     .populate('categories')
@@ -393,6 +433,7 @@ export async function addNewGhostListing({
     yearIncome: 0,
     claimableIncome: 0,
     verified: null,
+    addressOpinionsSummary: null,
   })
   const createdGhostListing = await (
     await (
@@ -431,6 +472,9 @@ export async function updateOrCloneOnchainListing({
     console.error('Error occurred while fetching web3 data from subgraph')
     throw new InternalServerError('Failed to get web3 data from subgraph')
   }
+  const addressOpinionsSummary = await AddressOpinionsSummaryModel.findOne({
+    tokenAddress: token.id,
+  })
 
   const listing = await ListingModel.findOne({ marketId, value })
   const listingDoc: IListing = {
@@ -457,6 +501,7 @@ export async function updateOrCloneOnchainListing({
     yearIncome: calculateYearIncome(token.marketCap),
     claimableIncome: calculateClaimableIncome(),
     verified: isListingVerified(token.tokenOwner),
+    addressOpinionsSummary,
   }
 
   const updatedOrClonedListing = await ListingModel.findOneAndUpdate(
@@ -537,6 +582,10 @@ export async function updateOnchainListing({
       `UpdateOnchainListing :: Updating the token address : ${ideaToken.id}`
     )
 
+    const addressOpinionsSummary = await AddressOpinionsSummaryModel.findOne({
+      tokenAddress: ideaToken.id,
+    })
+
     const listingDoc: IListing = {
       value: listing ? listing.value : value,
       marketId: ideaToken.market.id,
@@ -564,6 +613,7 @@ export async function updateOnchainListing({
       yearIncome: calculateYearIncome(ideaToken.marketCap),
       claimableIncome: calculateClaimableIncome(),
       verified: isListingVerified(ideaToken.tokenOwner),
+      addressOpinionsSummary,
     }
 
     return await ListingModel.findOneAndUpdate(

@@ -30,6 +30,8 @@ export async function fetchListings(req: Request, res: Response) {
     const orderBy = req.query.orderBy as string
     const orderDirection =
       (req.query.orderDirection as string | undefined) ?? 'desc'
+    const filterListings =
+      (req.query.filterListings as string | undefined)?.split(',') ?? []
     const filterTokens =
       (req.query.filterTokens as string | undefined)?.split(',') ?? []
     const isVerifiedFilter = Boolean(req.query.isVerifiedFilter as string)
@@ -49,6 +51,7 @@ export async function fetchListings(req: Request, res: Response) {
       limit,
       orderBy,
       orderDirection,
+      filterListings,
       filterTokens,
       isVerifiedFilter,
       earliestPricePointTs,

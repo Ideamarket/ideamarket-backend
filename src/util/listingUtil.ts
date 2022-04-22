@@ -61,7 +61,7 @@ export function mapListingResponse({
   upVoted,
   web3TokenData,
 }: {
-  listingDoc: ListingDocument | null
+  listingDoc: ListingDocument | any | null
   upVoted: boolean | null
   web3TokenData: Web3TokenData | Partial<Web3TokenData> | null
 }): NewListingResponse | null {
@@ -70,11 +70,11 @@ export function mapListingResponse({
   }
 
   return {
-    listingId: listingDoc.id,
+    listingId: listingDoc._id,
     value: listingDoc.value,
     marketId: listingDoc.marketId,
     marketName: listingDoc.marketName,
-    categories: listingDoc.categories.map((category) => ({
+    categories: listingDoc.categories.map((category: any) => ({
       id: category._id,
       name: category.name,
     })),
@@ -97,6 +97,9 @@ export function mapListingResponse({
     yearIncome: listingDoc.yearIncome || 0,
     claimableIncome: listingDoc.claimableIncome || 0,
     verified: listingDoc.verified,
+    averageRating: listingDoc.opinionsSummary?.averageRating ?? 0,
+    latestRatingsCount: listingDoc.opinionsSummary?.latestRatingsCount ?? 0,
+    latestCommentsCount: listingDoc.opinionsSummary?.latestCommentsCount ?? 0,
     upVoted,
     web3TokenData,
   }

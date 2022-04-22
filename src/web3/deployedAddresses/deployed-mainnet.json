@@ -15,5 +15,7 @@
   "ideaTokenVaultLogic": "0x993C88a08FAF53bee322Cc501619920d16e0b50D",
   "multiAction": "0xB41bd4C99dA73510d9e081C5FADBE7A27Ac1F814",
   "addMarketSpell": "0x58D63AeAd5B593B4974be0ef34AfbA77F144553d",
-  "opinionBase": ""
+  "addressOpinionBase": "",
+  "nftOpinionBase": "",
+  "ideamarketPosts": ""
 }

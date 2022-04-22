@@ -21,5 +21,7 @@
   "ideaTokenLogic": "0x1c57DDCa2D78373D879F5356f9d53260b68aD309",
   "substackNameVerifier": "0x24d352ecC8D6ac85Ab0dea670665aBb95e9c21b1",
   "merkleDistributor": "0x460e6a71E9E8146C83f96126Ee3DA675a90eBCe9",
-  "opinionBase": ""
+  "addressOpinionBase": "",
+  "nftOpinionBase": "",
+  "ideamarketPosts": ""
 }

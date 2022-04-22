@@ -14,8 +14,21 @@ const L1_RPC_URL = config.get<string>(`web3.rpcUrls.${L1_NETWORK}`)
 const PRIVATE_KEY = config.get<string>(`web3.privateKeys.${NETWORK}`)
 const L1_PRIVATE_KEY = config.get<string>(`web3.privateKeys.${L1_NETWORK}`)
 
-const web3 = new Web3(RPC_URL)
+export const web3 = new Web3(RPC_URL)
 const web3L1 = new Web3(L1_RPC_URL)
+
+/**
+ * Returns address opinions contract
+ */
+export function getAddressOpinionsContract() {
+  const account = web3.eth.accounts.privateKeyToAccount(PRIVATE_KEY)
+  web3.eth.accounts.wallet.add(account)
+  return new web3.eth.Contract(
+    getDeployedABIs(NETWORK).addressOpinionBase as any,
+    getDeployedAddresses(NETWORK)?.addressOpinionBase ?? undefined,
+    { from: web3.eth.defaultAccount ?? undefined }
+  )
+}
 
 /**
  * Returns idea token valut contract for L1 layer

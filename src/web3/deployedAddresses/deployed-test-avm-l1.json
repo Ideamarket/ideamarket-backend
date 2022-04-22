@@ -22,5 +22,7 @@
   "ideaTokenFactoryStateTransferLogic": "0xF120D322FDb5dCd75760b568333b0B4B375E14Ea",
   "ideaTokenExchangeStateTransferLogic": "0xD2B36539a8c6d2bC5f527583b941FB80093889Bc",
   "interestManagerCompoundStateTransferLogic": "0x34BF54c26be9728Ba1b288EA3223e5b138280A27",
-  "opinionBase": ""
+  "addressOpinionBase": "",
+  "nftOpinionBase": "",
+  "ideamarketPosts": ""
 }
