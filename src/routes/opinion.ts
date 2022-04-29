@@ -5,6 +5,7 @@ import {
   fetchAddressOpinionsByAddress,
   fetchAddressOpinionsByWallet,
   syncAllAddressOpinions,
+  syncAllNFTOpinions,
 } from '../controllers/opinion.controller'
 import { validateRequest } from '../middleware/validateRequest'
 import {
@@ -31,3 +32,5 @@ opinionRouter.get(
 )
 
 opinionRouter.patch('/address', syncAllAddressOpinions)
+
+opinionRouter.patch('/nft', syncAllNFTOpinions)

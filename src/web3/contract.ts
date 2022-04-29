@@ -31,6 +31,32 @@ export function getAddressOpinionsContract() {
 }
 
 /**
+ * Returns ideamarket posts contract
+ */
+export function getIdeamarketPostsContract() {
+  const account = web3.eth.accounts.privateKeyToAccount(PRIVATE_KEY)
+  web3.eth.accounts.wallet.add(account)
+  return new web3.eth.Contract(
+    getDeployedABIs(NETWORK).ideamarketPosts as any,
+    getDeployedAddresses(NETWORK)?.ideamarketPosts ?? undefined,
+    { from: web3.eth.defaultAccount ?? undefined }
+  )
+}
+
+/**
+ * Returns nft opinions contract
+ */
+export function getNFTOpinionsContract() {
+  const account = web3.eth.accounts.privateKeyToAccount(PRIVATE_KEY)
+  web3.eth.accounts.wallet.add(account)
+  return new web3.eth.Contract(
+    getDeployedABIs(NETWORK).nftOpinionBase as any,
+    getDeployedAddresses(NETWORK)?.nftOpinionBase ?? undefined,
+    { from: web3.eth.defaultAccount ?? undefined }
+  )
+}
+
+/**
  * Returns idea token valut contract for L1 layer
  */
 export function getIdeaTokenVaultContractForL1() {

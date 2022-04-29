@@ -6,7 +6,10 @@ import {
   fetchAddressOpinionsByWalletFromWeb2,
   syncAllAddressOpinionsInWeb2,
 } from '../services/address-opinion.service'
-import { syncAllNFTOpinionsInWeb2 } from '../services/nft-opinion.service'
+import {
+  syncOpinionsOfAllNFTsInWeb2,
+  syncOpinionsOfNFTInWeb2,
+} from '../services/nft-opinion.service'
 import type {
   AddressOpinionQueryOptions,
   AddressOpinionWithSummaryResponse,
@@ -99,15 +102,22 @@ export async function syncAllAddressOpinions(_req: Request, res: Response) {
   }
 }
 
-export async function syncAllNFTOpinions(_req: Request, res: Response) {
+export async function syncAllNFTOpinions(req: Request, res: Response) {
   try {
-    await syncAllNFTOpinionsInWeb2()
+    const tokenID = req.body.tokenID ? Number.parseInt(req.body.tokenID) : null
+    if (tokenID) {
+      await syncOpinionsOfNFTInWeb2(tokenID)
+      return handleSuccess(res, {
+        message: 'All opinions of an NFT have been synced',
+      })
+    }
 
+    await syncOpinionsOfAllNFTsInWeb2()
     return handleSuccess(res, {
-      message: 'All NFT opinions have been synced',
+      message: 'All opinions of all NFTs have been synced',
     })
   } catch (error) {
-    console.error('Error occurred while syncing all NFT opinions', error)
-    return handleError(res, error, 'Unable to sync all NFT opinions')
+    console.error('Error occurred while syncing NFT opinions', error)
+    return handleError(res, error, 'Unable to sync NFT opinions')
   }
 }
