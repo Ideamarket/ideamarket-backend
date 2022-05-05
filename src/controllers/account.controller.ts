@@ -143,7 +143,7 @@ export async function checkAccountEmailVerificationCode(
     const decodedAccount = (req as any).decodedAccount as DECODED_ACCOUNT
 
     const verificationResponse = await checkEmailVerificationCode({
-      walletAddress: decodedAccount.walletAddress ?? '',
+      walletAddress: decodedAccount.walletAddress,
       email: reqBody.email,
       code: reqBody.code,
     })

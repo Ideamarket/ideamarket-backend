@@ -1,5 +1,4 @@
 /* eslint-disable unicorn/no-keyword-prefix */
-/* eslint-disable no-await-in-loop */
 /* eslint-disable @typescript-eslint/no-unnecessary-condition */
 /* eslint-disable unicorn/no-await-expression-member */
 import escapeStringRegexp from 'escape-string-regexp'
@@ -649,14 +648,6 @@ export async function updateTotalVotesInListing({
   totalVotes: number
 }) {
   return ListingModel.findByIdAndUpdate(listingId, { $set: { totalVotes } })
-}
-
-export async function resolveOnchainListingTriggers(
-  triggers: TriggerDocument[]
-) {
-  for (const trigger of triggers) {
-    await resolveOnchainListingTrigger(trigger)
-  }
 }
 
 export async function resolveOnchainListingTrigger(trigger: TriggerDocument) {

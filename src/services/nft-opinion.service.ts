@@ -7,7 +7,10 @@ import {
   getOpinionsSummaryOfNFT,
 } from '../web3/opinions/nft-opinions'
 import { InternalServerError } from './errors'
-import { getIdeamarketPostsContractAddress } from './post.service'
+import {
+  calculateCompositeRatingAndMarketInterest,
+  getIdeamarketPostsContractAddress,
+} from './post.service'
 
 export async function syncOpinionsOfAllNFTsInWeb2() {
   try {
@@ -66,6 +69,23 @@ export async function syncOpinionsOfNFTInWeb2(tokenID: number) {
       latestCommentsCount,
     } = opinionsSummary
 
+    console.log(`Calculating composite rating for tokenID=${tokenID}`)
+    const latestOpinions = opinionsSummary.latestOpinions.map(
+      async (opinion: any) => {
+        const block = await web3.eth.getBlock(opinion.blockHeight)
+        return {
+          contractAddress: (opinion.contractAddress as string).toLowerCase(),
+          tokenID: opinion.tokenID,
+          author: (opinion.author as string).toLowerCase(),
+          timestamp: block.timestamp.toString(),
+          rating: opinion.rating,
+          comment: opinion.comment,
+        }
+      }
+    )
+    const { compositeRating, marketInterest } =
+      await calculateCompositeRatingAndMarketInterest(latestOpinions)
+
     console.log(
       `Updating opinions summary of NFT with contractAddress=${contractAddress} and tokenId=${tokenID}`
     )
@@ -76,6 +96,8 @@ export async function syncOpinionsOfNFTInWeb2(tokenID: number) {
           contractAddress,
           tokenID,
           averageRating,
+          compositeRating,
+          marketInterest,
           totalRatingsCount,
           latestRatingsCount,
           totalCommentsCount,

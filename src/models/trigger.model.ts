@@ -3,6 +3,8 @@ import mongoose, { Schema } from 'mongoose'
 
 export enum TriggerType {
   ONCHAIN_LISTING = 'ONCHAIN_LISTING',
+  IDEAMARKET_POST = 'IDEAMARKET_POST',
+  USER_TOKEN = 'USER_TOKEN',
 }
 
 export interface ITrigger {

@@ -8,6 +8,11 @@ import type { NFTOpinionDocument } from '../models/nft-opinion.model'
 import { NFTOpinionModel } from '../models/nft-opinion.model'
 import type { PostDocument } from '../models/post.model'
 import { PostModel } from '../models/post.model'
+import type { TriggerDocument } from '../models/trigger.model'
+import { TriggerModel, TriggerType } from '../models/trigger.model'
+import type { UserTokenDocument } from '../models/user-token.model'
+import { UserTokenModel } from '../models/user-token.model'
+import type { Web3NFTOpinionData } from '../types/nft-opinion.types'
 import type {
   PostOpinionsQueryOptions,
   PostQueryOptions,
@@ -19,6 +24,7 @@ import {
   mapPostOpinionWithPost,
   mapPostResponse,
 } from '../util/postUtil'
+import { web3 } from '../web3/contract'
 import { getDeployedAddresses } from '../web3/deployedAddresses'
 import { getOpinionsSummaryOfNFT } from '../web3/opinions/nft-opinions'
 import {
@@ -30,7 +36,15 @@ import { InternalServerError } from './errors'
 const NETWORK = config.get<string>('web3.network')
 
 export async function fetchAllPostsFromWeb2(options: PostQueryOptions) {
-  const { skip, limit, orderBy, search, categories, filterTokens } = options
+  const {
+    skip,
+    limit,
+    orderBy,
+    minterAddress,
+    search,
+    categories,
+    filterTokens,
+  } = options
   const orderDirection = options.orderDirection === 'asc' ? 1 : -1
 
   // Sorting Options
@@ -39,22 +53,24 @@ export async function fetchAllPostsFromWeb2(options: PostQueryOptions) {
   sortOptions._id = 1
 
   // Filter Options
-  const filterOptions: FilterQuery<PostDocument>[] = []
+  const filterOptions: FilterQuery<PostDocument & UserTokenDocument>[] = []
   if (categories.length > 0) {
     filterOptions.push({ categories: { $in: categories } })
   }
   if (filterTokens.length > 0) {
     filterOptions.push({ tokenID: { $in: filterTokens } })
   }
+  if (minterAddress) {
+    filterOptions.push({ minterAddress })
+  }
   if (search) {
     filterOptions.push({
       $or: [
-        {
-          content: { $regex: escapeStringRegexp(search), $options: 'i' },
-        },
+        { content: { $regex: escapeStringRegexp(search), $options: 'i' } },
         {
           minterAddress: { $regex: escapeStringRegexp(search), $options: 'i' },
         },
+        { username: { $regex: escapeStringRegexp(search), $options: 'i' } },
       ],
     })
   }
@@ -65,7 +81,19 @@ export async function fetchAllPostsFromWeb2(options: PostQueryOptions) {
     filterQuery = { $and: filterOptions }
   }
 
-  const posts = await PostModel.find(filterQuery)
+  const posts = await PostModel.aggregate([
+    {
+      $lookup: {
+        from: 'usertokens',
+        localField: 'minterAddress',
+        foreignField: 'walletAddress',
+        as: 'UserTokens',
+      },
+    },
+    { $set: { userToken: { $arrayElemAt: ['$UserTokens', 0] } } },
+    { $set: { username: '$userToken.username' } },
+    { $match: filterQuery },
+  ])
     .sort(sortOptions)
     .skip(skip)
     .limit(limit)
@@ -73,7 +101,17 @@ export async function fetchAllPostsFromWeb2(options: PostQueryOptions) {
   return posts.map((post) => mapPostResponse(post))
 }
 
-export async function fetchPostFromWeb2(tokenID: number) {
+export async function fetchPostFromWeb2({
+  tokenID,
+  content,
+}: {
+  tokenID: number | null
+  content: string | null
+}) {
+  if (!tokenID && !content) {
+    return null
+  }
+
   const contractAddress = getIdeamarketPostsContractAddress()
   if (!contractAddress) {
     console.error('Deployed address is missing for ideamarket posts')
@@ -81,9 +119,33 @@ export async function fetchPostFromWeb2(tokenID: number) {
       'Contract address is missing for ideamamrket posts '
     )
   }
+  const filterOptions: FilterQuery<PostDocument>[] = []
+  filterOptions.push({ contractAddress })
+  if (tokenID) {
+    filterOptions.push({ tokenID })
+  }
+  if (content) {
+    filterOptions.push({ content })
+  }
 
-  const post = await PostModel.findOne({ contractAddress, tokenID })
-  return mapPostResponse(post)
+  // Filter Query
+  const filterQuery = { $and: filterOptions }
+
+  const posts = await PostModel.aggregate([
+    { $match: filterQuery },
+    {
+      $lookup: {
+        from: 'usertokens',
+        localField: 'minterAddress',
+        foreignField: 'walletAddress',
+        as: 'UserTokens',
+      },
+    },
+    { $set: { userToken: { $arrayElemAt: ['$UserTokens', 0] } } },
+  ])
+
+  // const post = await PostModel.findOne({ contractAddress, tokenID })
+  return mapPostResponse(posts[0])
 }
 
 export async function fetchPostOpinionsByTokenIdFromWeb2({
@@ -142,17 +204,15 @@ async function fetchAllPostOpinionsByTokenIdFromWeb2({
   sortOptions[orderBy] = orderDirection
 
   // Filter Options
-  const filterOptions: FilterQuery<NFTOpinionDocument>[] = []
-  filterOptions.push([{ contractAddress }, { tokenID }])
+  const filterOptions: FilterQuery<NFTOpinionDocument & UserTokenDocument>[] =
+    []
+  filterOptions.push({ contractAddress, tokenID })
   if (search) {
     filterOptions.push({
       $or: [
-        {
-          comment: { $regex: escapeStringRegexp(search), $options: 'i' },
-        },
-        {
-          ratedBy: { $regex: escapeStringRegexp(search), $options: 'i' },
-        },
+        { comment: { $regex: escapeStringRegexp(search), $options: 'i' } },
+        { ratedBy: { $regex: escapeStringRegexp(search), $options: 'i' } },
+        { username: { $regex: escapeStringRegexp(search), $options: 'i' } },
       ],
     })
   }
@@ -163,7 +223,20 @@ async function fetchAllPostOpinionsByTokenIdFromWeb2({
     filterQuery = { $and: filterOptions }
   }
 
-  const postOpinions = await NFTOpinionModel.find(filterQuery)
+  const postOpinions = await NFTOpinionModel.aggregate([
+    {
+      $lookup: {
+        from: 'usertokens',
+        localField: 'ratedBy',
+        foreignField: 'walletAddress',
+        as: 'UserTokens',
+      },
+    },
+    { $set: { userToken: { $arrayElemAt: ['$UserTokens', 0] } } },
+    { $set: { username: '$userToken.username' } },
+    { $set: { deposits: '$userToken.deposits' } },
+    { $match: filterQuery },
+  ])
     .sort(sortOptions)
     .skip(skip)
     .limit(limit)
@@ -188,17 +261,15 @@ async function fetchLatestPostOpinionsByTokenIdFromWeb2({
   sortOptions[orderBy] = orderDirection
 
   // Filter Options
-  const filterOptions: FilterQuery<NFTOpinionDocument>[] = []
+  const filterOptions: FilterQuery<NFTOpinionDocument & UserTokenDocument>[] =
+    []
   filterOptions.push({ contractAddress, tokenID })
   if (search) {
     filterOptions.push({
       $or: [
-        {
-          comment: { $regex: escapeStringRegexp(search), $options: 'i' },
-        },
-        {
-          ratedBy: { $regex: escapeStringRegexp(search), $options: 'i' },
-        },
+        { comment: { $regex: escapeStringRegexp(search), $options: 'i' } },
+        { ratedBy: { $regex: escapeStringRegexp(search), $options: 'i' } },
+        { username: { $regex: escapeStringRegexp(search), $options: 'i' } },
       ],
     })
   }
@@ -210,6 +281,17 @@ async function fetchLatestPostOpinionsByTokenIdFromWeb2({
   }
 
   const postOpinions = await NFTOpinionModel.aggregate([
+    {
+      $lookup: {
+        from: 'usertokens',
+        localField: 'ratedBy',
+        foreignField: 'walletAddress',
+        as: 'UserTokens',
+      },
+    },
+    { $set: { userToken: { $arrayElemAt: ['$UserTokens', 0] } } },
+    { $set: { username: '$userToken.username' } },
+    { $set: { deposits: '$userToken.deposits' } },
     { $match: filterQuery },
     { $sort: { ratedAt: -1 } },
     {
@@ -260,11 +342,22 @@ export async function fetchPostOpinionsByWalletFromWeb2({
 
   const postOpinionsWithPost = []
   for await (const postOpinion of postOpinions) {
-    const post = await PostModel.findOne({
-      contractAddress,
-      tokenID: postOpinion.tokenID,
+    const posts = await PostModel.aggregate([
+      { $match: { contractAddress, tokenID: postOpinion.tokenID } },
+      {
+        $lookup: {
+          from: 'usertokens',
+          localField: 'minterAddress',
+          foreignField: 'walletAddress',
+          as: 'UserTokens',
+        },
+      },
+      { $set: { userToken: { $arrayElemAt: ['$UserTokens', 0] } } },
+    ])
+    const postOpinionWithPost = mapPostOpinionWithPost({
+      post: posts[0],
+      postOpinion,
     })
-    const postOpinionWithPost = mapPostOpinionWithPost({ postOpinion, post })
     if (postOpinionWithPost) {
       postOpinionsWithPost.push(postOpinionWithPost)
     }
@@ -281,6 +374,9 @@ export async function fetchPostOpinionsByWalletFromWeb2({
         .toLowerCase()
         .includes((search ?? '').toLowerCase()) ||
       (postOpinionWithPost.minterAddress ?? '')
+        .toLowerCase()
+        .includes((search ?? '').toLowerCase()) ||
+      (postOpinionWithPost.minterToken?.username ?? '')
         .toLowerCase()
         .includes((search ?? '').toLowerCase())
   )
@@ -356,7 +452,7 @@ export async function syncAllPostsInWeb2() {
     await updatePostInWeb2({
       post: {
         tokenID: post.tokenID,
-        minter: post.minter,
+        minter: post.minter.toLowerCase(),
         content: post.content,
         categories: post.categories,
         imageLink: post.imageLink,
@@ -405,6 +501,22 @@ async function updatePostInWeb2({
       contractAddress,
       tokenID: post.tokenID,
     })
+    console.log(`Calculating composite rating for tokenID=${post.tokenID}`)
+    const latestOpinions = postOpinionsSummary.latestOpinions.map(
+      async (opinion: any) => {
+        const block = await web3.eth.getBlock(opinion.blockHeight)
+        return {
+          contractAddress: (opinion.contractAddress as string).toLowerCase(),
+          tokenID: opinion.tokenID,
+          author: (opinion.author as string).toLowerCase(),
+          timestamp: block.timestamp.toString(),
+          rating: opinion.rating,
+          comment: opinion.comment,
+        }
+      }
+    )
+    const { compositeRating, marketInterest } =
+      await calculateCompositeRatingAndMarketInterest(latestOpinions)
 
     console.log(
       `Updating post and opinions summary for tokenID=${post.tokenID}`
@@ -425,6 +537,8 @@ async function updatePostInWeb2({
           isURL: post.isURL,
           urlContent: post.urlContent,
           averageRating: postOpinionsSummary.averageRating,
+          compositeRating,
+          marketInterest,
           totalRatingsCount: postOpinionsSummary.totalRatingsCount,
           latestRatingsCount: postOpinionsSummary.latestRatingsCount,
           totalCommentsCount: postOpinionsSummary.totalCommentsCount,
@@ -449,4 +563,52 @@ export function getIdeamarketPostsContractAddress() {
   return ideamarketPostsDeployedAddress
     ? ideamarketPostsDeployedAddress.toLowerCase()
     : undefined
+}
+
+export async function calculateCompositeRatingAndMarketInterest(
+  opinions: Web3NFTOpinionData[]
+) {
+  let marketInterest = 0
+  let weightedSum = 0
+
+  for await (const opinion of opinions) {
+    const marketCap = await getDeposits(opinion.author)
+    marketInterest += marketCap
+    weightedSum += marketCap * Number.parseInt(opinion.rating)
+  }
+
+  const compositeRating =
+    marketInterest === 0 ? 0 : weightedSum / marketInterest
+
+  return { compositeRating, marketInterest }
+}
+
+export async function getDeposits(walletAddress: string) {
+  const userToken = await UserTokenModel.findOne({ walletAddress })
+  return userToken?.deposits ?? 0
+}
+
+export async function resolveIdeamarketPostTrigger(trigger: TriggerDocument) {
+  try {
+    console.info(`Resolving trigger - ${trigger._id as string}`)
+
+    const tokenID = trigger.triggerData.tokenID
+      ? Number.parseInt(trigger.triggerData.tokenID as string)
+      : null
+    if (!tokenID) {
+      console.error(
+        `TriggerData is not valid for type = ${TriggerType.IDEAMARKET_POST}`
+      )
+      return
+    }
+
+    await syncPostInWeb2(tokenID)
+    await TriggerModel.findByIdAndDelete(trigger._id)
+    console.info(`Trigger - ${trigger._id as string} resolved`)
+  } catch (error) {
+    console.error(
+      'Error occurred while resolving ideamarket post trigger',
+      error
+    )
+  }
 }

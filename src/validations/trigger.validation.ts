@@ -1,3 +1,4 @@
+/* eslint-disable sonarjs/no-duplicate-string */
 import { body, oneOf } from 'express-validator'
 
 import { TriggerType } from '../models/trigger.model'
@@ -16,6 +17,7 @@ export const addTriggerValidation = [
   oneOf(
     [
       [
+        body('type').isIn(['ONCHAIN_LISTING']).withMessage('Type is not valid'),
         body('triggerData.marketId')
           .notEmpty()
           .custom(isMarketIdValid)
@@ -30,6 +32,7 @@ export const addTriggerValidation = [
           .withMessage('triggerData.categories is not valid'),
       ],
       [
+        body('type').isIn(['ONCHAIN_LISTING']).withMessage('Type is not valid'),
         body('triggerData.marketId')
           .notEmpty()
           .custom(isMarketIdValid)
@@ -42,6 +45,20 @@ export const addTriggerValidation = [
           .optional()
           .isString()
           .withMessage('triggerData.categories is not valid'),
+      ],
+      [
+        body('type').isIn(['IDEAMARKET_POST']).withMessage('Type is not valid'),
+        body('triggerData.tokenID')
+          .notEmpty()
+          .isInt()
+          .withMessage('triggerData.tokenID is not valid or null/empty'),
+      ],
+      [
+        body('type').isIn(['USER_TOKEN']).withMessage('Type is not valid'),
+        body('triggerData.walletAddress')
+          .notEmpty()
+          .isString()
+          .withMessage('triggerData.walletAddress is not valid or null/empty'),
       ],
     ],
     'triggerData is not valid'

@@ -1,7 +1,7 @@
 import config from 'config'
 import jwt from 'jsonwebtoken'
 
-import { AccountModel } from '../models/account.model'
+import { UserTokenModel } from '../models/user-token.model'
 
 const jwtSecretKey: string = config.get('jwt.secretKey')
 const jwtExpiry: number = config.get('jwt.expiry')
@@ -81,7 +81,7 @@ export async function verifyAuthTokenAndReturnAccount(
       return null
     }
 
-    const account = await AccountModel.findById(accountId)
+    const account = await UserTokenModel.findById(accountId)
     if (!account) {
       return null
     }
@@ -106,6 +106,6 @@ export type DECODED_ACCOUNT = {
   id: string
   username: string | null
   email: string | null
-  walletAddress: string | null
+  walletAddress: string
   role: string
 }

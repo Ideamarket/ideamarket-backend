@@ -54,8 +54,13 @@ const config = {
     s3Bucket: process.env.ACCOUNTS_S3_BUCKET ?? '',
     cloudFrontDomain: process.env.ACCOUNTS_CLOUDFRONT_DOMAIN ?? '',
   },
+  userToken: {
+    s3Bucket: process.env.USER_TOKEN_S3_BUCKET ?? '',
+    cloudFrontDomain: process.env.USER_TOKEN_CLOUDFRONT_DOMAIN ?? '',
+  },
   web3: {
     network: process.env.NETWORK ?? 'test-avm-l2',
+    v2Network: process.env.V2_NETWORK ?? 'test-avm-l2-imo-market',
     rpcUrls: {
       avm: process.env.RPC_URL_AVM ?? '',
       mainnet: process.env.RPC_URL_MAINNET ?? '',
@@ -79,6 +84,10 @@ const config = {
       'test-avm-l1': process.env.SUBGRAPH_URL_TEST_AVM_L1 ?? '',
       'test-avm-l2': process.env.SUBGRAPH_URL_TEST_AVM_L2 ?? '',
       test: process.env.SUBGRAPH_URL_TEST ?? '',
+    },
+    subgraphUrlsV2: {
+      'test-avm-l2-imo-market':
+        process.env.SUBGRAPH_URL_V2_TEST_AVM_L2_IMO_MARKET ?? '',
     },
     privateKeys: {
       avm: process.env.PRIVATE_KEY_AVM ?? '',
@@ -119,6 +128,16 @@ const config = {
     market4: process.env.MARKET4 ?? '',
     market5: process.env.MARKET5 ?? '',
     market6: process.env.MARKET6 ?? '',
+  },
+  v2Markets: {
+    validMarketIds: process.env.VALID_V2_MARKET_IDS ?? '1',
+    names: {
+      userMarketName: 'User',
+    },
+    ids: {
+      userMarket: 1,
+    },
+    market1: process.env.V2_MARKET1 ?? 'User',
   },
   azureStorage: {
     connectionString: process.env.AZURE_STORAGE_CONNECTION_STRING,

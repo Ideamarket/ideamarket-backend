@@ -1,4 +1,5 @@
 import type { NFTOpinion } from './nft-opinion.types'
+import type { UserTokenResponse } from './user-token.types'
 
 export type Web3IdeamarketPost = {
   tokenID: number
@@ -15,6 +16,7 @@ export type PostQueryOptions = {
   limit: number
   orderBy: keyof PostResponse
   orderDirection: string
+  minterAddress: string | null
   search: string | null
   categories: string[]
   filterTokens: string[]
@@ -30,10 +32,13 @@ export type PostResponse = {
   isURL: boolean
   urlContent: string
   averageRating: number
+  compositeRating: number
+  marketInterest: number
   totalRatingsCount: number
   latestRatingsCount: number
   totalCommentsCount: number
   latestCommentsCount: number
+  minterToken: UserTokenResponse | null
 }
 
 export type PostOpinionsQueryOptions = {
@@ -52,7 +57,7 @@ export type PostOpinionsResponse = {
   opinions: PostOpinion[]
 }
 
-export type PostOpinion = NFTOpinion
+export type PostOpinion = NFTOpinion & { userToken: UserTokenResponse | null }
 
 export type PostOpinionWithPostResponse = {
   contractAddress: string
@@ -68,8 +73,12 @@ export type PostOpinionWithPostResponse = {
   rating: number
   comment: string
   averageRating: number
+  compositeRating: number
+  marketInterest: number
   totalRatingsCount: number
   latestRatingsCount: number
   totalCommentsCount: number
   latestCommentsCount: number
+  deposits?: number
+  minterToken: UserTokenResponse | null
 }

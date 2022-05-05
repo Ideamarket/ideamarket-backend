@@ -23,6 +23,9 @@ export async function fetchAllPosts(req: Request, res: Response) {
     const orderBy = req.query.orderBy as keyof PostResponse
     const orderDirection =
       (req.query.orderDirection as string | undefined) ?? 'desc'
+    const minterAddress = req.query.minterAddress
+      ? (req.query.minterAddress as string).toLowerCase()
+      : null
     const search = (req.query.search as string) || null
     const categories =
       (req.query.categories as string | undefined)?.split(',') ?? []
@@ -34,6 +37,7 @@ export async function fetchAllPosts(req: Request, res: Response) {
       limit,
       orderBy,
       orderDirection,
+      minterAddress,
       search,
       categories,
       filterTokens,
@@ -52,9 +56,12 @@ export async function fetchAllPosts(req: Request, res: Response) {
 
 export async function fetchPost(req: Request, res: Response) {
   try {
-    const tokenID = Number.parseInt(req.params.tokenID)
+    const tokenID = req.query.tokenID
+      ? Number.parseInt(req.query.tokenID as string)
+      : null
+    const content = req.query.content ? (req.query.content as string) : null
 
-    const post = await fetchPostFromWeb2(tokenID)
+    const post = await fetchPostFromWeb2({ tokenID, content })
 
     return handleSuccess(res, { post })
   } catch (error) {

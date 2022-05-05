@@ -11,6 +11,8 @@ export interface IPost {
   imageLink: string
   urlContent: string
   averageRating: number
+  compositeRating: number
+  marketInterest: number
   totalRatingsCount: number
   latestRatingsCount: number
   totalCommentsCount: number
@@ -31,6 +33,8 @@ export interface PostDocument extends mongoose.Document {
   imageLink: string
   urlContent: string
   averageRating: number
+  compositeRating: number
+  marketInterest: number
   totalRatingsCount: number
   latestRatingsCount: number
   totalCommentsCount: number
@@ -48,6 +52,8 @@ const PostSchema = new mongoose.Schema(
     imageLink: { type: String, required: false },
     urlContent: { type: String, required: false },
     averageRating: { type: Number, required: true, default: 0 },
+    compositeRating: { type: Number, required: true, default: 0 },
+    marketInterest: { type: Number, required: true, default: 0 },
     totalRatingsCount: { type: Number, required: true, default: 0 },
     latestRatingsCount: { type: Number, required: true, default: 0 },
     totalCommentsCount: { type: Number, required: true, default: 0 },

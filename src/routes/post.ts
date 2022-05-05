@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-misused-promises */
 import express from 'express'
 
 import {
@@ -14,13 +13,14 @@ import {
   fecthPostOpinionsByTokenIdValidation,
   syncAllPostsValidation,
   fecthPostOpinionsByWalletValidation,
+  fecthPostValidation,
 } from '../validations/post.validation'
 
 export const postRouter = express.Router()
 
 postRouter.get('', fetchAllPostsValidation, validateRequest, fetchAllPosts)
 
-postRouter.get('/:tokenID', fetchPost)
+postRouter.get('/single', fecthPostValidation, validateRequest, fetchPost)
 
 postRouter.get(
   '/opinions/token',

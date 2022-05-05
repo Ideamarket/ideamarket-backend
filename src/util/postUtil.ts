@@ -1,4 +1,5 @@
 import type { NFTOpinionDocument } from 'models/nft-opinion.model'
+import type { UserTokenDocument } from 'models/user-token.model'
 
 import type { PostDocument } from '../models/post.model'
 import type {
@@ -6,9 +7,10 @@ import type {
   PostResponse,
   PostOpinionWithPostResponse,
 } from '../types/post.types'
+import { mapUserTokenResponse } from './userTokenUtil'
 
 export function mapPostResponse(
-  post: PostDocument | null
+  post: (PostDocument & { userToken: UserTokenDocument | null }) | null
 ): PostResponse | null {
   if (!post) {
     return null
@@ -24,15 +26,20 @@ export function mapPostResponse(
     isURL: post.isURL,
     urlContent: post.urlContent,
     averageRating: post.averageRating,
+    compositeRating: post.compositeRating,
+    marketInterest: post.marketInterest,
     totalRatingsCount: post.totalRatingsCount,
     latestRatingsCount: post.latestRatingsCount,
     totalCommentsCount: post.totalCommentsCount,
     latestCommentsCount: post.latestCommentsCount,
+    minterToken: mapUserTokenResponse(post.userToken),
   }
 }
 
 export function mapPostOpinionResponse(
-  postOpinion: NFTOpinionDocument | null
+  postOpinion:
+    | (NFTOpinionDocument & { userToken: UserTokenDocument | null })
+    | null
 ): PostOpinion | null {
   if (!postOpinion) {
     return null
@@ -45,6 +52,7 @@ export function mapPostOpinionResponse(
     ratedAt: postOpinion.ratedAt,
     rating: postOpinion.rating,
     comment: postOpinion.comment,
+    userToken: mapUserTokenResponse(postOpinion.userToken),
   }
 }
 
@@ -52,7 +60,7 @@ export function mapPostOpinionWithPost({
   post,
   postOpinion,
 }: {
-  post: PostDocument | null
+  post: (PostDocument & { userToken: UserTokenDocument | null }) | null
   postOpinion: NFTOpinionDocument | null
 }): PostOpinionWithPostResponse | null {
   if (!postOpinion) {
@@ -73,9 +81,12 @@ export function mapPostOpinionWithPost({
     rating: postOpinion.rating,
     comment: postOpinion.comment,
     averageRating: post?.averageRating ?? 0,
+    compositeRating: post?.compositeRating ?? 0,
+    marketInterest: post?.marketInterest ?? 0,
     totalRatingsCount: post?.totalRatingsCount ?? 0,
     latestRatingsCount: post?.latestRatingsCount ?? 0,
     totalCommentsCount: post?.totalCommentsCount ?? 0,
     latestCommentsCount: post?.latestCommentsCount ?? 0,
+    minterToken: mapUserTokenResponse(post?.userToken ?? null),
   }
 }

@@ -17,6 +17,11 @@ export const SUBGRAPH_URL = config.get<string>(`web3.subgraphUrls.${NETWORK}`)
 const PRIVATE_KEY = config.get<string>(`web3.privateKeys.${NETWORK}`)
 const CONTRACT_ADDRESS = config.get<string>(`web3.contractAddresses.${NETWORK}`)
 
+export const V2_NETWORK = config.get<string>('web3.v2Network')
+export const SUBGRAPH_URL_V2 = config.get<string>(
+  `web3.subgraphUrlsV2.${V2_NETWORK}`
+)
+
 const web3 = new Web3(RPC_URL)
 
 export function getL1Network(network: string) {

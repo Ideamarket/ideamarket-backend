@@ -23,10 +23,9 @@ export async function addTrigger(req: Request, res: Response) {
 
 export async function resolveTriggers(req: Request, res: Response) {
   try {
-    const type = req.body.type as string
-    await resolveAllTriggers(type)
+    await resolveAllTriggers()
 
-    return handleSuccess(res, { message: `Triggers resolved for type=${type}` })
+    return handleSuccess(res, { message: `Triggers have been resolved` })
   } catch (error) {
     console.error('Error occurred while adding new trigger', error)
     return handleError(res, error, 'Unable to add the trigger')

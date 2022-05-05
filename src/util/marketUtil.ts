@@ -2,6 +2,8 @@ import config from 'config'
 
 export const validMarkets: string = config.get('markets.validMarketIds')
 
+export const validV2Markets: string = config.get('v2Markets.validMarketIds')
+
 export const twitterMarketName: string = config.get(
   'markets.names.twitterMarketName'
 )
@@ -23,6 +25,10 @@ export function getAllMarketIds() {
   return validMarkets.split(',').map((marketId) => Number.parseInt(marketId))
 }
 
+export function getAllV2MarketIds() {
+  return validV2Markets.split(',').map((marketId) => Number.parseInt(marketId))
+}
+
 export function getAllMarkets(): Record<number, string> {
   const allMarkets: Record<number, string> = {}
 
@@ -34,9 +40,25 @@ export function getAllMarkets(): Record<number, string> {
   return allMarkets
 }
 
+export function getAllV2Markets(): Record<number, string> {
+  const allV2Markets: Record<number, string> = {}
+
+  const allV2MarketIds = getAllV2MarketIds()
+  for (const marketId of allV2MarketIds) {
+    allV2Markets[marketId] = config.get(`v2Markets.market${marketId}`)
+  }
+
+  return allV2Markets
+}
+
 export function isMarketIdValid(marketId: number | string) {
   const marketID = Number.parseInt(marketId as string)
   return getAllMarketIds().includes(marketID)
+}
+
+export function isV2MarketIdValid(marketId: number | string) {
+  const marketID = Number.parseInt(marketId as string)
+  return getAllV2MarketIds().includes(marketID)
 }
 
 export function getTokenNameUrl({

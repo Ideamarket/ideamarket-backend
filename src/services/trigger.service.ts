@@ -1,7 +1,9 @@
 import { TriggerModel, TriggerType } from '../models/trigger.model'
 import { mapTriggerResponse } from '../util/triggerUtil'
 import { BadRequestError, InternalServerError } from './errors'
-import { resolveOnchainListingTriggers } from './listing.service'
+import { resolveOnchainListingTrigger } from './listing.service'
+import { resolveIdeamarketPostTrigger } from './post.service'
+import { resolveUserTokenTrigger } from './user-token.service'
 
 export async function addNewTrigger({
   type,
@@ -24,11 +26,20 @@ export async function addNewTrigger({
   }
 }
 
-export async function resolveAllTriggers(type: string) {
+export async function resolveAllTriggers() {
   try {
-    const triggers = await TriggerModel.find({ type })
-    if (type === TriggerType.ONCHAIN_LISTING) {
-      await resolveOnchainListingTriggers(triggers)
+    const triggers = await TriggerModel.find()
+
+    for await (const trigger of triggers) {
+      if (trigger.type === TriggerType.ONCHAIN_LISTING) {
+        await resolveOnchainListingTrigger(trigger)
+      }
+      if (trigger.type === TriggerType.IDEAMARKET_POST) {
+        await resolveIdeamarketPostTrigger(trigger)
+      }
+      if (trigger.type === TriggerType.USER_TOKEN) {
+        await resolveUserTokenTrigger(trigger)
+      }
     }
   } catch (error) {
     console.error('Error occurred while resolving the triggers', error)
@@ -48,5 +59,14 @@ function validateTriggerData({
       triggerData?.marketId && (triggerData.tokenId || triggerData.tokenName)
     )
   }
+
+  if (type === TriggerType.IDEAMARKET_POST) {
+    return !!triggerData.tokenID
+  }
+
+  if (type === TriggerType.USER_TOKEN) {
+    return !!triggerData.walletAddress
+  }
+
   return false
 }
