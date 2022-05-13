@@ -38,7 +38,11 @@ export const updateuserTokenValidation = [
     .custom(isValidUsername)
     .withMessage('Username is not valid'),
   body('name').optional().isString().withMessage('Name is not valid'),
-  body('bio').optional().isString().withMessage('Bio is not valid'),
+  body('bio')
+    .optional()
+    .isString()
+    .isLength({ min: 0, max: 200 })
+    .withMessage('Bio should be string and be within 200 characters'),
   body('profilePhoto')
     .optional()
     .isString()

@@ -1,6 +1,38 @@
 /* eslint-disable @typescript-eslint/restrict-template-expressions */
 import axios from 'axios'
 import cheerio from 'cheerio'
+import config from 'config'
+import Client from 'twitter-api-sdk'
+
+const twitterBearerToken = config.get<string>('auth.twitter.bearerToken')
+
+async function checkTwitterUrl(url: string) {
+  const client = new Client(twitterBearerToken)
+
+  const urlObject = new URL(url)
+  const pathArray = urlObject.pathname.split('/').filter((item) => item !== '')
+
+  if (pathArray.length === 0) {
+    return url
+  }
+
+  const [username] = pathArray
+  const userResponse = await client.users.findUserByUsername(username)
+
+  if (pathArray.length === 1) {
+    return userResponse.errors
+      ? null
+      : `https://twitter.com/${userResponse.data?.username ?? username}`
+  }
+
+  const tweetId = pathArray[pathArray.length - 1]
+  const tweetResponse = await client.tweets.findTweetById(tweetId)
+  return tweetResponse.errors
+    ? null
+    : `https://twitter.com/${
+        userResponse.data?.username ?? username
+      }/status/${tweetId}`
+}
 
 /**
  * Checks if url is valid.
@@ -10,6 +42,16 @@ import cheerio from 'cheerio'
  * @param url
  */
 export async function checkAndReturnValidUrl(url: string) {
+  const urlObject = new URL(url)
+  if (urlObject.hostname.endsWith('twitter.com')) {
+    try {
+      return await checkTwitterUrl(url)
+    } catch (error) {
+      console.error('Error occurred while validating twitter url', error)
+      return null
+    }
+  }
+
   let res: any = null
   try {
     res = await axios.get(encodeURI(url), {
@@ -20,9 +62,7 @@ export async function checkAndReturnValidUrl(url: string) {
     })
   } catch (error: any) {
     console.error(
-      `Error occurred while fetching url :: status=${
-        error.response?.status
-      }, data=${JSON.stringify(error.response?.data)}`
+      `Error occurred with status code - ${error.response?.status} while fetching url`
     )
     return null
   }
