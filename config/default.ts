@@ -86,6 +86,7 @@ const config = {
       test: process.env.SUBGRAPH_URL_TEST ?? '',
     },
     subgraphUrlsV2: {
+      'avm-imo-market': process.env.SUBGRAPH_URL_V2_AVM_IMO_MARKET ?? '',
       'test-avm-l2-imo-market':
         process.env.SUBGRAPH_URL_V2_TEST_AVM_L2_IMO_MARKET ?? '',
     },
