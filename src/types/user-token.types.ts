@@ -3,6 +3,7 @@ export type UserTokenResponse = {
   walletAddress: string
   name: string | null
   username: string | null
+  twitterUsername: string | null
   email: string | null
   bio: string | null
   profilePhoto: string | null

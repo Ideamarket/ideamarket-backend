@@ -24,6 +24,7 @@ import { generateRandomNDigitNumber } from '../util/randomUtil'
 import {
   checkUsernameCanBeUpdatedOrNot,
   mapUserTokenResponse,
+  mapUserTokenResponseWithLatestTwitterUsername,
   sendMailForEmailVerification,
 } from '../util/userTokenUtil'
 import type { SignedWalletAddress } from '../util/web3Util'
@@ -181,7 +182,7 @@ export async function updateUserTokenWeb2ProfileInDB(
 
   const updatedUserTokenDoc = await userTokenDoc.save()
 
-  return mapUserTokenResponse(updatedUserTokenDoc)
+  return mapUserTokenResponseWithLatestTwitterUsername(updatedUserTokenDoc)
 }
 
 export async function fetchUserTokenFromDB({
@@ -209,7 +210,7 @@ export async function fetchUserTokenFromDB({
     return null
   }
 
-  return mapUserTokenResponse(userTokenDoc)
+  return mapUserTokenResponseWithLatestTwitterUsername(userTokenDoc)
 }
 
 export async function uploadProfilePhoto(profilePhoto: UploadedFile) {

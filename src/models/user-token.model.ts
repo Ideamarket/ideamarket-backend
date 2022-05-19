@@ -12,6 +12,8 @@ export enum UserRole {
 export interface IUserToken {
   name: string | null | undefined
   username?: string | undefined
+  twitterUsername?: string | undefined
+  twitterUserId?: string | undefined
   email: string | null | undefined
   bio: string | null | undefined
   profilePhoto: string | null | undefined
@@ -37,6 +39,8 @@ interface IUserTokenModel extends mongoose.Model<UserTokenDocument> {
 interface UserTokenDocument extends mongoose.Document {
   name: string | null
   username: string
+  twitterUsername: string | null
+  twitterUserId: string | null
   email: string | null
   bio: string | null
   profilePhoto: string | null
@@ -65,6 +69,8 @@ const UserTokenSchema = new mongoose.Schema(
       unique: true,
       sparse: true,
     },
+    twitterUsername: { type: String, required: false },
+    twitterUserId: { type: String, required: false },
     email: { type: String, required: false },
     bio: { type: String, required: false },
     profilePhoto: { type: String, default: null },

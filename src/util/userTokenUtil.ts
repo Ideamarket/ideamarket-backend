@@ -3,6 +3,7 @@ import config from 'config'
 
 import type { UserTokenDocument } from '../models/user-token.model'
 import { UserTokenModel } from '../models/user-token.model'
+import { fetchTwitterUsernameByUserId } from '../services/twitterVerification.service'
 import type { UserTokenResponse } from '../types/user-token.types'
 import { sendMailWithDynamicTemplate } from './emailUtil'
 import { getRandomString } from './randomUtil'
@@ -70,6 +71,50 @@ export function mapUserTokenResponse(
     walletAddress: userTokenDoc.walletAddress,
     name: userTokenDoc.name,
     username: (userTokenDoc.username as any) ?? null,
+    twitterUsername: userTokenDoc.twitterUsername,
+    email: userTokenDoc.email,
+    bio: userTokenDoc.bio,
+    profilePhoto: userTokenDoc.profilePhoto
+      ? `${cloudFrontDomain}/${userTokenDoc.profilePhoto}`
+      : null,
+    role: userTokenDoc.role,
+    tokenAddress: userTokenDoc.tokenAddress,
+    marketId: userTokenDoc.marketId,
+    marketName: userTokenDoc.marketName,
+    tokenOwner: userTokenDoc.tokenOwner,
+    price: userTokenDoc.price || 0,
+    dayChange: userTokenDoc.dayChange || 0,
+    weekChange: userTokenDoc.weekChange || 0,
+    deposits: userTokenDoc.deposits || 0,
+    holders: userTokenDoc.holders || 0,
+    yearIncome: userTokenDoc.yearIncome || 0,
+    claimableIncome: userTokenDoc.claimableIncome || 0,
+  }
+}
+
+export async function mapUserTokenResponseWithLatestTwitterUsername(
+  userTokenDoc: UserTokenDocument | null
+): Promise<UserTokenResponse | null> {
+  if (!userTokenDoc) {
+    return null
+  }
+
+  const twitterUsername = await fetchTwitterUsernameByUserId(
+    userTokenDoc.twitterUserId
+  )
+
+  if (twitterUsername && twitterUsername !== userTokenDoc.twitterUsername) {
+    await UserTokenModel.findByIdAndUpdate(userTokenDoc.id, {
+      $set: { twitterUsername },
+    })
+  }
+
+  return {
+    id: userTokenDoc._id.toString(),
+    walletAddress: userTokenDoc.walletAddress,
+    name: userTokenDoc.name,
+    username: (userTokenDoc.username as any) ?? null,
+    twitterUsername: twitterUsername ?? userTokenDoc.twitterUsername,
     email: userTokenDoc.email,
     bio: userTokenDoc.bio,
     profilePhoto: userTokenDoc.profilePhoto

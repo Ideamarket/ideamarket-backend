@@ -11,6 +11,7 @@ import { postRouter } from './post'
 import { subgraphRouter } from './subgraph'
 import { switchRouter } from './switch'
 import { triggerRouter } from './trigger'
+import { twitterVerificationRouter } from './twitterVerification'
 import { userTokenRouter } from './user-token'
 import { versionRouter } from './version'
 import { votesRouter } from './vote'
@@ -28,6 +29,7 @@ routes.use('/opinion', opinionRouter)
 routes.use('/post', postRouter)
 routes.use('/subgraph', subgraphRouter)
 routes.use('/trigger', triggerRouter)
+routes.use('/twitter-verification', twitterVerificationRouter)
 routes.use('/user-token', userTokenRouter)
 routes.use('/version', versionRouter)
 routes.use('/votes', votesRouter)
