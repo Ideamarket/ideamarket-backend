@@ -72,3 +72,27 @@ export const syncAllPostsValidation = [
     .isNumeric()
     .withMessage('tokenID should be numeric'),
 ]
+
+export const fetchPostCompositeRatingsValidation = [
+  oneOf(
+    [
+      query('postId')
+        .optional()
+        .isString()
+        .withMessage('postId should be a string'),
+      query('tokenID')
+        .optional()
+        .isNumeric()
+        .withMessage('tokenID should be numeric'),
+    ],
+    'Either postId / tokenID is mandatory'
+  ),
+  query('startDate')
+    .notEmpty()
+    .isString()
+    .withMessage('startDate should be a yyyy-mm-dd string'),
+  query('endDate')
+    .optional()
+    .isString()
+    .withMessage('endDate should be a yyyy-mm-dd string'),
+]

@@ -3,6 +3,7 @@ import type { Request, Response } from 'express'
 import { handleError, handleSuccess } from '../lib/base'
 import {
   fetchAllPostsFromWeb2,
+  fetchPostCompositeRatingsFromWeb2,
   fetchPostFromWeb2,
   fetchPostOpinionsByTokenIdFromWeb2,
   fetchPostOpinionsByWalletFromWeb2,
@@ -179,5 +180,38 @@ export async function syncAllPosts(req: Request, res: Response) {
       error
     )
     return handleError(res, error, 'Unable to sync ideamarket posts')
+  }
+}
+
+export async function fetchPostCompositeRatings(req: Request, res: Response) {
+  try {
+    const reqQuery = req.query
+    const postId = reqQuery.postId ? (reqQuery.postId as string) : null
+    const tokenID = reqQuery.tokenID
+      ? Number.parseInt(reqQuery.tokenID as string)
+      : null
+    const startDate = new Date(reqQuery.startDate as string)
+    const endDate = reqQuery.endDate
+      ? new Date(reqQuery.endDate as string)
+      : new Date()
+    endDate.setUTCHours(23, 59, 59, 999)
+
+    const data = await fetchPostCompositeRatingsFromWeb2({
+      postId,
+      tokenID,
+      startDate,
+      endDate,
+    })
+    return handleSuccess(res, data)
+  } catch (error) {
+    console.error(
+      'Error occurred while fetching composite ratings of the post',
+      error
+    )
+    return handleError(
+      res,
+      error,
+      'Unable to fetch composite ratings of the post'
+    )
   }
 }

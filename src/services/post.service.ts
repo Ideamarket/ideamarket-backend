@@ -2,8 +2,11 @@
 /* eslint-disable sonarjs/no-duplicate-string */
 import config from 'config'
 import escapeStringRegexp from 'escape-string-regexp'
+import mongoose from 'mongoose'
 import type { FilterQuery } from 'mongoose'
 
+import type { CompositeRatingDocument } from '../models/composite-rating-model'
+import { CompositeRatingModel } from '../models/composite-rating-model'
 import type { NFTOpinionDocument } from '../models/nft-opinion.model'
 import { NFTOpinionModel } from '../models/nft-opinion.model'
 import type { PostDocument } from '../models/post.model'
@@ -19,6 +22,7 @@ import type {
   Web3IdeamarketPost,
 } from '../types/post.types'
 import { compareFn } from '../util'
+import { mapCompositeRating } from '../util/compositeRatingsUtil'
 import {
   mapPostOpinionResponse,
   mapPostOpinionWithPost,
@@ -31,7 +35,7 @@ import {
   getAllIdeamarketPosts,
   getIdeamarketPostByTokenID,
 } from '../web3/posts'
-import { InternalServerError } from './errors'
+import { BadRequestError, InternalServerError } from './errors'
 
 const NETWORK = config.get<string>('web3.network')
 
@@ -521,7 +525,7 @@ async function updatePostInWeb2({
     console.log(
       `Updating post and opinions summary for tokenID=${post.tokenID}`
     )
-    return await PostModel.findOneAndUpdate(
+    const updatedPost = await PostModel.findOneAndUpdate(
       {
         contractAddress,
         tokenID: post.tokenID,
@@ -547,12 +551,78 @@ async function updatePostInWeb2({
       },
       { upsert: true, new: true }
     )
+
+    console.log(`Updating composite rating for tokenID=${post.tokenID}`)
+    const date = new Date()
+    const compositeRatingDoc = CompositeRatingModel.build({
+      post: updatedPost,
+      tokenID: updatedPost.tokenID,
+      rating: compositeRating,
+      date: date.toISOString().split('T')[0],
+      timestamp: date,
+    })
+    await CompositeRatingModel.create(compositeRatingDoc)
+
+    return updatedPost
   } catch (error) {
     console.error(
       'Error occurred while syncing the post from web3 to web2',
       error
     )
     return await Promise.resolve(null)
+  }
+}
+
+export async function fetchPostCompositeRatingsFromWeb2({
+  postId,
+  tokenID,
+  startDate,
+  endDate,
+}: {
+  postId: string | null
+  tokenID: number | null
+  startDate: Date
+  endDate: Date
+}) {
+  try {
+    if (!postId && !tokenID) {
+      throw new BadRequestError('Either tokenID or postId is required')
+    }
+    // Filter Options
+    const filterOptions: FilterQuery<CompositeRatingDocument>[] = []
+    filterOptions.push({ timestamp: { $gt: startDate, $lt: endDate } })
+    if (postId) {
+      filterOptions.push({ post: new mongoose.Types.ObjectId(postId) })
+    } else {
+      filterOptions.push({ tokenID })
+    }
+    // Filter Query
+    let filterQuery = {}
+    if (filterOptions.length > 0) {
+      filterQuery = { $and: filterOptions }
+    }
+
+    const compositeRatings = await CompositeRatingModel.aggregate([
+      { $match: filterQuery },
+      { $sort: { timestamp: -1 } },
+      {
+        $group: {
+          _id: '$date',
+          doc: { $last: '$$ROOT' },
+        },
+      },
+      { $replaceRoot: { newRoot: '$doc' } },
+    ])
+
+    return compositeRatings.map((compositeRating) =>
+      mapCompositeRating(compositeRating)
+    )
+  } catch (error) {
+    console.error(
+      'Error occurred while fetching composite ratings of the post from web2',
+      error
+    )
+    throw new InternalServerError('Failed to fetch composite ratings from web2')
   }
 }
 
