@@ -1,11 +1,25 @@
+import type { Citation } from '../../models/nft-opinion.model'
 import { getNFTOpinionsContract } from '../contract'
+
+export type Opinion = {
+  tokenID: number
+  author: string
+  blockHeight: string
+  rating: string
+  comment: string | null
+  citations: Citation[]
+}
 
 /**
  * Get all opinions of all the NFTs
  */
-export async function getAllNFTsOpinions() {
+export async function getAllNFTsOpinions(): Promise<Opinion[]> {
   const nftOpinionBaseContract = getNFTOpinionsContract()
-  return nftOpinionBaseContract.methods.getAllOpinions().call()
+  const allOpinions = await nftOpinionBaseContract.methods
+    .getAllOpinions()
+    .call()
+
+  return (allOpinions as any[]).map((opinion: any) => convertOpinion(opinion))
 }
 
 /**
@@ -17,83 +31,47 @@ export async function getAllOpinionedNFTs() {
 }
 
 /**
- * Get all opinions of all the NFTs that belong to a single contract address
- */
-export async function getAllNFTsOpinionsOfAddress(contractAddress: string) {
-  const nftOpinionBaseContract = getNFTOpinionsContract()
-  return nftOpinionBaseContract.methods
-    .getAllOpinionsForAddress(contractAddress)
-    .call()
-}
-
-/**
- * Get all the opinioned NFTs that belong to a single contract address
- */
-export async function getAllOpinionedNFTsOfAddress(contractAddress: string) {
-  const nftOpinionBaseContract = getNFTOpinionsContract()
-  return nftOpinionBaseContract.methods
-    .getOpinionedNFTsForAddress(contractAddress)
-    .call()
-}
-
-/**
  * Get all opinions of an NFT (includes past ratings from users).
- * @param contractAddress -- contract address of the NFT
  * @param tokenID -- tokenID of the NFT
  */
-export async function getAllOpinionsOfNFT({
-  contractAddress,
-  tokenID,
-}: {
-  contractAddress: string
-  tokenID: number
-}) {
+export async function getAllOpinionsOfNFT(tokenID: number): Promise<Opinion[]> {
   const nftOpinionBaseContract = getNFTOpinionsContract()
-  return nftOpinionBaseContract.methods
-    .getOpinionsAboutNFT(contractAddress, tokenID)
+  const allOpinions = await nftOpinionBaseContract.methods
+    .getOpinionsAboutNFT(tokenID)
     .call()
+
+  return (allOpinions as any[]).map((opinion: any) => convertOpinion(opinion))
 }
 
 /**
  * Get latest opinions of an NFT
  * (doesn't include past ratings from users, just most recent).
- * @param contractAddress -- contract address of the NFT
  * @param tokenID -- tokenID of the NFT
  */
-export async function getLatestOpinionsOfNFT({
-  contractAddress,
-  tokenID,
-}: {
-  contractAddress: string
+export async function getLatestOpinionsOfNFT(
   tokenID: number
-}) {
+): Promise<Opinion[]> {
   const nftOpinionBaseContract = getNFTOpinionsContract()
-  return nftOpinionBaseContract.methods
-    .getLatestOpinionsAboutNFT(contractAddress, tokenID)
+  const latestOpinions = await nftOpinionBaseContract.methods
+    .getLatestOpinionsAboutNFT(tokenID)
     .call()
+
+  return (latestOpinions as any[]).map((opinion: any) =>
+    convertOpinion(opinion)
+  )
 }
 
 /**
  * Get the opinions data of an NFT
- * @param contractAddress -- contract address of the NFT
  * @param tokenID -- tokenID of the NFT
  */
-export async function getOpinionsSummaryOfNFT({
-  contractAddress,
-  tokenID,
-}: {
-  contractAddress: string
-  tokenID: number
-}) {
-  const allOpinions = await getAllOpinionsOfNFT({ contractAddress, tokenID })
-  const latestOpinions = await getLatestOpinionsOfNFT({
-    contractAddress,
-    tokenID,
-  })
+export async function getOpinionsSummaryOfNFT(tokenID: number) {
+  const allOpinions = await getAllOpinionsOfNFT(tokenID)
+  const latestOpinions = await getLatestOpinionsOfNFT(tokenID)
 
   const averageRating = calculateAverageRating(latestOpinions)
-  const totalRatingsCount = allOpinions?.length ?? 0
-  const latestRatingsCount = latestOpinions?.length ?? 0
+  const totalRatingsCount = allOpinions.length
+  const latestRatingsCount = latestOpinions.length
   const totalCommentsCount = calculateTotalNumberOfComments(allOpinions)
   const latestCommentsCount = calculateTotalNumberOfComments(latestOpinions)
 
@@ -133,97 +111,72 @@ function calculateTotalNumberOfComments(opinions: any[]) {
 
 /**
  * Get the average rating of an NFT from all latest ratings
- * @param contractAddress -- contract address of the NFT
  * @param tokenID -- tokenID of the NFT
  */
-export async function getAverageRatingOfNFT({
-  contractAddress,
-  tokenID,
-}: {
-  contractAddress: string
-  tokenID: number
-}) {
-  const latestOpinions = await getLatestOpinionsOfNFT({
-    contractAddress,
-    tokenID,
-  })
+export async function getAverageRatingOfNFT(tokenID: number) {
+  const latestOpinions = await getLatestOpinionsOfNFT(tokenID)
   return calculateAverageRating(latestOpinions)
 }
 
 /**
  * Get total number of opinions for an NFT
- * @param contractAddress -- contract address of the NFT
  * @param tokenID -- tokenID of the NFT
  */
-export async function getTotalOpinionsCountOfNFT({
-  contractAddress,
-  tokenID,
-}: {
-  contractAddress: string
-  tokenID: number
-}) {
-  const allOpinions = await getAllOpinionsOfNFT({ contractAddress, tokenID })
-  return allOpinions?.length ?? 0
+export async function getTotalOpinionsCountOfNFT(tokenID: number) {
+  const allOpinions = await getAllOpinionsOfNFT(tokenID)
+  return allOpinions.length
 }
 
 /**
  * Get total number of raters of an NFT (total # opinions, not including duplicates by users)
- * @param contractAddress -- contract address of the NFT
  * @param tokenID -- tokenID of the NFT
  */
-export async function getLatestOpinionsCountOfNFT({
-  contractAddress,
-  tokenID,
-}: {
-  contractAddress: string
-  tokenID: number
-}) {
-  const latestOpinions = await getLatestOpinionsOfNFT({
-    contractAddress,
-    tokenID,
-  })
-  return latestOpinions?.length ?? 0
+export async function getLatestOpinionsCountOfNFT(tokenID: number) {
+  const latestOpinions = await getLatestOpinionsOfNFT(tokenID)
+  return latestOpinions.length
 }
 
 /**
  * Get total number of comments of an NFT from all the opinions
- * @param contractAddress -- contract address of the NFT
  * @param tokenID -- tokenID of the NFT
  */
-export async function getTotalCommentsCountOfNFT({
-  contractAddress,
-  tokenID,
-}: {
-  contractAddress: string
-  tokenID: number
-}) {
-  const allOpinions = await getAllOpinionsOfNFT({ contractAddress, tokenID })
+export async function getTotalCommentsCountOfNFT(tokenID: number) {
+  const allOpinions = await getAllOpinionsOfNFT(tokenID)
   const opinionsWithComments = allOpinions.filter(
     (opinion: any) => opinion?.comment?.length > 0
   )
 
-  return opinionsWithComments?.length
+  return opinionsWithComments.length
 }
 
 /**
  * Get total number of comments of an NFT from all the latest opinions
- * @param contractAddress -- contract address of the NFT
  * @param tokenID -- tokenID of the NFT
  */
-export async function getLatestCommentsCountOfNFT({
-  contractAddress,
-  tokenID,
-}: {
-  contractAddress: string
-  tokenID: number
-}) {
-  const latestOpinions = await getLatestOpinionsOfNFT({
-    contractAddress,
-    tokenID,
-  })
+export async function getLatestCommentsCountOfNFT(tokenID: number) {
+  const latestOpinions = await getLatestOpinionsOfNFT(tokenID)
   const latestOpinionsWithComments = latestOpinions.filter(
     (opinion: any) => opinion?.comment?.length > 0
   )
 
-  return latestOpinionsWithComments?.length
+  return latestOpinionsWithComments.length
+}
+
+function convertOpinion(opinion: any): Opinion {
+  const citationsArr = opinion.citations as number[]
+  const inFavorArr = opinion.inFavorArr as boolean[]
+
+  const citations: Citation[] = []
+  for (let i = 0; i < citationsArr.length; i++) {
+    citations.push({ tokenID: citationsArr[i], inFavor: inFavorArr[i] })
+  }
+
+  return {
+    tokenID: opinion.tokenID,
+    author: opinion.author as string,
+    blockHeight: opinion.blockHeight,
+    rating: opinion.rating,
+    comment: null,
+    citations,
+  }
 }

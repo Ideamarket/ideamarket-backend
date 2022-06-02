@@ -3,7 +3,7 @@ import { PostModel } from '../models/post.model'
 import type { Web3NFTOpinionData } from '../types/nft-opinion.types'
 import { web3 } from '../web3/contract'
 import {
-  getAllNFTsOpinionsOfAddress,
+  getAllNFTsOpinions,
   getOpinionsSummaryOfNFT,
 } from '../web3/opinions/nft-opinions'
 import { InternalServerError } from './errors'
@@ -22,16 +22,17 @@ export async function syncOpinionsOfAllNFTsInWeb2() {
       )
     }
 
-    const allOpinions = await getAllNFTsOpinionsOfAddress(contractAddress)
+    const allOpinions = await getAllNFTsOpinions()
     for await (const opinion of allOpinions) {
       const block = await web3.eth.getBlock(opinion.blockHeight)
       await updateNFTOpinionInWeb2({
-        contractAddress: (opinion.contractAddress as string).toLowerCase(),
+        contractAddress: contractAddress.toLowerCase(),
         tokenID: opinion.tokenID,
-        author: (opinion.author as string).toLowerCase(),
+        author: opinion.author.toLowerCase(),
         timestamp: block.timestamp.toString(),
         rating: opinion.rating,
         comment: opinion.comment,
+        citations: opinion.citations,
       })
     }
   } catch (error) {
@@ -56,10 +57,7 @@ export async function syncOpinionsOfNFTInWeb2(tokenID: number) {
       )
     }
 
-    const opinionsSummary = await getOpinionsSummaryOfNFT({
-      contractAddress,
-      tokenID,
-    })
+    const opinionsSummary = await getOpinionsSummaryOfNFT(tokenID)
     const {
       allOpinions,
       averageRating,
@@ -70,19 +68,19 @@ export async function syncOpinionsOfNFTInWeb2(tokenID: number) {
     } = opinionsSummary
 
     console.log(`Calculating composite rating for tokenID=${tokenID}`)
-    const latestOpinions = opinionsSummary.latestOpinions.map(
-      async (opinion: any) => {
-        const block = await web3.eth.getBlock(opinion.blockHeight)
-        return {
-          contractAddress: (opinion.contractAddress as string).toLowerCase(),
-          tokenID: opinion.tokenID,
-          author: (opinion.author as string).toLowerCase(),
-          timestamp: block.timestamp.toString(),
-          rating: opinion.rating,
-          comment: opinion.comment,
-        }
-      }
-    )
+    const latestOpinions: Web3NFTOpinionData[] = []
+    for await (const opinion of opinionsSummary.latestOpinions) {
+      const block = await web3.eth.getBlock(opinion.blockHeight)
+      latestOpinions.push({
+        contractAddress,
+        tokenID: opinion.tokenID,
+        author: opinion.author.toLowerCase(),
+        timestamp: block.timestamp.toString(),
+        rating: opinion.rating,
+        comment: opinion.comment,
+        citations: opinion.citations,
+      })
+    }
     const { compositeRating, marketInterest } =
       await calculateCompositeRatingAndMarketInterest(latestOpinions)
 
@@ -111,12 +109,13 @@ export async function syncOpinionsOfNFTInWeb2(tokenID: number) {
     for await (const opinion of allOpinions) {
       const block = await web3.eth.getBlock(opinion.blockHeight)
       await updateNFTOpinionInWeb2({
-        contractAddress: (opinion.contractAddress as string).toLowerCase(),
+        contractAddress: contractAddress.toLowerCase(),
         tokenID: opinion.tokenID,
-        author: (opinion.author as string).toLowerCase(),
+        author: opinion.author.toLowerCase(),
         timestamp: block.timestamp.toString(),
         rating: opinion.rating,
         comment: opinion.comment,
+        citations: opinion.citations,
       })
     }
   } catch (error) {
@@ -144,6 +143,7 @@ async function updateNFTOpinionInWeb2(opinion: Web3NFTOpinionData) {
       ratedAt,
       rating: opinion.rating,
       comment: opinion.comment,
+      citations: opinion.citations,
     })
     if (web2NFTOpinionExists) {
       return await Promise.resolve(null)
@@ -159,6 +159,7 @@ async function updateNFTOpinionInWeb2(opinion: Web3NFTOpinionData) {
       ratedAt,
       rating: Number.parseInt(opinion.rating),
       comment: opinion.comment,
+      citations: opinion.citations,
     })
     return await NFTOpinionModel.create(web2NFTOpinionDoc)
   } catch (error) {

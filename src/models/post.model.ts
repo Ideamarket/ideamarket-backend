@@ -6,6 +6,7 @@ export interface IPost {
   tokenID: number
   minterAddress: string
   content: string
+  postedAt: Date | null
   isURL: boolean
   categories: string[]
   imageLink: string
@@ -28,6 +29,7 @@ export interface PostDocument extends mongoose.Document {
   tokenID: number
   minterAddress: string
   content: string
+  postedAt: Date | null
   isURL: boolean
   categories: string[]
   imageLink: string
@@ -47,6 +49,7 @@ const PostSchema = new mongoose.Schema(
     tokenID: { type: Number, required: true, index: true },
     minterAddress: { type: String, required: true, index: true },
     content: { type: String, required: false },
+    postedAt: { type: Date, required: false },
     isURL: { type: Boolean, required: true },
     categories: { type: [String], required: false },
     imageLink: { type: String, required: false },

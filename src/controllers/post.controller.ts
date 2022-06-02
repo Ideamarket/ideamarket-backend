@@ -19,6 +19,9 @@ import type {
 
 export async function fetchAllPosts(req: Request, res: Response) {
   try {
+    const contractAddress = req.query.contractAddress
+      ? (req.query.contractAddress as string)
+      : null
     const skip = Number.parseInt(req.query.skip as string) || 0
     const limit = Number.parseInt(req.query.limit as string) || 10
     const orderBy = req.query.orderBy as keyof PostResponse
@@ -44,7 +47,7 @@ export async function fetchAllPosts(req: Request, res: Response) {
       filterTokens,
     }
 
-    const posts = await fetchAllPostsFromWeb2(options)
+    const posts = await fetchAllPostsFromWeb2({ contractAddress, options })
     return handleSuccess(res, { posts })
   } catch (error) {
     console.error(

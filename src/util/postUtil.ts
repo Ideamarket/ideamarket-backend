@@ -1,3 +1,4 @@
+/* eslint-disable sonarjs/cognitive-complexity */
 import type { NFTOpinionDocument } from 'models/nft-opinion.model'
 import type { UserTokenDocument } from 'models/user-token.model'
 
@@ -21,6 +22,7 @@ export function mapPostResponse(
     tokenID: post.tokenID,
     minterAddress: post.minterAddress,
     content: post.content,
+    postedAt: post.postedAt ?? null,
     categories: post.categories,
     imageLink: post.imageLink,
     isURL: post.isURL,
@@ -52,6 +54,7 @@ export function mapPostOpinionResponse(
     ratedAt: postOpinion.ratedAt,
     rating: postOpinion.rating,
     comment: postOpinion.comment,
+    citations: postOpinion.citations,
     userToken: mapUserTokenResponse(postOpinion.userToken),
   }
 }
@@ -72,6 +75,7 @@ export function mapPostOpinionWithPost({
     tokenID: postOpinion.tokenID,
     minterAddress: post?.minterAddress ?? null,
     content: post?.content ?? null,
+    postedAt: post?.postedAt ?? null,
     categories: post?.categories ?? [],
     imageLink: post?.imageLink ?? null,
     isURL: post ? post.isURL : null,
@@ -80,6 +84,7 @@ export function mapPostOpinionWithPost({
     ratedAt: postOpinion.ratedAt,
     rating: postOpinion.rating,
     comment: postOpinion.comment,
+    citations: postOpinion.citations,
     averageRating: post?.averageRating ?? 0,
     compositeRating: post?.compositeRating ?? 0,
     marketInterest: post?.marketInterest ?? 0,

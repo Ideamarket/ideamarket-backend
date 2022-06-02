@@ -1,13 +1,19 @@
 /* eslint-disable @typescript-eslint/consistent-type-definitions */
 import mongoose from 'mongoose'
 
+export type Citation = {
+  tokenID: number
+  inFavor: boolean
+}
+
 export interface INFTOpinion {
   contractAddress: string
   tokenID: number
   ratedBy: string
   ratedAt: Date
   rating: number
-  comment: string
+  comment: string | null
+  citations: Citation[]
 }
 
 interface INFTOpinionModel extends mongoose.Model<NFTOpinionDocument> {
@@ -20,7 +26,8 @@ export interface NFTOpinionDocument extends mongoose.Document {
   ratedBy: string
   ratedAt: Date
   rating: number
-  comment: string
+  comment: string | null
+  citations: Citation[]
 }
 
 const NFTOpinionSchema = new mongoose.Schema(
@@ -31,6 +38,17 @@ const NFTOpinionSchema = new mongoose.Schema(
     ratedAt: { type: Date, required: true },
     rating: { type: Number, required: true },
     comment: { type: String, required: false },
+    citations: {
+      type: [
+        {
+          _id: false,
+          tokenID: { type: Number, required: true },
+          inFavor: { type: Boolean, required: true },
+        },
+      ],
+      default: [],
+      required: false,
+    },
   },
   { timestamps: true, versionKey: false }
 )

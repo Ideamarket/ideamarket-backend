@@ -1,3 +1,4 @@
+/* eslint-disable sonarjs/cognitive-complexity */
 /* eslint-disable unicorn/no-keyword-prefix */
 /* eslint-disable sonarjs/no-duplicate-string */
 import config from 'config'
@@ -39,7 +40,22 @@ import { BadRequestError, InternalServerError } from './errors'
 
 const NETWORK = config.get<string>('web3.network')
 
-export async function fetchAllPostsFromWeb2(options: PostQueryOptions) {
+export async function fetchAllPostsFromWeb2({
+  contractAddress: _contractAddress,
+  options,
+}: {
+  contractAddress: string | null | undefined
+  options: PostQueryOptions
+}) {
+  const contractAddress =
+    _contractAddress ?? getIdeamarketPostsContractAddress()
+  if (!contractAddress) {
+    console.error('Deployed address is missing for ideamarket posts')
+    throw new InternalServerError(
+      'Contract address is missing for ideamamrket posts '
+    )
+  }
+
   const {
     skip,
     limit,
@@ -58,6 +74,7 @@ export async function fetchAllPostsFromWeb2(options: PostQueryOptions) {
 
   // Filter Options
   const filterOptions: FilterQuery<PostDocument & UserTokenDocument>[] = []
+  filterOptions.push({ contractAddress })
   if (categories.length > 0) {
     filterOptions.push({ categories: { $in: categories } })
   }
@@ -374,9 +391,11 @@ export async function fetchPostOpinionsByWalletFromWeb2({
       (postOpinionWithPost.content ?? '')
         .toLowerCase()
         .includes((search ?? '').toLowerCase()) ||
-      postOpinionWithPost.comment
-        .toLowerCase()
-        .includes((search ?? '').toLowerCase()) ||
+      (postOpinionWithPost.comment
+        ? postOpinionWithPost.comment
+            .toLowerCase()
+            .includes((search ?? '').toLowerCase())
+        : false) ||
       (postOpinionWithPost.minterAddress ?? '')
         .toLowerCase()
         .includes((search ?? '').toLowerCase()) ||
@@ -453,11 +472,13 @@ export async function syncAllPostsInWeb2() {
   const allPosts = await getAllIdeamarketPosts()
   for await (const post of allPosts) {
     console.log(`Syncing post with tokenID=${post.tokenID as string}`)
+    const block = await web3.eth.getBlock(post.blockHeight)
     await updatePostInWeb2({
       post: {
         tokenID: post.tokenID,
         minter: post.minter.toLowerCase(),
         content: post.content,
+        timestamp: block.timestamp.toString(),
         categories: post.categories,
         imageLink: post.imageLink,
         isURL: post.isURL,
@@ -478,11 +499,13 @@ export async function syncPostInWeb2(tokenID: number) {
   }
 
   const post = await getIdeamarketPostByTokenID(tokenID)
+  const block = await web3.eth.getBlock(post.blockHeight)
   await updatePostInWeb2({
     post: {
       tokenID: post.tokenID,
       minter: post.minter.toLowerCase(),
       content: post.content,
+      timestamp: block.timestamp.toString(),
       categories: post.categories,
       imageLink: post.imageLink,
       isURL: post.isURL,
@@ -500,25 +523,25 @@ async function updatePostInWeb2({
   contractAddress: string
 }) {
   try {
+    const postedAt = new Date(Number.parseInt(post.timestamp) * 1000)
+
     console.log(`Fetching post opinions summary for tokenID=${post.tokenID}`)
-    const postOpinionsSummary = await getOpinionsSummaryOfNFT({
-      contractAddress,
-      tokenID: post.tokenID,
-    })
+    const postOpinionsSummary = await getOpinionsSummaryOfNFT(post.tokenID)
+
     console.log(`Calculating composite rating for tokenID=${post.tokenID}`)
-    const latestOpinions = postOpinionsSummary.latestOpinions.map(
-      async (opinion: any) => {
-        const block = await web3.eth.getBlock(opinion.blockHeight)
-        return {
-          contractAddress: (opinion.contractAddress as string).toLowerCase(),
-          tokenID: opinion.tokenID,
-          author: (opinion.author as string).toLowerCase(),
-          timestamp: block.timestamp.toString(),
-          rating: opinion.rating,
-          comment: opinion.comment,
-        }
-      }
-    )
+    const latestOpinions: Web3NFTOpinionData[] = []
+    for await (const opinion of postOpinionsSummary.latestOpinions) {
+      const block = await web3.eth.getBlock(opinion.blockHeight)
+      latestOpinions.push({
+        contractAddress,
+        tokenID: opinion.tokenID,
+        author: opinion.author.toLowerCase(),
+        timestamp: block.timestamp.toString(),
+        rating: opinion.rating,
+        comment: opinion.comment,
+        citations: opinion.citations,
+      })
+    }
     const { compositeRating, marketInterest } =
       await calculateCompositeRatingAndMarketInterest(latestOpinions)
 
@@ -536,6 +559,7 @@ async function updatePostInWeb2({
           tokenID: post.tokenID,
           minterAddress: post.minter,
           content: post.content,
+          postedAt,
           categories: post.categories,
           imageLink: post.imageLink,
           isURL: post.isURL,

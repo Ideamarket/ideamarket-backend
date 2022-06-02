@@ -1,3 +1,4 @@
+import type { Citation } from '../models/nft-opinion.model'
 import type { NFTOpinion } from './nft-opinion.types'
 import type { UserTokenResponse } from './user-token.types'
 
@@ -5,6 +6,7 @@ export type Web3IdeamarketPost = {
   tokenID: number
   minter: string
   content: string
+  timestamp: string
   categories: string[]
   imageLink: string
   isURL: boolean
@@ -27,6 +29,7 @@ export type PostResponse = {
   tokenID: number
   minterAddress: string
   content: string
+  postedAt: Date | null
   categories: string[]
   imageLink: string
   isURL: boolean
@@ -64,6 +67,7 @@ export type PostOpinionWithPostResponse = {
   tokenID: number
   minterAddress: string | null
   content: string | null
+  postedAt: Date | null
   categories: string[]
   imageLink: string | null
   isURL: boolean | null
@@ -71,7 +75,8 @@ export type PostOpinionWithPostResponse = {
   ratedBy: string
   ratedAt: Date
   rating: number
-  comment: string
+  comment: string | null
+  citations: Citation[]
   averageRating: number
   compositeRating: number
   marketInterest: number
