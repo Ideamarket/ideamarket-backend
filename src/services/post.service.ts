@@ -1,3 +1,4 @@
+/* eslint-disable require-atomic-updates */
 /* eslint-disable sonarjs/cognitive-complexity */
 /* eslint-disable unicorn/no-keyword-prefix */
 /* eslint-disable sonarjs/no-duplicate-string */
@@ -8,7 +9,7 @@ import type { FilterQuery } from 'mongoose'
 
 import type { CompositeRatingDocument } from '../models/composite-rating-model'
 import { CompositeRatingModel } from '../models/composite-rating-model'
-import type { NFTOpinionDocument } from '../models/nft-opinion.model'
+import type { Citation, NFTOpinionDocument } from '../models/nft-opinion.model'
 import { NFTOpinionModel } from '../models/nft-opinion.model'
 import type { PostDocument } from '../models/post.model'
 import { PostModel } from '../models/post.model'
@@ -262,7 +263,37 @@ async function fetchAllPostOpinionsByTokenIdFromWeb2({
     .skip(skip)
     .limit(limit)
 
-  return postOpinions.map((postOpinion) => mapPostOpinionResponse(postOpinion))
+  const citationPostsMap: Record<number, PostDocument | null> = {}
+  const citationMintersMap: Record<string, UserTokenDocument | null> = {}
+  for await (const postOpinion of postOpinions) {
+    const citations = postOpinion.citations as Citation[]
+    for await (const citation of citations) {
+      // Adding citation posts
+      const { tokenID } = citation
+      if (citationPostsMap[tokenID]) {
+        continue
+      }
+      const citationPost = await PostModel.findOne({ contractAddress, tokenID })
+      citationPostsMap[tokenID] = citationPost
+      if (!citationPost) {
+        continue
+      }
+
+      // Adding citation minters
+      const { minterAddress } = citationPost
+      if (citationMintersMap[minterAddress]) {
+        continue
+      }
+      const minter = await UserTokenModel.findOne({
+        walletAddress: minterAddress,
+      })
+      citationMintersMap[minterAddress] = minter
+    }
+  }
+
+  return postOpinions.map((postOpinion) =>
+    mapPostOpinionResponse(postOpinion, citationPostsMap, citationMintersMap)
+  )
 }
 
 async function fetchLatestPostOpinionsByTokenIdFromWeb2({
@@ -327,7 +358,37 @@ async function fetchLatestPostOpinionsByTokenIdFromWeb2({
     .skip(skip)
     .limit(limit)
 
-  return postOpinions.map((postOpinion) => mapPostOpinionResponse(postOpinion))
+  const citationPostsMap: Record<number, PostDocument | null> = {}
+  const citationMintersMap: Record<string, UserTokenDocument | null> = {}
+  for await (const postOpinion of postOpinions) {
+    const citations = postOpinion.citations as Citation[]
+    for await (const citation of citations) {
+      // Adding citation posts
+      const { tokenID } = citation
+      if (citationPostsMap[tokenID]) {
+        continue
+      }
+      const citationPost = await PostModel.findOne({ contractAddress, tokenID })
+      citationPostsMap[tokenID] = citationPost
+      if (!citationPost) {
+        continue
+      }
+
+      // Adding citation minters
+      const { minterAddress } = citationPost
+      if (citationMintersMap[minterAddress]) {
+        continue
+      }
+      const minter = await UserTokenModel.findOne({
+        walletAddress: minterAddress,
+      })
+      citationMintersMap[minterAddress] = minter
+    }
+  }
+
+  return postOpinions.map((postOpinion) =>
+    mapPostOpinionResponse(postOpinion, citationPostsMap, citationMintersMap)
+  )
 }
 
 export async function fetchPostOpinionsByWalletFromWeb2({
@@ -375,9 +436,41 @@ export async function fetchPostOpinionsByWalletFromWeb2({
       },
       { $set: { userToken: { $arrayElemAt: ['$UserTokens', 0] } } },
     ])
+
+    const citationPostsMap: Record<number, PostDocument | null> = {}
+    const citationMintersMap: Record<string, UserTokenDocument | null> = {}
+    const citations = postOpinion.citations as Citation[]
+    for await (const citation of citations) {
+      // Adding citation posts
+      const { tokenID } = citation
+      if (citationPostsMap[tokenID]) {
+        continue
+      }
+      const citationPost = await PostModel.findOne({
+        contractAddress,
+        tokenID,
+      })
+      citationPostsMap[tokenID] = citationPost
+      if (!citationPost) {
+        continue
+      }
+
+      // Adding citation minters
+      const { minterAddress } = citationPost
+      if (citationMintersMap[minterAddress]) {
+        continue
+      }
+      const minter = await UserTokenModel.findOne({
+        walletAddress: minterAddress,
+      })
+      citationMintersMap[minterAddress] = minter
+    }
+
     const postOpinionWithPost = mapPostOpinionWithPost({
       post: posts[0],
       postOpinion,
+      citationPostsMap,
+      citationMintersMap,
     })
     if (postOpinionWithPost) {
       postOpinionsWithPost.push(postOpinionWithPost)

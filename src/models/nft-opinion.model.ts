@@ -62,6 +62,7 @@ NFTOpinionSchema.index(
     ratedAt: 1,
     rating: 1,
     comment: 1,
+    citations: 1,
   },
   { unique: true }
 )

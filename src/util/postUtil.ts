@@ -1,5 +1,6 @@
 /* eslint-disable sonarjs/cognitive-complexity */
-import type { NFTOpinionDocument } from 'models/nft-opinion.model'
+import config from 'config'
+import type { Citation, NFTOpinionDocument } from 'models/nft-opinion.model'
 import type { UserTokenDocument } from 'models/user-token.model'
 
 import type { PostDocument } from '../models/post.model'
@@ -7,8 +8,11 @@ import type {
   PostOpinion,
   PostResponse,
   PostOpinionWithPostResponse,
+  CitationResponse,
 } from '../types/post.types'
 import { mapUserTokenResponse } from './userTokenUtil'
+
+const cloudFrontDomain: string = config.get('userToken.cloudFrontDomain')
 
 export function mapPostResponse(
   post: (PostDocument & { userToken: UserTokenDocument | null }) | null
@@ -41,7 +45,9 @@ export function mapPostResponse(
 export function mapPostOpinionResponse(
   postOpinion:
     | (NFTOpinionDocument & { userToken: UserTokenDocument | null })
-    | null
+    | null,
+  citationPostsMap: Record<number, PostDocument | null>,
+  citationMintersMap: Record<string, UserTokenDocument | null>
 ): PostOpinion | null {
   if (!postOpinion) {
     return null
@@ -54,7 +60,11 @@ export function mapPostOpinionResponse(
     ratedAt: postOpinion.ratedAt,
     rating: postOpinion.rating,
     comment: postOpinion.comment,
-    citations: postOpinion.citations,
+    citations: mapCitations(
+      postOpinion.citations,
+      citationPostsMap,
+      citationMintersMap
+    ),
     userToken: mapUserTokenResponse(postOpinion.userToken),
   }
 }
@@ -62,9 +72,13 @@ export function mapPostOpinionResponse(
 export function mapPostOpinionWithPost({
   post,
   postOpinion,
+  citationPostsMap,
+  citationMintersMap,
 }: {
   post: (PostDocument & { userToken: UserTokenDocument | null }) | null
   postOpinion: NFTOpinionDocument | null
+  citationPostsMap: Record<number, PostDocument | null>
+  citationMintersMap: Record<string, UserTokenDocument | null>
 }): PostOpinionWithPostResponse | null {
   if (!postOpinion) {
     return null
@@ -84,7 +98,11 @@ export function mapPostOpinionWithPost({
     ratedAt: postOpinion.ratedAt,
     rating: postOpinion.rating,
     comment: postOpinion.comment,
-    citations: postOpinion.citations,
+    citations: mapCitations(
+      postOpinion.citations,
+      citationPostsMap,
+      citationMintersMap
+    ),
     averageRating: post?.averageRating ?? 0,
     compositeRating: post?.compositeRating ?? 0,
     marketInterest: post?.marketInterest ?? 0,
@@ -94,4 +112,39 @@ export function mapPostOpinionWithPost({
     latestCommentsCount: post?.latestCommentsCount ?? 0,
     minterToken: mapUserTokenResponse(post?.userToken ?? null),
   }
+}
+
+function mapCitations(
+  citations: Citation[],
+  citationPostsMap: Record<number, PostDocument | null>,
+  citationMintersMap: Record<string, UserTokenDocument | null>
+): CitationResponse[] {
+  return citations.map((citation) => {
+    const citationPost = citationPostsMap[citation.tokenID]
+    const minter = citationPost
+      ? citationMintersMap[citationPost.minterAddress]
+      : null
+
+    return {
+      citation: citationPost
+        ? {
+            postId: citationPost._id.toString() as string,
+            tokenID: citationPost.tokenID,
+            content: citationPost.content,
+            compositeRating: citationPost.compositeRating,
+            minter: minter
+              ? {
+                  id: minter._id.toString() as string,
+                  walletAddress: minter.walletAddress,
+                  username: minter.username || null,
+                  profilePhoto: minter.profilePhoto
+                    ? `${cloudFrontDomain}/${minter.profilePhoto}`
+                    : null,
+                }
+              : null,
+          }
+        : null,
+      inFavor: citation.inFavor,
+    }
+  })
 }
