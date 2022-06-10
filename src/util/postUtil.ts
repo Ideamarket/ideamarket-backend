@@ -132,6 +132,8 @@ function mapCitations(
             tokenID: citationPost.tokenID,
             content: citationPost.content,
             compositeRating: citationPost.compositeRating,
+            totalRatingsCount: citationPost.totalRatingsCount || 0,
+            latestRatingsCount: citationPost.compositeRating || 0,
             minter: minter
               ? {
                   id: minter._id.toString() as string,

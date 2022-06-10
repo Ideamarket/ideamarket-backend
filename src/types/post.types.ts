@@ -32,6 +32,8 @@ export type CitationPost = {
   tokenID: number
   content: string
   compositeRating: number
+  totalRatingsCount: number
+  latestRatingsCount: number
   minter: {
     id: string
     walletAddress: string
