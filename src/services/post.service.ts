@@ -345,7 +345,7 @@ async function fetchLatestPostOpinionsByTokenIdFromWeb2({
     { $set: { username: '$userToken.username' } },
     { $set: { deposits: '$userToken.deposits' } },
     { $match: filterQuery },
-    { $sort: { ratedAt: -1 } },
+    { $sort: { ratedAt: -1, _id: -1 } },
     {
       $group: {
         _id: '$ratedBy',
@@ -541,7 +541,7 @@ async function fetchLatestPostOpinionsByWalletFromWeb2({
 
   return NFTOpinionModel.aggregate([
     { $match: { $and: filterOptions } },
-    { $sort: { ratedAt: -1 } },
+    { $sort: { ratedAt: -1, _id: -1 } },
     {
       $group: {
         _id: '$tokenID',
