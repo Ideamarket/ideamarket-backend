@@ -30,6 +30,8 @@ export interface IUserToken {
   holders: number | undefined
   yearIncome: number | undefined
   claimableIncome: number | undefined
+  totalRatingsCount: number
+  latestRatingsCount: number
 }
 
 interface IUserTokenModel extends mongoose.Model<UserTokenDocument> {
@@ -57,6 +59,8 @@ interface UserTokenDocument extends mongoose.Document {
   holders: number
   yearIncome: number
   claimableIncome: number
+  totalRatingsCount: number
+  latestRatingsCount: number
 }
 
 const UserTokenSchema = new mongoose.Schema(
@@ -96,6 +100,8 @@ const UserTokenSchema = new mongoose.Schema(
     holders: { type: Number, default: 0, required: true },
     yearIncome: { type: Number, default: 0, required: true },
     claimableIncome: { type: Number, default: 0, required: true },
+    totalRatingsCount: { type: Number, default: 0, required: true },
+    latestRatingsCount: { type: Number, default: 0, required: true },
   },
   {
     timestamps: true,

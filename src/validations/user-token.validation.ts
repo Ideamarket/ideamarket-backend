@@ -102,6 +102,8 @@ export const fetchAllUserTokensValidation = [
       'holders',
       'yearIncome',
       'claimableIncome',
+      'totalRatingsCount',
+      'latestRatingsCount',
     ])
     .withMessage('OrderBy cannot be empty and should be a valid string'),
 ]

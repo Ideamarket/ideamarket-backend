@@ -38,6 +38,7 @@ import {
   calculatePrice,
   calculateYearIncome,
 } from '../util/web3Util'
+import { getUserOpinionsSummary } from '../web3/opinions/nft-opinions'
 import { EntityNotFoundError, InternalServerError } from './errors'
 import { calculateWeekChange } from './listing.service'
 
@@ -67,6 +68,8 @@ export async function copyAccountsToUserToken() {
       holders: 0,
       yearIncome: 0,
       claimableIncome: 0,
+      totalRatingsCount: 0,
+      latestRatingsCount: 0,
     })
     if (account.username) {
       userTokenDoc.username = account.username
@@ -98,6 +101,8 @@ export async function createUserToken(walletAddress: string) {
       holders: 0,
       yearIncome: 0,
       claimableIncome: 0,
+      totalRatingsCount: 0,
+      latestRatingsCount: 0,
     })
     userToken = await UserTokenModel.create(userTokenDoc)
   }
@@ -132,6 +137,8 @@ export async function signInUserAndReturnToken(
       holders: 0,
       yearIncome: 0,
       claimableIncome: 0,
+      totalRatingsCount: 0,
+      latestRatingsCount: 0,
     })
     userToken = await UserTokenModel.create(userTokenDoc)
     userTokenCreated = true
@@ -459,9 +466,10 @@ async function fetchAllUserTokensFromWeb3() {
 
 async function updateUserTokenInWeb2(web3UserToken: IdeaToken) {
   try {
-    const userToken = await UserTokenModel.findOne({
-      walletAddress: web3UserToken.name.toLowerCase(),
-    })
+    const walletAddress = web3UserToken.name.toLowerCase()
+    const userOpinionsSummary = await getUserOpinionsSummary(walletAddress)
+
+    const userToken = await UserTokenModel.findOne({ walletAddress })
 
     if (userToken) {
       userToken.tokenAddress = web3UserToken.id
@@ -475,6 +483,8 @@ async function updateUserTokenInWeb2(web3UserToken: IdeaToken) {
       userToken.holders = web3UserToken.holders
       userToken.yearIncome = calculateYearIncome(web3UserToken.marketCap)
       userToken.claimableIncome = calculateClaimableIncome()
+      userToken.totalRatingsCount = userOpinionsSummary.totalRatingsCount
+      userToken.latestRatingsCount = userOpinionsSummary.latestRatingsCount
 
       return await userToken.save()
     }
@@ -497,6 +507,8 @@ async function updateUserTokenInWeb2(web3UserToken: IdeaToken) {
       holders: web3UserToken.holders,
       yearIncome: calculateYearIncome(web3UserToken.marketCap),
       claimableIncome: calculateClaimableIncome(),
+      totalRatingsCount: userOpinionsSummary.totalRatingsCount,
+      latestRatingsCount: userOpinionsSummary.latestRatingsCount,
     }
 
     return await UserTokenModel.create(userTokenDoc)

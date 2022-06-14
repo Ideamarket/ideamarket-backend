@@ -19,6 +19,8 @@ export type UserTokenResponse = {
   holders: number
   yearIncome: number
   claimableIncome: number
+  totalRatingsCount: number
+  latestRatingsCount: number
 }
 
 export type UserTokensQueryOptions = {

@@ -63,6 +63,56 @@ export async function getPastEvents({
   return allEvents
 }
 
+export async function getAllUserOpinions(walletAddress: string) {
+  const nftOpinionBaseContract = getNFTOpinionsContract()
+  const allOpinions = await nftOpinionBaseContract.methods
+    .getUsersOpinions(walletAddress)
+    .call()
+
+  return (allOpinions as any[]).map((opinion: any) => convertOpinion(opinion))
+}
+
+export async function getLatestUserOpinions(walletAddress: string) {
+  const allOpinions = await getAllUserOpinions(walletAddress)
+
+  const latestOpinionsMap: Record<number, Opinion> = {}
+  for (const opinion of allOpinions) {
+    latestOpinionsMap[opinion.tokenID] = opinion
+  }
+
+  return Object.values(latestOpinionsMap)
+}
+
+export async function getAllUserOpinionsCount(walletAddress: string) {
+  const allOpinions = await getAllUserOpinions(walletAddress)
+  return allOpinions.length
+}
+
+export async function getLatestUserOpinionsCount(walletAddress: string) {
+  const latestOpinions = await getLatestUserOpinions(walletAddress)
+  return latestOpinions.length
+}
+
+export async function getUserOpinionsSummary(walletAddress: string) {
+  const allOpinions = await getAllUserOpinions(walletAddress)
+
+  const latestOpinionsMap: Record<number, Opinion> = {}
+  for (const opinion of allOpinions) {
+    latestOpinionsMap[opinion.tokenID] = opinion
+  }
+  const latestOpinions = Object.values(latestOpinionsMap)
+
+  const totalRatingsCount = allOpinions.length
+  const latestRatingsCount = latestOpinions.length
+
+  return {
+    allOpinions,
+    latestOpinions,
+    totalRatingsCount,
+    latestRatingsCount,
+  }
+}
+
 /**
  * Get all opinions of all the NFTs
  */

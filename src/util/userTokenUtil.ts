@@ -89,6 +89,8 @@ export function mapUserTokenResponse(
     holders: userTokenDoc.holders || 0,
     yearIncome: userTokenDoc.yearIncome || 0,
     claimableIncome: userTokenDoc.claimableIncome || 0,
+    totalRatingsCount: userTokenDoc.totalRatingsCount || 0,
+    latestRatingsCount: userTokenDoc.latestRatingsCount || 0,
   }
 }
 
@@ -132,6 +134,8 @@ export async function mapUserTokenResponseWithLatestTwitterUsername(
     holders: userTokenDoc.holders || 0,
     yearIncome: userTokenDoc.yearIncome || 0,
     claimableIncome: userTokenDoc.claimableIncome || 0,
+    totalRatingsCount: userTokenDoc.totalRatingsCount || 0,
+    latestRatingsCount: userTokenDoc.latestRatingsCount || 0,
   }
 }
 
