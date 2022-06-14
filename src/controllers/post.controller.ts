@@ -1,6 +1,7 @@
 import type { Request, Response } from 'express'
 
 import { handleError, handleSuccess } from '../lib/base'
+import { syncAllCitedByPostsInWeb2 } from '../services/post-citedby-service'
 import {
   fetchAllPostsFromWeb2,
   fetchPostCompositeRatingsFromWeb2,
@@ -183,6 +184,19 @@ export async function syncAllPosts(req: Request, res: Response) {
       error
     )
     return handleError(res, error, 'Unable to sync ideamarket posts')
+  }
+}
+
+export async function syncAllCitedByPosts(req: Request, res: Response) {
+  try {
+    await syncAllCitedByPostsInWeb2()
+
+    return handleSuccess(res, {
+      message: 'All citedBy posts have been synced',
+    })
+  } catch (error) {
+    console.error('Error occurred while syncing all the citedBy posts', error)
+    return handleError(res, error, 'Unable to sync citedBy posts')
   }
 }
 

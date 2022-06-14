@@ -1,3 +1,6 @@
+/* eslint-disable no-await-in-loop */
+import type { EventData } from 'web3-eth-contract'
+
 import type { Citation } from '../../models/nft-opinion.model'
 import { getNFTOpinionsContract } from '../contract'
 
@@ -8,6 +11,56 @@ export type Opinion = {
   rating: string
   comment: string | null
   citations: Citation[]
+}
+
+export async function getPastEvents({
+  startBlock,
+  endBlock,
+}: {
+  startBlock: number
+  endBlock: number
+}) {
+  const nftOpinionBaseContract = getNFTOpinionsContract()
+  let allEvents: EventData[] = []
+
+  const originalStepSize = 100_000
+  let stepSize = originalStepSize
+  let currentBlock = startBlock
+
+  while (currentBlock <= endBlock) {
+    let iterationEndBlock = currentBlock + stepSize
+    if (iterationEndBlock > endBlock) {
+      iterationEndBlock = endBlock
+    }
+
+    let events: EventData[] = []
+    try {
+      console.log(
+        `Fetching NewOpinion events from ${currentBlock} block to ${iterationEndBlock} block`
+      )
+      events = await nftOpinionBaseContract.getPastEvents('NewOpinion', {
+        fromBlock: currentBlock,
+        toBlock: iterationEndBlock,
+      })
+      console.log(
+        `Number of events found from ${currentBlock} block to ${iterationEndBlock} block = ${events.length}`
+      )
+      console.log({ events })
+    } catch (error) {
+      console.error(
+        'Too many events in this range, decreasing the range by half',
+        error
+      )
+      stepSize = Math.floor(stepSize / 2)
+      continue
+    }
+
+    allEvents = [...allEvents, ...events]
+    currentBlock = iterationEndBlock + 1
+    stepSize = originalStepSize
+  }
+
+  return allEvents
 }
 
 /**

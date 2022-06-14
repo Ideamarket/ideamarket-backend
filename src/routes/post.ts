@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-misused-promises */
 import express from 'express'
 
 import {
@@ -6,6 +7,7 @@ import {
   fetchAllPosts,
   fetchPost,
   fetchPostCompositeRatings,
+  syncAllCitedByPosts,
   syncAllPosts,
 } from '../controllers/post.controller'
 import { validateRequest } from '../middleware/validateRequest'
@@ -39,6 +41,8 @@ postRouter.get(
 )
 
 postRouter.patch('/sync', syncAllPostsValidation, validateRequest, syncAllPosts)
+
+postRouter.patch('/citedBy/sync', syncAllCitedByPosts)
 
 postRouter.get(
   '/compositeRating',
