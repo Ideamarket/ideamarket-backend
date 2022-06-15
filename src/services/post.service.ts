@@ -65,6 +65,8 @@ export async function fetchAllPostsFromWeb2({
     search,
     categories,
     filterTokens,
+    startDate,
+    endDate,
   } = options
   const orderDirection = options.orderDirection === 'asc' ? 1 : -1
 
@@ -95,6 +97,9 @@ export async function fetchAllPostsFromWeb2({
         { username: { $regex: escapeStringRegexp(search), $options: 'i' } },
       ],
     })
+  }
+  if (startDate && endDate) {
+    filterOptions.push({ postedAt: { $gte: startDate, $lte: endDate } })
   }
 
   // Filter Query

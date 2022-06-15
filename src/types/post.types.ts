@@ -20,6 +20,8 @@ export type PostQueryOptions = {
   search: string | null
   categories: string[]
   filterTokens: string[]
+  startDate: Date | null
+  endDate: Date | null
 }
 
 export type CitationResponse = {

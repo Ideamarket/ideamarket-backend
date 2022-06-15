@@ -36,6 +36,18 @@ export async function fetchAllPosts(req: Request, res: Response) {
       (req.query.categories as string | undefined)?.split(',') ?? []
     const filterTokens =
       (req.query.filterTokens as string | undefined)?.split(',') ?? []
+    const startDate = req.query.startDate
+      ? new Date(req.query.startDate as string)
+      : null
+    if (startDate) {
+      startDate.setUTCHours(0, 0, 0, 0)
+    }
+    const endDate = req.query.endDate
+      ? new Date(req.query.endDate as string)
+      : null
+    if (endDate) {
+      endDate.setUTCHours(23, 59, 59, 999)
+    }
 
     const options: PostQueryOptions = {
       skip,
@@ -46,6 +58,8 @@ export async function fetchAllPosts(req: Request, res: Response) {
       search,
       categories,
       filterTokens,
+      startDate,
+      endDate,
     }
 
     const posts = await fetchAllPostsFromWeb2({ contractAddress, options })
