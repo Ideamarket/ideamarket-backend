@@ -5,22 +5,35 @@ import { web3 } from '../web3/contract'
 import { getDeployedAddresses } from '../web3/deployedAddresses'
 import { getPastEvents } from '../web3/opinions/nft-opinions'
 import { EntityNotFoundError, InternalServerError } from './errors'
+import { getIdeamarketPostsContractAddress } from './post.service'
 
 export async function syncAllCitedByPostsInWeb2() {
-  const contractAddress = getNFTOpinionBaseContractAddress()
-  if (!contractAddress) {
+  const opinionsContractAddress = getNFTOpinionBaseContractAddress()
+  if (!opinionsContractAddress) {
     console.error('Deployed address is missing for nft opinion base')
     throw new InternalServerError(
       'Contract address is missing for nft opinion base '
     )
   }
 
+  const postsContractAddress = getIdeamarketPostsContractAddress()
+  if (!postsContractAddress) {
+    console.error('Deployed address is missing for ideamarket posts')
+    throw new InternalServerError(
+      'Contract address is missing for ideamarket posts '
+    )
+  }
+
   try {
-    console.error(`Fetching block for contractAddress = ${contractAddress}`)
-    const block = await BlockModel.findOne({ contractAddress })
+    console.info(
+      `Fetching block for opinionsContractAddress = ${opinionsContractAddress}`
+    )
+    const block = await BlockModel.findOne({
+      contractAddress: opinionsContractAddress,
+    })
     if (!block) {
       console.error(
-        `Block does not exist for contractAddress = ${contractAddress}`
+        `Block does not exist for opinionsContractAddress = ${opinionsContractAddress}`
       )
       throw new EntityNotFoundError(
         null,
@@ -41,13 +54,13 @@ export async function syncAllCitedByPostsInWeb2() {
       for await (const citation of citations) {
         console.log(`Handling citation=${citation as number}`)
         const postCitedBy = await PostCitedByModel.findOne({
-          contractAddress,
+          contractAddress: postsContractAddress,
           tokenID: citation,
         })
 
         if (!postCitedBy) {
           await PostCitedByModel.create({
-            contractAddress,
+            contractAddress: postsContractAddress,
             tokenID: citation,
             citedBy: [tokenID],
           })
@@ -61,7 +74,9 @@ export async function syncAllCitedByPostsInWeb2() {
       }
     }
 
-    console.log(`Updating the endBlock for contractAddress=${contractAddress}`)
+    console.log(
+      `Updating the endBlock for opinionsContractAddress=${opinionsContractAddress}`
+    )
     block.endBlock = endBlock
     await block.save()
   } catch (error) {

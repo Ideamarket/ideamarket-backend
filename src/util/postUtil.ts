@@ -135,7 +135,7 @@ function mapCitations(
             compositeRating: citationPost.compositeRating,
             totalRatingsCount: citationPost.totalRatingsCount || 0,
             latestRatingsCount: citationPost.compositeRating || 0,
-            minter: minter
+            minterToken: minter
               ? {
                   id: minter._id.toString() as string,
                   walletAddress: minter.walletAddress,

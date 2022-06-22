@@ -32,6 +32,13 @@ export type PostCitationsQueryOptions = {
   orderDirection: string
 }
 
+export type PostCitedByQueryOptions = {
+  skip: number
+  limit: number
+  orderBy: keyof PostResponse
+  orderDirection: string
+}
+
 export type CitationResponse = {
   citation: CitationPost | null
   inFavor: boolean
@@ -44,7 +51,7 @@ export type CitationPost = {
   compositeRating: number
   totalRatingsCount: number
   latestRatingsCount: number
-  minter: {
+  minterToken: {
     id: string
     walletAddress: string
     username: string | null

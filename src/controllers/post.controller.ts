@@ -5,6 +5,7 @@ import { syncAllCitedByPostsInWeb2 } from '../services/post-citedby-service'
 import {
   fetchAllPostsFromWeb2,
   fetchPostCitationsFromWeb2,
+  fetchCitedByPostsService,
   fetchPostCompositeRatingsFromWeb2,
   fetchPostFromWeb2,
   fetchPostOpinionsByTokenIdFromWeb2,
@@ -14,6 +15,7 @@ import {
 } from '../services/post.service'
 import type {
   PostCitationsQueryOptions,
+  PostCitedByQueryOptions,
   PostOpinionsQueryOptions,
   PostOpinionWithPostResponse,
   PostQueryOptions,
@@ -123,6 +125,37 @@ export async function fetchPostCitations(req: Request, res: Response) {
   } catch (error) {
     console.error('Error occurred while fetching all the citations', error)
     return handleError(res, error, 'Unable to fetch the citations')
+  }
+}
+
+export async function fetchCitedByPosts(req: Request, res: Response) {
+  try {
+    const contractAddress = req.query.contractAddress
+      ? (req.query.contractAddress as string)
+      : null
+    const tokenID = Number.parseInt(req.query.tokenID as string)
+    const skip = Number.parseInt(req.query.skip as string) || 0
+    const limit = Number.parseInt(req.query.limit as string) || 10
+    const orderBy = req.query.orderBy as keyof PostResponse
+    const orderDirection =
+      (req.query.orderDirection as string | undefined) ?? 'desc'
+
+    const options: PostCitedByQueryOptions = {
+      skip,
+      limit,
+      orderBy,
+      orderDirection,
+    }
+
+    const citedByPosts = await fetchCitedByPostsService({
+      contractAddress,
+      tokenID,
+      options,
+    })
+    return handleSuccess(res, citedByPosts)
+  } catch (error) {
+    console.error('Error occurred while fetching all the citedBy posts', error)
+    return handleError(res, error, 'Unable to fetch the citedBy posts')
   }
 }
 

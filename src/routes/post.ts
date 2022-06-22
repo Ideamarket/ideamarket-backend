@@ -5,6 +5,7 @@ import {
   fecthPostOpinionsByTokenId,
   fecthPostOpinionsByWallet,
   fetchAllPosts,
+  fetchCitedByPosts,
   fetchPost,
   fetchPostCitations,
   fetchPostCompositeRatings,
@@ -20,6 +21,7 @@ import {
   fecthPostValidation,
   fetchPostCompositeRatingsValidation,
   fecthPostCitationsValidation,
+  fecthCitedByPostsValidation,
 } from '../validations/post.validation'
 
 export const postRouter = express.Router()
@@ -33,6 +35,13 @@ postRouter.get(
   fecthPostCitationsValidation,
   validateRequest,
   fetchPostCitations
+)
+
+postRouter.get(
+  '/citedBy',
+  fecthCitedByPostsValidation,
+  validateRequest,
+  fetchCitedByPosts
 )
 
 postRouter.get(

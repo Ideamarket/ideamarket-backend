@@ -51,6 +51,25 @@ export const fecthPostCitationsValidation = [
     .withMessage('OrderBy cannot be empty and should be a valid string'),
 ]
 
+export const fecthCitedByPostsValidation = [
+  query('contractAddress').optional().toLowerCase(),
+  query('tokenID').notEmpty().withMessage('tokenID cannot be empty/null'),
+  query('orderBy')
+    .notEmpty()
+    .isString()
+    .isIn([
+      'averageRating',
+      'compositeRating',
+      'marketInterest',
+      'postedAt',
+      'totalRatingsCount',
+      'latestRatingsCount',
+      'totalCommentsCount',
+      'latestCommentsCount',
+    ])
+    .withMessage('OrderBy cannot be empty and should be a valid string'),
+]
+
 export const fecthPostOpinionsByTokenIdValidation = [
   query('contractAddress').optional().toLowerCase(),
   query('tokenID').notEmpty().withMessage('tokenID cannot be empty/null'),

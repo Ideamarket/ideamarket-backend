@@ -11,6 +11,7 @@ import type { CompositeRatingDocument } from '../models/composite-rating-model'
 import { CompositeRatingModel } from '../models/composite-rating-model'
 import type { Citation, NFTOpinionDocument } from '../models/nft-opinion.model'
 import { NFTOpinionModel } from '../models/nft-opinion.model'
+import { PostCitedByModel } from '../models/post-citedby-model'
 import type { PostDocument } from '../models/post.model'
 import { PostModel } from '../models/post.model'
 import type { TriggerDocument } from '../models/trigger.model'
@@ -20,6 +21,7 @@ import { UserTokenModel } from '../models/user-token.model'
 import type { Web3NFTOpinionData } from '../types/nft-opinion.types'
 import type {
   PostCitationsQueryOptions,
+  PostCitedByQueryOptions,
   PostOpinionsQueryOptions,
   PostQueryOptions,
   Web3IdeamarketPost,
@@ -338,6 +340,77 @@ export async function fetchLatestPostCitationsTokenIds({
   return {
     forCitationsTokenIds: [...forCitationsSet],
     againstCitationsTokenIds: [...againstCitationsSet],
+  }
+}
+
+export async function fetchCitedByPostsService({
+  contractAddress: _contractAddress,
+  tokenID,
+  options,
+}: {
+  contractAddress: string | null | undefined
+  tokenID: number
+  options: PostCitedByQueryOptions
+}) {
+  try {
+    const contractAddress =
+      _contractAddress ?? getIdeamarketPostsContractAddress()
+    if (!contractAddress) {
+      console.error('Deployed address is missing for ideamarket posts')
+      throw new InternalServerError(
+        'Contract address is missing for ideamamrket posts '
+      )
+    }
+    const postCitedBy = await PostCitedByModel.findOne({
+      contractAddress,
+      tokenID,
+    })
+    if (!postCitedBy) {
+      return []
+    }
+
+    const citedByTokenIds = postCitedBy.citedBy
+
+    const { skip, limit, orderBy } = options
+
+    // Sorting Options
+    const sortOptions: any = {}
+    const orderDirection = options.orderDirection === 'asc' ? 1 : -1
+    sortOptions[orderBy] = orderDirection
+    sortOptions._id = -1
+
+    // Filter Options
+    const filterOptions: FilterQuery<NFTOpinionDocument>[] = []
+    filterOptions.push(
+      { contractAddress },
+      { tokenID: { $in: citedByTokenIds } }
+    )
+    // Filter Query
+    let filterQuery = {}
+    if (filterOptions.length > 0) {
+      filterQuery = { $and: filterOptions }
+    }
+
+    const citedByPosts = await PostModel.aggregate([
+      {
+        $lookup: {
+          from: 'usertokens',
+          localField: 'minterAddress',
+          foreignField: 'walletAddress',
+          as: 'UserTokens',
+        },
+      },
+      { $set: { userToken: { $arrayElemAt: ['$UserTokens', 0] } } },
+      { $match: filterQuery },
+    ])
+      .sort(sortOptions)
+      .skip(skip)
+      .limit(limit)
+
+    return citedByPosts.map((post) => mapPostResponse(post))
+  } catch (error) {
+    console.error('Error occurred while fetching citedBy posts', error)
+    throw new InternalServerError('Failed to fetch citedBy posts')
   }
 }
 
