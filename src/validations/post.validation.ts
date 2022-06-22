@@ -10,6 +10,7 @@ export const fetchAllPostsValidation = [
       'averageRating',
       'compositeRating',
       'marketInterest',
+      'postedAt',
       'totalRatingsCount',
       'latestRatingsCount',
       'totalCommentsCount',
