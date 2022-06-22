@@ -4,6 +4,7 @@ import { handleError, handleSuccess } from '../lib/base'
 import { syncAllCitedByPostsInWeb2 } from '../services/post-citedby-service'
 import {
   fetchAllPostsFromWeb2,
+  fetchPostCitationsFromWeb2,
   fetchPostCompositeRatingsFromWeb2,
   fetchPostFromWeb2,
   fetchPostOpinionsByTokenIdFromWeb2,
@@ -12,6 +13,7 @@ import {
   syncPostInWeb2,
 } from '../services/post.service'
 import type {
+  PostCitationsQueryOptions,
   PostOpinionsQueryOptions,
   PostOpinionWithPostResponse,
   PostQueryOptions,
@@ -86,6 +88,41 @@ export async function fetchPost(req: Request, res: Response) {
   } catch (error) {
     console.error('Error occurred while fetching the ideamarket post', error)
     return handleError(res, error, 'Unable to fetch the ideamarket post')
+  }
+}
+
+export async function fetchPostCitations(req: Request, res: Response) {
+  try {
+    const contractAddress = req.query.contractAddress
+      ? (req.query.contractAddress as string)
+      : null
+    const tokenID = Number.parseInt(req.query.tokenID as string)
+    const latest = req.query.latest
+      ? (req.query.latest as string) === 'true'
+      : true
+    const skip = Number.parseInt(req.query.skip as string) || 0
+    const limit = Number.parseInt(req.query.limit as string) || 10
+    const orderBy = req.query.orderBy as keyof PostResponse
+    const orderDirection =
+      (req.query.orderDirection as string | undefined) ?? 'desc'
+
+    const options: PostCitationsQueryOptions = {
+      latest,
+      skip,
+      limit,
+      orderBy,
+      orderDirection,
+    }
+
+    const citations = await fetchPostCitationsFromWeb2({
+      contractAddress,
+      tokenID,
+      options,
+    })
+    return handleSuccess(res, { citations })
+  } catch (error) {
+    console.error('Error occurred while fetching all the citations', error)
+    return handleError(res, error, 'Unable to fetch the citations')
   }
 }
 

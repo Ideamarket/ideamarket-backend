@@ -24,6 +24,14 @@ export type PostQueryOptions = {
   endDate: Date | null
 }
 
+export type PostCitationsQueryOptions = {
+  latest: boolean
+  skip: number
+  limit: number
+  orderBy: keyof PostResponse
+  orderDirection: string
+}
+
 export type CitationResponse = {
   citation: CitationPost | null
   inFavor: boolean
@@ -45,6 +53,7 @@ export type CitationPost = {
 }
 
 export type PostResponse = {
+  id: string
   contractAddress: string
   tokenID: number
   minterAddress: string

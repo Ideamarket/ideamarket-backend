@@ -6,6 +6,7 @@ import {
   fecthPostOpinionsByWallet,
   fetchAllPosts,
   fetchPost,
+  fetchPostCitations,
   fetchPostCompositeRatings,
   syncAllCitedByPosts,
   syncAllPosts,
@@ -18,6 +19,7 @@ import {
   fecthPostOpinionsByWalletValidation,
   fecthPostValidation,
   fetchPostCompositeRatingsValidation,
+  fecthPostCitationsValidation,
 } from '../validations/post.validation'
 
 export const postRouter = express.Router()
@@ -25,6 +27,13 @@ export const postRouter = express.Router()
 postRouter.get('', fetchAllPostsValidation, validateRequest, fetchAllPosts)
 
 postRouter.get('/single', fecthPostValidation, validateRequest, fetchPost)
+
+postRouter.get(
+  '/citations',
+  fecthPostCitationsValidation,
+  validateRequest,
+  fetchPostCitations
+)
 
 postRouter.get(
   '/opinions/token',

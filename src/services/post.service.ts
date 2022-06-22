@@ -19,6 +19,7 @@ import type { UserTokenDocument } from '../models/user-token.model'
 import { UserTokenModel } from '../models/user-token.model'
 import type { Web3NFTOpinionData } from '../types/nft-opinion.types'
 import type {
+  PostCitationsQueryOptions,
   PostOpinionsQueryOptions,
   PostQueryOptions,
   Web3IdeamarketPost,
@@ -173,6 +174,171 @@ export async function fetchPostFromWeb2({
 
   // const post = await PostModel.findOne({ contractAddress, tokenID })
   return mapPostResponse(posts[0])
+}
+
+export async function fetchPostCitationsFromWeb2({
+  contractAddress: _contractAddress,
+  tokenID,
+  options,
+}: {
+  contractAddress: string | null | undefined
+  tokenID: number
+  options: PostCitationsQueryOptions
+}) {
+  const contractAddress =
+    _contractAddress ?? getIdeamarketPostsContractAddress()
+  if (!contractAddress) {
+    console.error('Deployed address is missing for ideamarket posts')
+    throw new InternalServerError(
+      'Contract address is missing for ideamamrket posts '
+    )
+  }
+  const { latest, skip, limit, orderBy } = options
+
+  const citationTokenIds = latest
+    ? await fetchLatestPostCitationsTokenIds({
+        contractAddress,
+        tokenID,
+      })
+    : await fetchAllPostCitationsTokenIds({
+        contractAddress,
+        tokenID,
+      })
+
+  // Sorting Options
+  const sortOptions: any = {}
+  const orderDirection = options.orderDirection === 'asc' ? 1 : -1
+  sortOptions[orderBy] = orderDirection
+  sortOptions._id = -1
+
+  // For Filter Options
+  const forFilterOptions: FilterQuery<NFTOpinionDocument>[] = []
+  forFilterOptions.push(
+    { contractAddress },
+    { tokenID: { $in: citationTokenIds.forCitationsTokenIds } }
+  )
+  // For Filter Query
+  let forFilterQuery = {}
+  if (forFilterOptions.length > 0) {
+    forFilterQuery = { $and: forFilterOptions }
+  }
+
+  // Against Filter Options
+  const againstFilterOptions: FilterQuery<NFTOpinionDocument>[] = []
+  againstFilterOptions.push(
+    { contractAddress },
+    { tokenID: { $in: citationTokenIds.againstCitationsTokenIds } }
+  )
+  // Against Filter Query
+  let againstFilterQuery = {}
+  if (againstFilterOptions.length > 0) {
+    againstFilterQuery = { $and: againstFilterOptions }
+  }
+
+  // For Citations Posts
+  const forCitationsPosts = await PostModel.aggregate([
+    {
+      $lookup: {
+        from: 'usertokens',
+        localField: 'minterAddress',
+        foreignField: 'walletAddress',
+        as: 'UserTokens',
+      },
+    },
+    { $set: { userToken: { $arrayElemAt: ['$UserTokens', 0] } } },
+    { $match: forFilterQuery },
+  ])
+    .sort(sortOptions)
+    .skip(skip)
+    .limit(limit)
+  const forCitations = forCitationsPosts.map((post) => mapPostResponse(post))
+
+  // Against Citations Posts
+  const againstCitationsPosts = await PostModel.aggregate([
+    {
+      $lookup: {
+        from: 'usertokens',
+        localField: 'minterAddress',
+        foreignField: 'walletAddress',
+        as: 'UserTokens',
+      },
+    },
+    { $set: { userToken: { $arrayElemAt: ['$UserTokens', 0] } } },
+    { $match: againstFilterQuery },
+  ])
+    .sort(sortOptions)
+    .skip(skip)
+    .limit(limit)
+  const againstCitations = againstCitationsPosts.map((post) =>
+    mapPostResponse(post)
+  )
+
+  return { forCitations, againstCitations }
+}
+
+export async function fetchAllPostCitationsTokenIds({
+  contractAddress,
+  tokenID,
+}: {
+  contractAddress: string
+  tokenID: number
+}) {
+  const opinions = await NFTOpinionModel.find({ contractAddress, tokenID })
+  const forCitationsSet = new Set<number>()
+  const againstCitationsSet = new Set<number>()
+
+  for (const opinion of opinions) {
+    for (const citation of opinion.citations) {
+      if (citation.inFavor) {
+        forCitationsSet.add(citation.tokenID)
+      } else {
+        againstCitationsSet.add(citation.tokenID)
+      }
+    }
+  }
+
+  return {
+    forCitationsTokenIds: [...forCitationsSet],
+    againstCitationsTokenIds: [...againstCitationsSet],
+  }
+}
+
+export async function fetchLatestPostCitationsTokenIds({
+  contractAddress,
+  tokenID,
+}: {
+  contractAddress: string
+  tokenID: number
+}) {
+  const opinions: NFTOpinionDocument[] = await NFTOpinionModel.aggregate([
+    { $match: { contractAddress, tokenID } },
+    { $sort: { ratedAt: -1, _id: -1 } },
+    {
+      $group: {
+        _id: '$ratedBy',
+        doc: { $first: '$$ROOT' },
+      },
+    },
+    { $replaceRoot: { newRoot: '$doc' } },
+  ])
+
+  const forCitationsSet = new Set<number>()
+  const againstCitationsSet = new Set<number>()
+
+  for (const opinion of opinions) {
+    for (const citation of opinion.citations) {
+      if (citation.inFavor) {
+        forCitationsSet.add(citation.tokenID)
+      } else {
+        againstCitationsSet.add(citation.tokenID)
+      }
+    }
+  }
+
+  return {
+    forCitationsTokenIds: [...forCitationsSet],
+    againstCitationsTokenIds: [...againstCitationsSet],
+  }
 }
 
 export async function fetchPostOpinionsByTokenIdFromWeb2({

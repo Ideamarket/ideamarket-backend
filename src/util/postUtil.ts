@@ -22,6 +22,7 @@ export function mapPostResponse(
   }
 
   return {
+    id: post._id.toString(),
     contractAddress: post.contractAddress,
     tokenID: post.tokenID,
     minterAddress: post.minterAddress,
