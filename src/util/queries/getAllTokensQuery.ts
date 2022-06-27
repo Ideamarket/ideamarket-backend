@@ -30,6 +30,10 @@ export function getAllTokensQuery({
             id: marketID
             name
           }
+          balances {
+            amount
+            holder
+          }
           lister
           tokenOwner
           listedAt

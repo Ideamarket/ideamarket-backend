@@ -34,6 +34,7 @@ import {
   ZERO_ADDRESS,
   calculateClaimableIncome,
   calculateDayChange,
+  calculateHolderAmount,
   calculateMarketCap,
   calculatePrice,
   calculateYearIncome,
@@ -61,6 +62,7 @@ export async function copyAccountsToUserToken() {
       marketId: 0,
       marketName: null,
       tokenOwner: ZERO_ADDRESS,
+      holderTokens: [],
       price: 0,
       dayChange: 0,
       weekChange: 0,
@@ -94,6 +96,7 @@ export async function createUserToken(walletAddress: string) {
       marketId: 0,
       marketName: null,
       tokenOwner: ZERO_ADDRESS,
+      holderTokens: [],
       price: 0,
       dayChange: 0,
       weekChange: 0,
@@ -130,6 +133,7 @@ export async function signInUserAndReturnToken(
       marketId: 0,
       marketName: null,
       tokenOwner: ZERO_ADDRESS,
+      holderTokens: [],
       price: 0,
       dayChange: 0,
       weekChange: 0,
@@ -464,10 +468,81 @@ async function fetchAllUserTokensFromWeb3() {
   }
 }
 
+export async function fetchUserHoldersFromWeb2({
+  userTokenId,
+  username,
+  walletAddress,
+}: {
+  userTokenId: string | null
+  username: string | null
+  walletAddress: string | null
+}) {
+  try {
+    console.info('Fetching user token from the DB')
+    let userTokenDoc: UserTokenDocument | null = null
+
+    if (userTokenId) {
+      userTokenDoc = await UserTokenModel.findById(userTokenId).populate({
+        path: 'holderTokens',
+        populate: { path: 'token' },
+      })
+    } else if (username) {
+      userTokenDoc = await UserTokenModel.findOne({ username }).populate({
+        path: 'holderTokens',
+        populate: { path: 'token' },
+      })
+    } else if (walletAddress) {
+      userTokenDoc = await UserTokenModel.findOne({ walletAddress }).populate({
+        path: 'holderTokens',
+        populate: { path: 'token' },
+      })
+    } else {
+      userTokenDoc = null
+    }
+
+    if (!userTokenDoc) {
+      console.error('User token does not exist in the DB')
+      throw new EntityNotFoundError(null, 'UserToken does not exist')
+    }
+
+    return userTokenDoc.holderTokens.map((holderToken) => ({
+      amount: holderToken.amount,
+      token: mapUserTokenResponse(holderToken.token),
+    }))
+  } catch (error) {
+    console.error('Error occurred while fetching user holders from web2', error)
+    throw new InternalServerError('Failed to fetch user holders from web2')
+  }
+}
+
 async function updateUserTokenInWeb2(web3UserToken: IdeaToken) {
   try {
     const walletAddress = web3UserToken.name.toLowerCase()
     const userOpinionsSummary = await getUserOpinionsSummary(walletAddress)
+
+    const holders = web3UserToken.balances.map((balance) => ({
+      wallet: balance.holder,
+      amount: balance.amount,
+    }))
+    const holderWallets = holders.map((holder) => holder.wallet)
+    const holderWalletTokens = await UserTokenModel.find({
+      walletAddress: { $in: holderWallets },
+    })
+    const holderTokensMap: Record<string, UserTokenDocument> = {}
+    for (const holderWalletToken of holderWalletTokens) {
+      holderTokensMap[holderWalletToken.walletAddress] = holderWalletToken
+    }
+
+    const holderTokens = []
+    for (const holder of holders) {
+      const amount = calculateHolderAmount(holder.amount)
+      if (holder.wallet in holderTokensMap && amount > 0) {
+        holderTokens.push({
+          amount,
+          token: holderTokensMap[holder.wallet],
+        })
+      }
+    }
 
     const userToken = await UserTokenModel.findOne({ walletAddress })
 
@@ -476,6 +551,7 @@ async function updateUserTokenInWeb2(web3UserToken: IdeaToken) {
       userToken.marketId = web3UserToken.market.id
       userToken.marketName = web3UserToken.market.name
       userToken.tokenOwner = web3UserToken.tokenOwner
+      userToken.holderTokens = holderTokens
       userToken.price = calculatePrice(web3UserToken.latestPricePoint.price)
       userToken.dayChange = calculateDayChange(web3UserToken.dayChange)
       userToken.weekChange = calculateWeekChange(web3UserToken.pricePoints)
@@ -500,6 +576,10 @@ async function updateUserTokenInWeb2(web3UserToken: IdeaToken) {
       marketId: web3UserToken.market.id,
       marketName: web3UserToken.market.name,
       tokenOwner: web3UserToken.tokenOwner,
+      holderTokens: holderTokens.map((holderToken) => ({
+        amount: holderToken.amount,
+        token: holderToken.token._id.toString(),
+      })),
       price: calculatePrice(web3UserToken.latestPricePoint.price),
       dayChange: calculateDayChange(web3UserToken.dayChange),
       weekChange: calculateWeekChange(web3UserToken.pricePoints),

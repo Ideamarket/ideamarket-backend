@@ -11,6 +11,7 @@ import {
   copyAccountsToUserToken,
   createUserToken,
   fetchAllUserTokensFromWeb2,
+  fetchUserHoldersFromWeb2,
   fetchUserTokenFromDB,
   sendEmailVerificationCode,
   signInUserAndReturnToken,
@@ -118,6 +119,31 @@ export async function fetchUserToken(req: Request, res: Response) {
   } catch (error) {
     console.error('Error occurred while fetching user token', error)
     return handleError(res, error, 'Unable to fetch the user token')
+  }
+}
+
+// Fetch User Holders
+export async function fetchUserHolders(req: Request, res: Response) {
+  try {
+    const decodedAccount = (req as any).decodedAccount as
+      | DECODED_ACCOUNT
+      | null
+      | undefined
+    const username = req.query.username ? (req.query.username as string) : null
+    const walletAddress = req.query.walletAddress
+      ? (req.query.walletAddress as string).toLowerCase()
+      : null
+
+    const userHolders = await fetchUserHoldersFromWeb2({
+      userTokenId: decodedAccount?.id ?? null,
+      username,
+      walletAddress,
+    })
+
+    return handleSuccess(res, userHolders)
+  } catch (error) {
+    console.error('Error occurred while fetching user holders', error)
+    return handleError(res, error, 'Unable to fetch the user holders')
   }
 }
 

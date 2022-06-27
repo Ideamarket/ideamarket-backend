@@ -10,12 +10,18 @@ export type IdeaToken = {
   market: Market
   dayChange: string
   marketCap: string
+  balances: IdeaTokenBalance[]
   latestPricePoint: LatestPricePoint
   holders: number
   pricePoints: PricePoint[]
   lister: string
   listedAt: string
   tokenOwner: string
+}
+
+export type IdeaTokenBalance = {
+  amount: string
+  holder: string
 }
 
 export type EarliestPricePoint = {

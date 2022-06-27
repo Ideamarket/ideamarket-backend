@@ -9,6 +9,16 @@ export enum UserRole {
   ADMIN = 'ADMIN',
 }
 
+export type HolderToken = {
+  amount: number
+  token: string
+}
+
+export type HolderTokenDocument = {
+  amount: number
+  token: UserTokenDocument
+}
+
 export interface IUserToken {
   name: string | null | undefined
   username?: string | undefined
@@ -23,6 +33,7 @@ export interface IUserToken {
   marketId: number | null | undefined
   marketName: string | null | undefined
   tokenOwner: string | undefined
+  holderTokens: HolderToken[]
   price: number | undefined
   dayChange: number | undefined
   weekChange: number | undefined
@@ -52,6 +63,7 @@ interface UserTokenDocument extends mongoose.Document {
   marketId: number
   marketName: string | null
   tokenOwner: string | null
+  holderTokens: HolderTokenDocument[]
   price: number
   dayChange: number
   weekChange: number
@@ -92,6 +104,20 @@ const UserTokenSchema = new mongoose.Schema(
     tokenAddress: { type: String, index: true },
     marketId: { type: Number },
     marketName: { type: String },
+    holderTokens: {
+      type: [
+        {
+          _id: false,
+          amount: { type: Number },
+          token: {
+            type: mongoose.Types.ObjectId,
+            ref: 'UserToken',
+          },
+        },
+      ],
+      default: [],
+      required: false,
+    },
     tokenOwner: { type: String, default: ZERO_ADDRESS, required: false },
     price: { type: Number, default: 0, required: true },
     dayChange: { type: Number, default: 0, required: true },

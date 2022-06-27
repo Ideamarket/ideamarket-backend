@@ -17,6 +17,10 @@ export function getTokensByTokenAddressQuery(tokenAddress: string): string {
           id: marketID
           name
         }
+        balances {
+          amount
+          holder
+        }
         lister
         tokenOwner
         listedAt

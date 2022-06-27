@@ -1,3 +1,4 @@
+/* eslint-disable sonarjs/no-duplicate-string */
 import { body, header, oneOf, query } from 'express-validator'
 
 import { isValidUsername } from '../util/accountUtil'
@@ -50,6 +51,26 @@ export const updateuserTokenValidation = [
 ]
 
 export const fetchUserTokenValidation = [
+  oneOf(
+    [
+      header('Authorization')
+        .notEmpty()
+        .withMessage('Authorization header is required'),
+      query('username')
+        .notEmpty()
+        .toLowerCase()
+        .withMessage('Username is required')
+        .custom(isValidUsername)
+        .withMessage('Username is not valid'),
+      query('walletAddress')
+        .notEmpty()
+        .withMessage('walletAddress is required'),
+    ],
+    'Either authorization header or username or walletAddress is mandatory'
+  ),
+]
+
+export const fetchUserHoldersValidation = [
   oneOf(
     [
       header('Authorization')

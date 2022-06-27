@@ -136,6 +136,12 @@ export function calculateClaimableIncome() {
   return 0
 }
 
+export function calculateHolderAmount(holderAmount: string) {
+  return Number.parseFloat(
+    web3BNToFloatString(new BN(holderAmount), bigNumberTenPow18, 2)
+  )
+}
+
 export function isListingVerified(tokenOwner: string) {
   return tokenOwner !== ZERO_ADDRESS
 }
