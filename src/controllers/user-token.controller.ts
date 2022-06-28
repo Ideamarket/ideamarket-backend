@@ -1,8 +1,4 @@
 import type { Request, Response } from 'express'
-import type {
-  UserTokenResponse,
-  UserTokensQueryOptions,
-} from 'types/user-token.types'
 
 import { handleError, handleSuccess } from '../lib/base'
 import type { IUserToken } from '../models/user-token.model'
@@ -20,6 +16,12 @@ import {
   updateUserTokenWeb2ProfileInDB,
   uploadProfilePhoto,
 } from '../services/user-token.service'
+import type {
+  UserHoldersQueryOptions,
+  UserTokenResponse,
+  UserTokenResponseWithHoldingAmount,
+  UserTokensQueryOptions,
+} from '../types/user-token.types'
 import type { DECODED_ACCOUNT } from '../util/jwtTokenUtil'
 
 // Create User
@@ -129,18 +131,35 @@ export async function fetchUserHolders(req: Request, res: Response) {
       | DECODED_ACCOUNT
       | null
       | undefined
+    const userTokenId = req.query.userTokenId
+      ? (req.query.userTokenId as string)
+      : null
     const username = req.query.username ? (req.query.username as string) : null
     const walletAddress = req.query.walletAddress
       ? (req.query.walletAddress as string).toLowerCase()
       : null
+    const skip = Number.parseInt(req.query.skip as string) || 0
+    const limit = Number.parseInt(req.query.limit as string) || 10
+    const orderBy = req.query
+      .orderBy as keyof UserTokenResponseWithHoldingAmount
+    const orderDirection =
+      (req.query.orderDirection as string | undefined) ?? 'desc'
 
-    const userHolders = await fetchUserHoldersFromWeb2({
-      userTokenId: decodedAccount?.id ?? null,
+    const options: UserHoldersQueryOptions = {
+      skip,
+      limit,
+      orderBy,
+      orderDirection,
+    }
+
+    const holders = await fetchUserHoldersFromWeb2({
+      userTokenId: userTokenId ?? decodedAccount?.id ?? null,
       username,
       walletAddress,
+      options,
     })
 
-    return handleSuccess(res, userHolders)
+    return handleSuccess(res, { holders })
   } catch (error) {
     console.error('Error occurred while fetching user holders', error)
     return handleError(res, error, 'Unable to fetch the user holders')

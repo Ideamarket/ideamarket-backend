@@ -4,7 +4,10 @@ import config from 'config'
 import type { UserTokenDocument } from '../models/user-token.model'
 import { UserTokenModel } from '../models/user-token.model'
 import { fetchTwitterUsernameByUserId } from '../services/twitterVerification.service'
-import type { UserTokenResponse } from '../types/user-token.types'
+import type {
+  UserTokenResponse,
+  UserTokenResponseWithHoldingAmount,
+} from '../types/user-token.types'
 import { sendMailWithDynamicTemplate } from './emailUtil'
 import { getRandomString } from './randomUtil'
 
@@ -91,6 +94,42 @@ export function mapUserTokenResponse(
     claimableIncome: userTokenDoc.claimableIncome || 0,
     totalRatingsCount: userTokenDoc.totalRatingsCount || 0,
     latestRatingsCount: userTokenDoc.latestRatingsCount || 0,
+  }
+}
+
+export function mapUserTokenResponseWithHoldingAmount({
+  userToken,
+  holdingAmount,
+}: {
+  userToken: UserTokenDocument
+  holdingAmount: number
+}): UserTokenResponseWithHoldingAmount {
+  return {
+    id: userToken._id.toString(),
+    walletAddress: userToken.walletAddress,
+    name: userToken.name,
+    username: (userToken.username as any) ?? null,
+    twitterUsername: userToken.twitterUsername,
+    email: userToken.email,
+    bio: userToken.bio,
+    profilePhoto: userToken.profilePhoto
+      ? `${cloudFrontDomain}/${userToken.profilePhoto}`
+      : null,
+    role: userToken.role,
+    tokenAddress: userToken.tokenAddress,
+    marketId: userToken.marketId,
+    marketName: userToken.marketName,
+    tokenOwner: userToken.tokenOwner,
+    price: userToken.price || 0,
+    dayChange: userToken.dayChange || 0,
+    weekChange: userToken.weekChange || 0,
+    deposits: userToken.deposits || 0,
+    holders: userToken.holders || 0,
+    yearIncome: userToken.yearIncome || 0,
+    claimableIncome: userToken.claimableIncome || 0,
+    totalRatingsCount: userToken.totalRatingsCount || 0,
+    latestRatingsCount: userToken.latestRatingsCount || 0,
+    holdingAmount,
   }
 }
 

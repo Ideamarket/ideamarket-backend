@@ -23,6 +23,10 @@ export type UserTokenResponse = {
   latestRatingsCount: number
 }
 
+export type UserTokenResponseWithHoldingAmount = UserTokenResponse & {
+  holdingAmount: number
+}
+
 export type UserTokensQueryOptions = {
   skip: number
   limit: number
@@ -30,4 +34,11 @@ export type UserTokensQueryOptions = {
   orderDirection: string
   search: string | null
   filterWallets: string[]
+}
+
+export type UserHoldersQueryOptions = {
+  skip: number
+  limit: number
+  orderBy: keyof UserTokenResponseWithHoldingAmount
+  orderDirection: string
 }

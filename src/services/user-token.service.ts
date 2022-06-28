@@ -13,7 +13,11 @@ import { TriggerModel, TriggerType } from '../models/trigger.model'
 import { UserRole, UserTokenModel } from '../models/user-token.model'
 import type { IUserToken, UserTokenDocument } from '../models/user-token.model'
 import type { IdeaToken, IdeaTokens } from '../types/subgraph.types'
-import type { UserTokensQueryOptions } from '../types/user-token.types'
+import type {
+  UserHoldersQueryOptions,
+  UserTokensQueryOptions,
+} from '../types/user-token.types'
+import { compareFn } from '../util'
 import { generateAuthToken } from '../util/jwtTokenUtil'
 import { uploadFileToS3 } from '../util/mediaHandlerUtil'
 import {
@@ -24,6 +28,7 @@ import { generateRandomNDigitNumber } from '../util/randomUtil'
 import {
   checkUsernameCanBeUpdatedOrNot,
   mapUserTokenResponse,
+  mapUserTokenResponseWithHoldingAmount,
   mapUserTokenResponseWithLatestTwitterUsername,
   sendMailForEmailVerification,
 } from '../util/userTokenUtil'
@@ -472,30 +477,23 @@ export async function fetchUserHoldersFromWeb2({
   userTokenId,
   username,
   walletAddress,
+  options,
 }: {
   userTokenId: string | null
   username: string | null
   walletAddress: string | null
+  options: UserHoldersQueryOptions
 }) {
   try {
     console.info('Fetching user token from the DB')
     let userTokenDoc: UserTokenDocument | null = null
 
     if (userTokenId) {
-      userTokenDoc = await UserTokenModel.findById(userTokenId).populate({
-        path: 'holderTokens',
-        populate: { path: 'token' },
-      })
+      userTokenDoc = await UserTokenModel.findById(userTokenId)
     } else if (username) {
-      userTokenDoc = await UserTokenModel.findOne({ username }).populate({
-        path: 'holderTokens',
-        populate: { path: 'token' },
-      })
+      userTokenDoc = await UserTokenModel.findOne({ username })
     } else if (walletAddress) {
-      userTokenDoc = await UserTokenModel.findOne({ walletAddress }).populate({
-        path: 'holderTokens',
-        populate: { path: 'token' },
-      })
+      userTokenDoc = await UserTokenModel.findOne({ walletAddress })
     } else {
       userTokenDoc = null
     }
@@ -505,10 +503,40 @@ export async function fetchUserHoldersFromWeb2({
       throw new EntityNotFoundError(null, 'UserToken does not exist')
     }
 
-    return userTokenDoc.holderTokens.map((holderToken) => ({
+    console.info('Fetching holder token ids of the user')
+    const holderTokens = userTokenDoc.holderTokens.map((holderToken) => ({
       amount: holderToken.amount,
-      token: mapUserTokenResponse(holderToken.token),
+      tokenId: holderToken.token._id.toString(),
     }))
+    const holderTokenIds = holderTokens.map(
+      (holderToken) => holderToken.tokenId
+    )
+    const holderTokensMap: Record<string, number> = {}
+    for (const holderToken of holderTokens) {
+      holderTokensMap[holderToken.tokenId] = holderToken.amount
+    }
+
+    console.info('Fetching holder tokens from the DB')
+    const holders = await UserTokenModel.find({ _id: { $in: holderTokenIds } })
+    const holdersWithHoldingAmounts: {
+      userToken: UserTokenDocument
+      holdingAmount: number
+    }[] = []
+    for (const holder of holders) {
+      holdersWithHoldingAmounts.push({
+        userToken: holder,
+        holdingAmount: holderTokensMap[holder._id.toString()] || 0,
+      })
+    }
+    const mappedHoldersWithHoldingAmounts = holdersWithHoldingAmounts.map(
+      (holderWithHoldingAmounts) =>
+        mapUserTokenResponseWithHoldingAmount(holderWithHoldingAmounts)
+    )
+
+    const { skip, limit, orderBy, orderDirection } = options
+    return mappedHoldersWithHoldingAmounts
+      .sort((a, b) => compareFn(a, b, orderBy, orderDirection))
+      .slice(skip, skip + limit)
   } catch (error) {
     console.error('Error occurred while fetching user holders from web2', error)
     throw new InternalServerError('Failed to fetch user holders from web2')
