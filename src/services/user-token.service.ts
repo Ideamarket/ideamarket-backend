@@ -15,6 +15,7 @@ import type { IUserToken, UserTokenDocument } from '../models/user-token.model'
 import type { IdeaToken, IdeaTokens } from '../types/subgraph.types'
 import type {
   UserHoldersQueryOptions,
+  UserHoldingsQueryOptions,
   UserTokensQueryOptions,
 } from '../types/user-token.types'
 import { compareFn } from '../util'
@@ -540,6 +541,77 @@ export async function fetchUserHoldersFromWeb2({
   } catch (error) {
     console.error('Error occurred while fetching user holders from web2', error)
     throw new InternalServerError('Failed to fetch user holders from web2')
+  }
+}
+
+export async function fetchUserHoldingsFromWeb2({
+  userTokenId,
+  username,
+  walletAddress,
+  options,
+}: {
+  userTokenId: string | null
+  username: string | null
+  walletAddress: string | null
+  options: UserHoldingsQueryOptions
+}) {
+  try {
+    console.info('Fetching user token from the DB')
+    let userTokenDoc: UserTokenDocument | null = null
+
+    if (userTokenId) {
+      userTokenDoc = await UserTokenModel.findById(userTokenId)
+    } else if (username) {
+      userTokenDoc = await UserTokenModel.findOne({ username })
+    } else if (walletAddress) {
+      userTokenDoc = await UserTokenModel.findOne({ walletAddress })
+    } else {
+      userTokenDoc = null
+    }
+
+    if (!userTokenDoc) {
+      console.error('User token does not exist in the DB')
+      throw new EntityNotFoundError(null, 'UserToken does not exist')
+    }
+
+    console.info('Fetching holdings token ids of the user')
+    const holdings = await UserTokenModel.find({
+      'holderTokens.token': userTokenDoc,
+    }).populate({ path: 'holderTokens', populate: 'token' })
+
+    const holdingsWithHoldingAmounts: {
+      userToken: UserTokenDocument
+      holdingAmount: number
+    }[] = []
+    for (const holding of holdings) {
+      let holdingAmount = 0
+      for (const holderToken of holding.holderTokens) {
+        if (holderToken.token._id.toString() === userTokenDoc._id.toString()) {
+          holdingAmount = holderToken.amount
+          break
+        }
+      }
+      holdingsWithHoldingAmounts.push({
+        userToken: holding,
+        holdingAmount,
+      })
+    }
+
+    const mappedHoldingsWithHoldingAmounts = holdingsWithHoldingAmounts.map(
+      (holdingWithHoldingAmounts) =>
+        mapUserTokenResponseWithHoldingAmount(holdingWithHoldingAmounts)
+    )
+
+    const { skip, limit, orderBy, orderDirection } = options
+    return mappedHoldingsWithHoldingAmounts
+      .sort((a, b) => compareFn(a, b, orderBy, orderDirection))
+      .slice(skip, skip + limit)
+  } catch (error) {
+    console.error(
+      'Error occurred while fetching user holdings from web2',
+      error
+    )
+    throw new InternalServerError('Failed to fetch user holdings from web2')
   }
 }
 

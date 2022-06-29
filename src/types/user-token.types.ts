@@ -42,3 +42,10 @@ export type UserHoldersQueryOptions = {
   orderBy: keyof UserTokenResponseWithHoldingAmount
   orderDirection: string
 }
+
+export type UserHoldingsQueryOptions = {
+  skip: number
+  limit: number
+  orderBy: keyof UserTokenResponseWithHoldingAmount
+  orderDirection: string
+}

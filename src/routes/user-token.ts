@@ -6,6 +6,7 @@ import {
   createUser,
   fetchAllUserTokens,
   fetchUserHolders,
+  fetchUserHoldings,
   fetchUserToken,
   sendUserTokenEmailVerificationCode,
   signInUser,
@@ -25,6 +26,7 @@ import {
   createUserValidation,
   fetchAllUserTokensValidation,
   fetchUserHoldersValidation,
+  fetchUserHoldingsValidation,
   fetchUserTokenValidation,
   sendUserTokenEmailVerificationCodeValidation,
   signInUserValidation,
@@ -103,6 +105,15 @@ userTokenRouter.get(
   validateRequest,
   optionalAuthenticateAndSetAccount,
   fetchUserHolders
+)
+
+// Fetch All User Holdings
+userTokenRouter.get(
+  '/holdings',
+  fetchUserHoldingsValidation,
+  validateRequest,
+  optionalAuthenticateAndSetAccount,
+  fetchUserHoldings
 )
 
 // Sync UserTokens from web3 to web2

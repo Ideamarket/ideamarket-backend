@@ -8,6 +8,7 @@ import {
   createUserToken,
   fetchAllUserTokensFromWeb2,
   fetchUserHoldersFromWeb2,
+  fetchUserHoldingsFromWeb2,
   fetchUserTokenFromDB,
   sendEmailVerificationCode,
   signInUserAndReturnToken,
@@ -18,6 +19,7 @@ import {
 } from '../services/user-token.service'
 import type {
   UserHoldersQueryOptions,
+  UserHoldingsQueryOptions,
   UserTokenResponse,
   UserTokenResponseWithHoldingAmount,
   UserTokensQueryOptions,
@@ -163,6 +165,48 @@ export async function fetchUserHolders(req: Request, res: Response) {
   } catch (error) {
     console.error('Error occurred while fetching user holders', error)
     return handleError(res, error, 'Unable to fetch the user holders')
+  }
+}
+
+// Fetch User Holdings
+export async function fetchUserHoldings(req: Request, res: Response) {
+  try {
+    const decodedAccount = (req as any).decodedAccount as
+      | DECODED_ACCOUNT
+      | null
+      | undefined
+    const userTokenId = req.query.userTokenId
+      ? (req.query.userTokenId as string)
+      : null
+    const username = req.query.username ? (req.query.username as string) : null
+    const walletAddress = req.query.walletAddress
+      ? (req.query.walletAddress as string).toLowerCase()
+      : null
+    const skip = Number.parseInt(req.query.skip as string) || 0
+    const limit = Number.parseInt(req.query.limit as string) || 10
+    const orderBy = req.query
+      .orderBy as keyof UserTokenResponseWithHoldingAmount
+    const orderDirection =
+      (req.query.orderDirection as string | undefined) ?? 'desc'
+
+    const options: UserHoldingsQueryOptions = {
+      skip,
+      limit,
+      orderBy,
+      orderDirection,
+    }
+
+    const holdings = await fetchUserHoldingsFromWeb2({
+      userTokenId: userTokenId ?? decodedAccount?.id ?? null,
+      username,
+      walletAddress,
+      options,
+    })
+
+    return handleSuccess(res, { holdings })
+  } catch (error) {
+    console.error('Error occurred while fetching user holdings', error)
+    return handleError(res, error, 'Unable to fetch the user holdings')
   }
 }
 

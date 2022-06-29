@@ -111,6 +111,47 @@ export const fetchUserHoldersValidation = [
     .withMessage('OrderBy cannot be empty and should be a valid string'),
 ]
 
+export const fetchUserHoldingsValidation = [
+  oneOf(
+    [
+      header('Authorization')
+        .notEmpty()
+        .withMessage('Authorization header is required'),
+      query('userTokenId').notEmpty().withMessage('userTokenId is required'),
+      query('username')
+        .notEmpty()
+        .toLowerCase()
+        .withMessage('Username is required')
+        .custom(isValidUsername)
+        .withMessage('Username is not valid'),
+      query('walletAddress')
+        .notEmpty()
+        .withMessage('walletAddress is required'),
+    ],
+    'Either authorization header or username or walletAddress is mandatory'
+  ),
+  query('orderBy')
+    .notEmpty()
+    .isString()
+    .isIn([
+      'walletAddress',
+      'username',
+      'email',
+      'tokenAddress',
+      'price',
+      'dayChange',
+      'weekChange',
+      'deposits',
+      'holders',
+      'yearIncome',
+      'claimableIncome',
+      'totalRatingsCount',
+      'latestRatingsCount',
+      'holdingAmount',
+    ])
+    .withMessage('OrderBy cannot be empty and should be a valid string'),
+]
+
 export const sendUserTokenEmailVerificationCodeValidation = [
   query('email')
     .notEmpty()
