@@ -2,6 +2,7 @@ import { Router } from 'express'
 
 import { accountRouter } from './account'
 import { avatarRouter } from './avatar'
+import { bountyRouter } from './bounty'
 import { categoryRouter } from './category'
 import { commentsRouter } from './comments'
 import { generalRouter } from './general'
@@ -20,6 +21,7 @@ const routes = Router()
 
 // Routers
 routes.use('/account', accountRouter)
+routes.use('/bounty', bountyRouter)
 routes.use('/category', categoryRouter)
 routes.use('/comments', commentsRouter)
 routes.use('/fs', switchRouter)
