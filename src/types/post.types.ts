@@ -78,6 +78,8 @@ export type PostResponse = {
   totalCommentsCount: number
   latestCommentsCount: number
   minterToken: UserTokenResponse | null
+  topCitations: PostResponse[]
+  topRatings: any[]
 }
 
 export type PostOpinionsQueryOptions = {

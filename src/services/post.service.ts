@@ -128,7 +128,39 @@ export async function fetchAllPostsFromWeb2({
     .skip(skip)
     .limit(limit)
 
-  return posts.map((post) => mapPostResponse(post))
+  return Promise.all(
+    posts.map(async (post) => {
+      const topCitations = await fetchPostCitationsFromWeb2({
+        contractAddress: null,
+        tokenID: post.tokenID,
+        options: {
+          latest: true,
+          skip: 0,
+          limit: 3,
+          orderBy: 'compositeRating', // TODO: order by new citation rating thing
+          orderDirection: 'desc',
+        },
+      })
+      post.topCitations = topCitations.forCitations
+
+      const topRatings = await fetchPostOpinionsByTokenIdFromWeb2({
+        contractAddress: null,
+        tokenID: post.tokenID,
+        options: {
+          latest: true,
+          skip: 0,
+          limit: 10,
+          orderBy: 'deposits',
+          orderDirection: 'desc',
+          search: '',
+          filterTokens: [],
+        },
+      })
+      post.topRatings = topRatings.postOpinions
+
+      return mapPostResponse(post)
+    })
+  )
 }
 
 export async function fetchPostFromWeb2({

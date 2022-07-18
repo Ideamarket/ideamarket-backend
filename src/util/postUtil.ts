@@ -14,9 +14,7 @@ import { mapUserTokenResponse } from './userTokenUtil'
 
 const cloudFrontDomain: string = config.get('userToken.cloudFrontDomain')
 
-export function mapPostResponse(
-  post: (PostDocument & { userToken: UserTokenDocument | null }) | null
-): PostResponse | null {
+export function mapPostResponse(post: any): PostResponse | null {
   if (!post) {
     return null
   }
@@ -40,6 +38,8 @@ export function mapPostResponse(
     totalCommentsCount: post.totalCommentsCount,
     latestCommentsCount: post.latestCommentsCount,
     minterToken: mapUserTokenResponse(post.userToken),
+    topCitations: post.topCitations,
+    topRatings: post.topRatings,
   }
 }
 
