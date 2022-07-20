@@ -5,7 +5,7 @@ export type Web3Bounty = {
   bountyID: number
   tokenID: number
   user: string
-  depositer: string
+  depositor: string
   token: string
   amount: number
   status: BountyStatus
@@ -21,10 +21,10 @@ export type BountyQueryOptions = {
   userTokenId: string | null
   username: string | null
   userAddress: string | null
-  depositerTokenId: string | null
-  depositerUsername: string | null
-  depositerAddress: string | null
-  status: BountyStatus | null
+  depositorTokenId: string | null
+  depositorUsername: string | null
+  depositorAddress: string | null
+  filterStatuses: string[] // string of comma separated statuses. All other statuses are filtered out
   startDate: Date | null
   endDate: Date | null
 }
@@ -34,7 +34,7 @@ export type BountyResponse = {
   bountyID: number
   tokenID: number
   userToken: UserTokenResponse | null
-  depositerToken: UserTokenResponse | null
+  depositorToken: UserTokenResponse | null
   token: string
   amount: number
   status: BountyStatus

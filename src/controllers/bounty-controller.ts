@@ -2,11 +2,10 @@
 import type { Request, Response } from 'express'
 
 import { handleError, handleSuccess } from '../lib/base'
-import type { BountyStatus } from '../models/bounty-model'
 import {
   fetchAllBountiesFromWeb2,
   syncAllBountiesInWeb2,
-  syncBountyInWeb2,
+  // syncBountyInWeb2,
 } from '../services/bounty-service'
 import type { BountyQueryOptions, BountyResponse } from '../types/bounty-types'
 
@@ -30,18 +29,17 @@ export async function fetchAllBounties(req: Request, res: Response) {
     const userAddress = req.query.userAddress
       ? (req.query.userAddress as string).toLowerCase()
       : null
-    const depositerTokenId = req.query.depositerTokenId
-      ? (req.query.depositerTokenId as string)
+    const depositorTokenId = req.query.depositorTokenId
+      ? (req.query.depositorTokenId as string)
       : null
-    const depositerUsername = req.query.depositerUsername
-      ? (req.query.depositerUsername as string)
+    const depositorUsername = req.query.depositorUsername
+      ? (req.query.depositorUsername as string)
       : null
-    const depositerAddress = req.query.depositerAddress
-      ? (req.query.depositerAddress as string).toLowerCase()
+    const depositorAddress = req.query.depositorAddress
+      ? (req.query.depositorAddress as string).toLowerCase()
       : null
-    const status = req.query.status
-      ? (req.query.status as string as BountyStatus)
-      : null
+    const filterStatuses =
+      (req.query.filterStatuses as string | undefined)?.split(',') ?? []
     const startDate = req.query.startDate
       ? new Date(req.query.startDate as string)
       : null
@@ -64,10 +62,10 @@ export async function fetchAllBounties(req: Request, res: Response) {
       userTokenId,
       username,
       userAddress,
-      depositerTokenId,
-      depositerUsername,
-      depositerAddress,
-      status,
+      depositorTokenId,
+      depositorUsername,
+      depositorAddress,
+      filterStatuses,
       startDate,
       endDate,
     }
@@ -85,16 +83,22 @@ export async function fetchAllBounties(req: Request, res: Response) {
 
 export async function syncAllBounties(req: Request, res: Response) {
   try {
-    const bountyID = req.body.bountyID
-      ? Number.parseInt(req.body.bountyID)
-      : null
+    // const tokenID = req.body.tokenID
+    //   ? Number.parseInt(req.body.tokenID)
+    //   : null
+    // const userAddress = req.body.userAddress
+    //   ? req.body.userAddress as string
+    //   : null
+    // const token = req.body.token
+    //   ? req.body.token as string
+    //   : null
 
-    if (bountyID) {
-      await syncBountyInWeb2(bountyID)
-      return handleSuccess(res, {
-        message: `Bounty with bountyID=${bountyID} has been synced`,
-      })
-    }
+    // if (tokenID && userAddress && token) {
+    //   await syncBountyInWeb2(tokenID, userAddress, token)
+    //   return handleSuccess(res, {
+    //     message: `Bounty with tokenID=${tokenID} userAddress=${userAddress} token=${token} has been synced`,
+    //   })
+    // }
 
     await syncAllBountiesInWeb2()
     return handleSuccess(res, {

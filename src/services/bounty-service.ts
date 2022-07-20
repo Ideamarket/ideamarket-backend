@@ -1,15 +1,17 @@
-/* eslint-disable sonarjs/no-duplicate-string */
 /* eslint-disable sonarjs/cognitive-complexity */
 import config from 'config'
 import type { FilterQuery } from 'mongoose'
 
-import type { BountyDocument, BountyStatus } from '../models/bounty-model'
-import { BountyModel } from '../models/bounty-model'
+import type { BountyDocument } from '../models/bounty-model'
+import { BountyStatus, BountyModel } from '../models/bounty-model'
 import { UserTokenModel } from '../models/user-token.model'
 import type { UserTokenDocument } from '../models/user-token.model'
-import type { BountyQueryOptions, Web3Bounty } from '../types/bounty-types'
-import { mapBountyResponse } from '../util/bountyUtil'
-import { getAllBounties, getBounty } from '../web3/bounty'
+import type { BountyQueryOptions } from '../types/bounty-types'
+import {
+  areBountiesInSameGroup,
+  bountyOrderByCompareFn,
+} from '../util/bountyUtil'
+import { getAllBounties, getBountyAmountPayable } from '../web3/bounty'
 import { web3 } from '../web3/contract'
 import { getDeployedAddresses } from '../web3/deployedAddresses'
 import { EntityNotFoundError, InternalServerError } from './errors'
@@ -37,23 +39,18 @@ export async function fetchAllBountiesFromWeb2({
       skip,
       limit,
       orderBy,
+      orderDirection,
       tokenID,
       userTokenId,
       userAddress,
       username,
-      depositerTokenId,
-      depositerUsername,
-      depositerAddress,
-      status,
+      depositorTokenId,
+      depositorUsername,
+      depositorAddress,
+      filterStatuses,
       startDate,
       endDate,
     } = options
-
-    // Sorting Options
-    const sortOptions: any = {}
-    const orderDirection = options.orderDirection === 'asc' ? 1 : -1
-    sortOptions[orderBy] = orderDirection
-    sortOptions._id = 1
 
     // Filter Options
     const filterOptions: FilterQuery<BountyDocument>[] = []
@@ -79,37 +76,37 @@ export async function fetchAllBountiesFromWeb2({
     }
 
     if (userToken) {
-      filterOptions.push({ userToken })
+      filterOptions.push({ userAddress })
     }
 
-    let depositerToken: UserTokenDocument | null = null
-    if (depositerTokenId) {
-      depositerToken = await UserTokenModel.findById(depositerTokenId)
-    } else if (depositerUsername) {
-      depositerToken = await UserTokenModel.findOne({
-        username: depositerUsername,
+    let depositorToken: UserTokenDocument | null = null
+    if (depositorTokenId) {
+      depositorToken = await UserTokenModel.findById(depositorTokenId)
+    } else if (depositorUsername) {
+      depositorToken = await UserTokenModel.findOne({
+        username: depositorUsername,
       })
-    } else if (depositerAddress) {
-      depositerToken = await UserTokenModel.findOne({
-        walletAddress: depositerAddress,
+    } else if (depositorAddress) {
+      depositorToken = await UserTokenModel.findOne({
+        walletAddress: depositorAddress,
       })
     } else {
-      depositerToken = null
+      depositorToken = null
     }
     if (
-      (depositerTokenId || depositerUsername || depositerAddress) &&
-      !depositerToken
+      (depositorTokenId || depositorUsername || depositorAddress) &&
+      !depositorToken
     ) {
-      console.error('DepositerToken does not exist in the DB')
-      throw new EntityNotFoundError('', 'DepositerToken does not exist')
+      console.error('depositorToken does not exist in the DB')
+      throw new EntityNotFoundError('', 'depositorToken does not exist')
     }
 
-    if (depositerToken) {
-      filterOptions.push({ depositerToken })
+    if (depositorToken) {
+      filterOptions.push({ depositorAddress })
     }
 
-    if (status) {
-      filterOptions.push({ status })
+    if (filterStatuses.length > 0) {
+      filterOptions.push({ status: { $in: filterStatuses } })
     }
 
     if (startDate && endDate) {
@@ -122,14 +119,74 @@ export async function fetchAllBountiesFromWeb2({
       filterQuery = { $and: filterOptions }
     }
 
-    const bounties = await BountyModel.find(filterQuery)
-      .sort(sortOptions)
-      .skip(skip)
-      .limit(limit)
-      .populate('userToken')
-      .populate('depositerToken')
+    const bounties = await BountyModel.aggregate([
+      {
+        $lookup: {
+          from: 'usertokens',
+          localField: 'userAddress',
+          foreignField: 'walletAddress',
+          as: 'UserTokens',
+        },
+      },
+      {
+        $lookup: {
+          from: 'usertokens',
+          localField: 'depositorAddress',
+          foreignField: 'walletAddress',
+          as: 'DepositorTokens',
+        },
+      },
+      {
+        $lookup: {
+          from: 'posts',
+          localField: 'tokenID',
+          foreignField: 'tokenID',
+          as: 'Posts',
+        },
+      },
+      { $set: { userToken: { $arrayElemAt: ['$UserTokens', 0] } } },
+      { $set: { depositorToken: { $arrayElemAt: ['$DepositorTokens', 0] } } },
+      { $set: { post: { $arrayElemAt: ['$Posts', 0] } } },
+      { $match: filterQuery },
+    ])
 
-    return bounties.map((bounty) => mapBountyResponse(bounty))
+    const groupBounties = [] as any
+
+    for await (const bounty of bounties) {
+      // if this bounty is already in group bounties, then don't add it again
+      if (!groupBounties.some((b: any) => areBountiesInSameGroup(b, bounty))) {
+        // Bounties that have this same tokenID, userAddress, and token are all in same group
+        const group = bounties.filter((b: any) =>
+          areBountiesInSameGroup(b, bounty)
+        )
+
+        // eslint-disable-next-line @typescript-eslint/restrict-plus-operands
+        const groupAmount = group.reduce((a, curr) => a + curr.amount, 0)
+
+        const groupBounty = {
+          contractAddress: group[0].contractAddress,
+          bountyIDs: group.map((b: any) => b.bountyID),
+          tokenID: group[0].tokenID,
+          userToken: group[0].userToken,
+          userAddress: group[0].userAddress,
+          depositorTokens: group.map((b: any) => b.depositorToken),
+          depositorAddresses: group.map((b: any) => b.depositorAddress),
+          token: group[0].token,
+          post: group[0].post,
+          groupAmount,
+          groupFunders: group.length,
+          group,
+        }
+
+        groupBounties.push(groupBounty)
+      }
+    }
+
+    return groupBounties
+      .sort((a: any, b: any) =>
+        bountyOrderByCompareFn(a, b, orderBy, orderDirection)
+      )
+      .slice(skip, skip + limit)
   } catch (error) {
     console.error(
       'Error occurred while fetching opinion bounties from web2',
@@ -149,77 +206,126 @@ export async function syncAllBountiesInWeb2() {
   }
 
   console.log('Fetching all the bounties')
-  const allBounties = await getAllBounties()
+  const allWeb3Bounties = await getAllBounties()
 
-  for await (const bounty of allBounties) {
-    console.log(`Syncing bounty with bountyID=${bounty.bountyID}`)
-    const block = await web3.eth.getBlock(bounty.blockHeight)
+  // Update all bounties that are returned from getAllBounties() -- once bounty is claimed, all its fields turn to 0, which sucks. Need to update those newly claimed bounties still too. Will do that after this loop
+  for await (const bounty of allWeb3Bounties) {
+    // If user is 0, then this bounty has been claimed and none of its data is useful anymore
+    if (bounty.user !== '0x0000000000000000000000000000000000000000') {
+      // console.log(`Syncing bounty with bountyID=${bounty.bountyID}`)
+      const block = await web3.eth.getBlock(bounty.blockHeight)
+
+      const bountyAmountPayable = await getBountyAmountPayable(
+        bounty.tokenID,
+        bounty.user.toLowerCase(),
+        bounty.token
+      )
+      let status = null
+
+      if (bounty.amount > 0 && Number.parseInt(bountyAmountPayable) === 0) {
+        status = BountyStatus.OPEN
+      } else {
+        status = BountyStatus.CLAIMABLE
+      }
+
+      await updateBountyInWeb2({
+        bounty: {
+          bountyID: bounty.bountyID,
+          tokenID: bounty.tokenID,
+          userAddress: bounty.user.toLowerCase(),
+          depositorAddress: bounty.depositor.toLowerCase(),
+          token: bounty.token,
+          amount: bounty.amount,
+          status,
+          timestamp: block.timestamp.toString(),
+        },
+        contractAddress,
+      })
+    }
+  }
+
+  const allDbBounties = await BountyModel.find()
+  // If dbBounty is NOT in web3Bounties AND status is not already CLAIMED, it is newly claimed, so update it in DB. NOTE: first bounty does not work due to bountyID of 0 and all claimed bounties has bountyID of 0
+  const newlyClaimedBounties = allDbBounties.filter(
+    (dbBounty) =>
+      dbBounty.status !== BountyStatus.CLAIMED &&
+      !allWeb3Bounties.some(
+        (web3Bounty) => web3Bounty.bountyID === dbBounty.bountyID
+      )
+  )
+
+  for await (const newlyClaimedBounty of newlyClaimedBounties) {
     await updateBountyInWeb2({
       bounty: {
-        bountyID: bounty.bountyID,
-        tokenID: bounty.tokenID,
-        user: bounty.user.toLowerCase(),
-        depositer: bounty.depositer.toLowerCase(),
-        token: bounty.token,
-        amount: bounty.amount,
-        status: bounty.status as BountyStatus,
-        timestamp: block.timestamp.toString(),
+        bountyID: newlyClaimedBounty.bountyID,
+        tokenID: newlyClaimedBounty.tokenID,
+        userAddress: newlyClaimedBounty.userAddress,
+        depositorAddress: newlyClaimedBounty.depositorAddress,
+        token: newlyClaimedBounty.token,
+        amount: newlyClaimedBounty.amount,
+        status: BountyStatus.CLAIMED,
+        timestamp: null,
       },
       contractAddress,
+      postedAt: newlyClaimedBounty.postedAt,
     })
   }
 }
 
-export async function syncBountyInWeb2(bountyID: number) {
-  const contractAddress = getOpinionBountiesContractAddress()
-  if (!contractAddress) {
-    console.error('Deployed address is missing for opinion bounties')
-    throw new InternalServerError(
-      'Contract address is missing for opinion bounties '
-    )
-  }
+// export async function syncBountyInWeb2(tokenID: number, userAddress: string, token: string) {
+//   const contractAddress = getOpinionBountiesContractAddress()
+//   if (!contractAddress) {
+//     console.error('Deployed address is missing for opinion bounties')
+//     throw new InternalServerError(
+//       'Contract address is missing for opinion bounties '
+//     )
+//   }
 
-  console.log('Fetching the bounty')
-  const bounty = await getBounty(bountyID)
+//   console.log('Fetching the bounty')
+//   const bounty = await getBounty(tokenID, userAddress, token)
 
-  console.log(`Syncing bounty with bountyID=${bountyID}`)
-  const block = await web3.eth.getBlock(bounty.blockHeight)
-  await updateBountyInWeb2({
-    bounty: {
-      bountyID: bounty.bountyID,
-      tokenID: bounty.tokenID,
-      user: bounty.user.toLowerCase(),
-      depositer: bounty.depositer.toLowerCase(),
-      token: bounty.token,
-      amount: bounty.amount,
-      status: bounty.status as BountyStatus,
-      timestamp: block.timestamp.toString(),
-    },
-    contractAddress,
-  })
-}
+//   console.log(`Syncing bounty with tokenID=${tokenID} userAddress=${userAddress} token=${token}`)
+//   const block = await web3.eth.getBlock(bounty.blockHeight)
+//   await updateBountyInWeb2({
+//     bounty: {
+//       bountyID: bounty.bountyID,
+//       tokenID: bounty.tokenID,
+//       user: bounty.user.toLowerCase(),
+//       depositor: bounty.depositor.toLowerCase(),
+//       token: bounty.token,
+//       amount: bounty.amount,
+//       status: bounty.status as BountyStatus,
+//       timestamp: block.timestamp.toString(),
+//     },
+//     contractAddress,
+//   })
+// }
 
 export async function updateBountyInWeb2({
   bounty,
   contractAddress,
+  postedAt,
 }: {
-  bounty: Web3Bounty
+  bounty: any
   contractAddress: string
+  postedAt?: Date
 }) {
-  const postedAt = new Date(Number.parseInt(bounty.timestamp) * 1000)
+  const updatedPostedAt = bounty.timestamp
+    ? new Date(Number.parseInt(bounty.timestamp) * 1000)
+    : postedAt
 
-  console.log(`Fetching user token with walletAddress=${bounty.user}`)
-  const userToken = await UserTokenModel.findOne({ walletAddress: bounty.user })
+  // console.log(`Fetching user token with walletAddress=${bounty.userAddress}`)
+  // const userToken = await UserTokenModel.findOne({ walletAddress: bounty.userAddress })
 
-  console.log(`Fetching depositer token with walletAddress=${bounty.user}`)
-  const depositerToken = await UserTokenModel.findOne({
-    walletAddress: bounty.depositer,
-  })
+  // console.log(`Fetching depositor token with walletAddress=${bounty.userAddress}`)
+  // const depositorToken = await UserTokenModel.findOne({
+  //   walletAddress: bounty.depositorAddress,
+  // })
 
-  console.log(`Updating bounty for bountyID=${bounty.bountyID} in web2`)
-  await BountyModel.findOneAndUpdate(
+  // console.log(`Updating bounty for bountyID=${bounty.bountyID} in web2`)
+  // eslint-disable-next-line sonarjs/prefer-immediate-return
+  const updatedBounty = await BountyModel.findOneAndUpdate(
     {
-      contractAddress,
       bountyID: bounty.bountyID,
     },
     {
@@ -227,21 +333,23 @@ export async function updateBountyInWeb2({
         contractAddress,
         bountyID: bounty.bountyID,
         tokenID: bounty.tokenID,
-        userToken,
-        depositerToken,
+        userAddress: bounty.userAddress,
+        depositorAddress: bounty.depositorAddress,
         token: bounty.token,
         amount: bounty.amount,
         status: bounty.status,
-        postedAt,
+        postedAt: updatedPostedAt,
       },
     },
     { upsert: true, new: true }
   )
+
+  return updatedBounty
 }
 
 export function getOpinionBountiesContractAddress() {
   const opinionBountiesBaseDeployedAddress =
-    getDeployedAddresses(NETWORK)?.opinionBounties
+    getDeployedAddresses(NETWORK)?.nftOpinionBounties
 
   return opinionBountiesBaseDeployedAddress
     ? opinionBountiesBaseDeployedAddress.toLowerCase()

@@ -20,7 +20,7 @@ bountyRouter.get(
 )
 
 bountyRouter.patch(
-  '',
+  '/sync',
   syncAllBountiesValidation,
   validateRequest,
   syncAllBounties

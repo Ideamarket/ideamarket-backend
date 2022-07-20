@@ -63,8 +63,8 @@ export function getOpinionBountiesContract() {
   const account = web3.eth.accounts.privateKeyToAccount(PRIVATE_KEY)
   web3.eth.accounts.wallet.add(account)
   return new web3.eth.Contract(
-    getDeployedABIs(NETWORK).opinionBounties as any,
-    getDeployedAddresses(NETWORK)?.opinionBounties ?? undefined,
+    getDeployedABIs(NETWORK).nftOpinionBounties as any,
+    getDeployedAddresses(NETWORK)?.nftOpinionBounties ?? undefined,
     { from: web3.eth.defaultAccount ?? undefined }
   )
 }

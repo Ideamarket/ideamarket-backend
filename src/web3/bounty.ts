@@ -4,7 +4,7 @@ export type Bounty = {
   bountyID: number
   tokenID: number
   user: string
-  depositer: string
+  depositor: string
   token: string
   amount: number
   status: string
@@ -20,21 +20,39 @@ export async function getAllBounties() {
   return (allBounties as any[]).map((bounty: any) => mapWeb3Bounty(bounty))
 }
 
-export async function getBounty(bountyID: number) {
+export async function getBounty(
+  tokenID: number,
+  userAddress: string,
+  token: string
+) {
   const opinionBountiesContract = getOpinionBountiesContract()
   const bounty = await opinionBountiesContract.methods
-    .getBounty(bountyID)
+    .getBountyInfo(tokenID, userAddress, token)
     .call()
 
   return mapWeb3Bounty(bounty)
 }
 
+export async function getBountyAmountPayable(
+  tokenID: number,
+  user: string,
+  token: string
+) {
+  const opinionBountiesContract = getOpinionBountiesContract()
+  // eslint-disable-next-line sonarjs/prefer-immediate-return
+  const amount = await opinionBountiesContract.methods
+    .getBountyAmountPayable(tokenID, user, token)
+    .call()
+
+  return amount
+}
+
 function mapWeb3Bounty(bounty: any): Bounty {
   return {
-    bountyID: bounty.bountyID,
+    bountyID: Number.parseInt(bounty.bountyID),
     tokenID: bounty.tokenID,
     user: bounty.user,
-    depositer: bounty.depositer,
+    depositor: bounty.depositor,
     token: bounty.token,
     amount: bounty.amount,
     status: bounty.status,
