@@ -9,6 +9,7 @@ import { generalRouter } from './general'
 import { listingRouter } from './listing'
 import { opinionRouter } from './opinion'
 import { postRouter } from './post'
+import { postMetadataRouter } from './post-metadata'
 import { subgraphRouter } from './subgraph'
 import { switchRouter } from './switch'
 import { triggerRouter } from './trigger'
@@ -36,5 +37,6 @@ routes.use('/user-token', userTokenRouter)
 routes.use('/version', versionRouter)
 routes.use('/votes', votesRouter)
 routes.use('/avatar', avatarRouter)
+routes.use('/post-metadata', postMetadataRouter)
 
 export { routes }
