@@ -15,7 +15,8 @@ export async function fetchPostMetadata(req: Request, res: Response) {
 
     const post = await fetchPostMetadataFromWeb2({ tokenID })
 
-    return handleSuccess(res, post)
+    // Returns differently than most APIs because NFT marketplace needs very specific format
+    return res.status(200).json(post)
   } catch (error) {
     console.error(
       'Error occurred while fetching the ideamarket post metadata',
