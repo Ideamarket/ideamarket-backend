@@ -15,7 +15,7 @@ export async function fetchPostMetadata(req: Request, res: Response) {
 
     const post = await fetchPostMetadataFromWeb2({ tokenID })
 
-    return handleSuccess(res, { post })
+    return handleSuccess(res, post)
   } catch (error) {
     console.error(
       'Error occurred while fetching the ideamarket post metadata',

@@ -8,10 +8,22 @@ export function mapPostMetadataResponse(
   }
 
   return {
-    tokenID: post.tokenID,
-    minterAddress: post.minterAddress,
-    content: post.content,
-    // postedAt: post.postedAt ?? null,
-    categories: post.categories,
+    description:
+      'Ideamarket Post that tracks public opinion without trusted third parties — a collectible belief!',
+    image: '',
+    // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
+    name: `Ideamarket Post #${post.tokenID}`,
+    attributes: [
+      { trait_type: 'Content', value: post.content },
+      { trait_type: 'Categories', value: post.categories },
+      { trait_type: 'Minter', value: post.minterAddress },
+    ],
   }
+
+  // return {
+  //   tokenID: post.tokenID,
+  //   minterAddress: post.minterAddress,
+  //   content: post.content,
+  //   categories: post.categories,
+  // }
 }
