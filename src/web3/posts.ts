@@ -1,3 +1,4 @@
+import { PostMetadataModel } from '../models/post-metadata.model'
 import { getIdeamarketPostsContract } from './contract'
 
 /**
@@ -16,8 +17,16 @@ async function getTokenIDsOfAllPosts() {
 }
 
 export async function getIdeamarketPostByTokenID(tokenID: number) {
-  const ideamarketPostsContract = getIdeamarketPostsContract()
-  return ideamarketPostsContract.methods.getPost(tokenID).call()
+  // const ideamarketPostsContract = getIdeamarketPostsContract()
+  // return ideamarketPostsContract.methods.getPost(tokenID).call()
+  const dbPost = (await PostMetadataModel.findOne({ tokenID })) as any
+  return {
+    tokenID,
+    minter: dbPost?.minterAddress,
+    content: dbPost?.content,
+    timestamp: dbPost?.createdAt,
+    categories: dbPost?.categories,
+  }
 }
 
 export async function getAllIdeamarketPosts() {
@@ -25,8 +34,8 @@ export async function getAllIdeamarketPosts() {
   const tokenIDs = await getTokenIDsOfAllPosts()
 
   for await (const tokenID of tokenIDs) {
-    const post = await getIdeamarketPostByTokenID(tokenID)
-    allPosts.push(post)
+    const customPost = await getIdeamarketPostByTokenID(tokenID)
+    allPosts.push(customPost)
   }
 
   return allPosts

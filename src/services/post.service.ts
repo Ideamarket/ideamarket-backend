@@ -840,18 +840,17 @@ export async function syncAllPostsInWeb2() {
   console.log('Fetching all the ideamarket posts')
   const allPosts = await getAllIdeamarketPosts()
   for await (const post of allPosts) {
-    console.log(`Syncing post with tokenID=${post.tokenID as string}`)
-    const block = await web3.eth.getBlock(post.blockHeight)
+    console.log(`Syncing post with tokenID=${post.tokenID}`)
     await updatePostInWeb2({
       post: {
         tokenID: post.tokenID,
         minter: post.minter.toLowerCase(),
         content: post.content,
-        timestamp: block.timestamp.toString(),
+        timestamp: post.timestamp.toString(),
         categories: post.categories,
-        imageLink: post.imageLink,
-        isURL: post.isURL,
-        urlContent: post.urlContent,
+        imageLink: '',
+        isURL: false,
+        urlContent: '',
       },
       contractAddress,
     })
@@ -868,17 +867,16 @@ export async function syncPostInWeb2(tokenID: number) {
   }
 
   const post = await getIdeamarketPostByTokenID(tokenID)
-  const block = await web3.eth.getBlock(post.blockHeight)
   await updatePostInWeb2({
     post: {
       tokenID: post.tokenID,
       minter: post.minter.toLowerCase(),
       content: post.content,
-      timestamp: block.timestamp.toString(),
+      timestamp: post.timestamp.toString(),
       categories: post.categories,
-      imageLink: post.imageLink,
-      isURL: post.isURL,
-      urlContent: post.urlContent,
+      imageLink: '',
+      isURL: false,
+      urlContent: '',
     },
     contractAddress: contractAddress.toLowerCase(),
   })
@@ -892,7 +890,7 @@ async function updatePostInWeb2({
   contractAddress: string
 }) {
   try {
-    const postedAt = new Date(Number.parseInt(post.timestamp) * 1000)
+    const postedAt = new Date(post.timestamp)
 
     console.log(`Fetching post opinions summary for tokenID=${post.tokenID}`)
     const postOpinionsSummary = await getOpinionsSummaryOfNFT(post.tokenID)
