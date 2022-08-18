@@ -1,6 +1,8 @@
+/* eslint-disable @typescript-eslint/no-misused-promises */
 import express from 'express'
 
 import {
+  fetchETHPrice,
   fetchLatestApr,
   fetchLatestLPApr,
   fetchUrlMetadata,
@@ -28,10 +30,10 @@ generalRouter.get(
   fetchValidUrl
 )
 
-// eslint-disable-next-line @typescript-eslint/no-misused-promises
 generalRouter.get('/apr', fetchLatestApr)
 
-// eslint-disable-next-line @typescript-eslint/no-misused-promises
 generalRouter.get('/lp-apr', fetchLatestLPApr)
+
+generalRouter.get('/eth-price', fetchETHPrice)
 
 export { generalRouter }

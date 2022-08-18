@@ -77,3 +77,25 @@ export async function checkAndReturnValidUrl(url: string) {
     return url
   }
 }
+
+/**
+ * Get current ETH price using Etherscan API
+ */
+export const getETHPriceFromExternal = async () => {
+  try {
+    const params = {
+      module: 'stats',
+      action: 'ethprice',
+      apikey: process.env.ETHERSCAN_API_KEY,
+    }
+
+    const response = await axios.get(`https://api.etherscan.io/api`, {
+      params,
+    })
+
+    return response.data?.result?.ethusd
+  } catch (error) {
+    console.error(`Could not get ETH price using Etherscan API`, error)
+    return null
+  }
+}
