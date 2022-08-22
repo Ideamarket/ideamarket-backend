@@ -5988,6 +5988,77 @@
       "type": "event"
     },
     {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "internalType": "address",
+          "name": "oldOwner",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "address",
+          "name": "newOwner",
+          "type": "address"
+        }
+      ],
+      "name": "OwnershipChanged",
+      "type": "event"
+    },
+    {
+      "inputs": [],
+      "name": "_fee",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "_feeSwitch",
+      "outputs": [
+        {
+          "internalType": "bool",
+          "name": "",
+          "type": "bool"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "_totalOpinionNumber",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "newFee",
+          "type": "uint256"
+        }
+      ],
+      "name": "changeFeePrice",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
       "inputs": [
         {
           "internalType": "uint256",
@@ -6013,6 +6084,32 @@
       "name": "checkInput",
       "outputs": [],
       "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "user",
+          "type": "address"
+        }
+      ],
+      "name": "claimableFees",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "flipFeeSwitch",
+      "outputs": [],
+      "stateMutability": "nonpayable",
       "type": "function"
     },
     {
@@ -6232,6 +6329,19 @@
       "type": "function"
     },
     {
+      "inputs": [],
+      "name": "getOwner",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
       "inputs": [
         {
           "internalType": "address",
@@ -6286,11 +6396,41 @@
       "inputs": [
         {
           "internalType": "address",
+          "name": "owner",
+          "type": "address"
+        },
+        {
+          "internalType": "address",
           "name": "ideamarketPosts",
           "type": "address"
+        },
+        {
+          "internalType": "uint256",
+          "name": "fee",
+          "type": "uint256"
         }
       ],
       "name": "initialize",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "newOwner",
+          "type": "address"
+        }
+      ],
+      "name": "setOwner",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "withdrawClaimableFees",
       "outputs": [],
       "stateMutability": "nonpayable",
       "type": "function"
@@ -6316,11 +6456,16 @@
           "internalType": "bool[]",
           "name": "inFavorArr",
           "type": "bool[]"
+        },
+        {
+          "internalType": "address",
+          "name": "opinionWriter",
+          "type": "address"
         }
       ],
       "name": "writeOpinion",
       "outputs": [],
-      "stateMutability": "nonpayable",
+      "stateMutability": "payable",
       "type": "function"
     }
   ],
@@ -6329,8 +6474,23 @@
       "inputs": [
         {
           "internalType": "address",
-          "name": "admin",
+          "name": "owner",
           "type": "address"
+        },
+        {
+          "internalType": "string",
+          "name": "contractUri",
+          "type": "string"
+        },
+        {
+          "internalType": "string",
+          "name": "baseUri",
+          "type": "string"
+        },
+        {
+          "internalType": "uint256",
+          "name": "fee",
+          "type": "uint256"
         }
       ],
       "stateMutability": "nonpayable",
@@ -6390,75 +6550,19 @@
       "anonymous": false,
       "inputs": [
         {
-          "indexed": true,
-          "internalType": "bytes32",
-          "name": "role",
-          "type": "bytes32"
-        },
-        {
-          "indexed": true,
-          "internalType": "bytes32",
-          "name": "previousAdminRole",
-          "type": "bytes32"
-        },
-        {
-          "indexed": true,
-          "internalType": "bytes32",
-          "name": "newAdminRole",
-          "type": "bytes32"
-        }
-      ],
-      "name": "RoleAdminChanged",
-      "type": "event"
-    },
-    {
-      "anonymous": false,
-      "inputs": [
-        {
-          "indexed": true,
-          "internalType": "bytes32",
-          "name": "role",
-          "type": "bytes32"
-        },
-        {
-          "indexed": true,
+          "indexed": false,
           "internalType": "address",
-          "name": "account",
+          "name": "oldOwner",
           "type": "address"
         },
         {
-          "indexed": true,
+          "indexed": false,
           "internalType": "address",
-          "name": "sender",
+          "name": "newOwner",
           "type": "address"
         }
       ],
-      "name": "RoleGranted",
-      "type": "event"
-    },
-    {
-      "anonymous": false,
-      "inputs": [
-        {
-          "indexed": true,
-          "internalType": "bytes32",
-          "name": "role",
-          "type": "bytes32"
-        },
-        {
-          "indexed": true,
-          "internalType": "address",
-          "name": "account",
-          "type": "address"
-        },
-        {
-          "indexed": true,
-          "internalType": "address",
-          "name": "sender",
-          "type": "address"
-        }
-      ],
-      "name": "RoleRevoked",
+      "name": "OwnershipChanged",
       "type": "event"
     },
     {
@@ -6488,39 +6592,7 @@
     },
     {
       "inputs": [],
-      "name": "ADMIN_ROLE",
-      "outputs": [
-        {
-          "internalType": "bytes32",
-          "name": "",
-          "type": "bytes32"
-        }
-      ],
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
-      "inputs": [],
-      "name": "DEFAULT_ADMIN_ROLE",
-      "outputs": [
-        {
-          "internalType": "bytes32",
-          "name": "",
-          "type": "bytes32"
-        }
-      ],
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "uint256",
-          "name": "",
-          "type": "uint256"
-        }
-      ],
-      "name": "activeCategories",
+      "name": "_baseUri",
       "outputs": [
         {
           "internalType": "string",
@@ -6532,34 +6604,42 @@
       "type": "function"
     },
     {
-      "inputs": [
+      "inputs": [],
+      "name": "_contractUri",
+      "outputs": [
         {
-          "internalType": "string[]",
-          "name": "newCategories",
-          "type": "string[]"
+          "internalType": "string",
+          "name": "",
+          "type": "string"
         }
       ],
-      "name": "addCategories",
-      "outputs": [],
-      "stateMutability": "nonpayable",
+      "stateMutability": "view",
       "type": "function"
     },
     {
-      "inputs": [
+      "inputs": [],
+      "name": "_fee",
+      "outputs": [
         {
           "internalType": "uint256",
-          "name": "tokenID",
+          "name": "",
           "type": "uint256"
-        },
-        {
-          "internalType": "string[]",
-          "name": "newCategories",
-          "type": "string[]"
         }
       ],
-      "name": "addCategoriesToPost",
-      "outputs": [],
-      "stateMutability": "nonpayable",
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "_feeSwitch",
+      "outputs": [
+        {
+          "internalType": "bool",
+          "name": "",
+          "type": "bool"
+        }
+      ],
+      "stateMutability": "view",
       "type": "function"
     },
     {
@@ -6602,17 +6682,24 @@
     {
       "inputs": [
         {
+          "internalType": "uint256",
+          "name": "newFee",
+          "type": "uint256"
+        }
+      ],
+      "name": "changeFeePrice",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "contractURI",
+      "outputs": [
+        {
           "internalType": "string",
           "name": "",
           "type": "string"
-        }
-      ],
-      "name": "categories",
-      "outputs": [
-        {
-          "internalType": "bool",
-          "name": "",
-          "type": "bool"
         }
       ],
       "stateMutability": "view",
@@ -6620,15 +6707,9 @@
     },
     {
       "inputs": [],
-      "name": "getActiveCategories",
-      "outputs": [
-        {
-          "internalType": "string[]",
-          "name": "",
-          "type": "string[]"
-        }
-      ],
-      "stateMutability": "view",
+      "name": "flipFeeSwitch",
+      "outputs": [],
+      "stateMutability": "nonpayable",
       "type": "function"
     },
     {
@@ -6651,6 +6732,19 @@
       "type": "function"
     },
     {
+      "inputs": [],
+      "name": "getOwner",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
       "inputs": [
         {
           "internalType": "uint256",
@@ -6661,75 +6755,9 @@
       "name": "getPost",
       "outputs": [
         {
-          "components": [
-            {
-              "internalType": "address",
-              "name": "minter",
-              "type": "address"
-            },
-            {
-              "internalType": "uint256",
-              "name": "tokenID",
-              "type": "uint256"
-            },
-            {
-              "internalType": "string",
-              "name": "content",
-              "type": "string"
-            },
-            {
-              "internalType": "string[]",
-              "name": "imageHashes",
-              "type": "string[]"
-            },
-            {
-              "internalType": "string[]",
-              "name": "categories",
-              "type": "string[]"
-            },
-            {
-              "internalType": "string",
-              "name": "imageLink",
-              "type": "string"
-            },
-            {
-              "internalType": "bool",
-              "name": "isURL",
-              "type": "bool"
-            },
-            {
-              "internalType": "string",
-              "name": "urlContent",
-              "type": "string"
-            },
-            {
-              "internalType": "uint256",
-              "name": "blockHeight",
-              "type": "uint256"
-            }
-          ],
-          "internalType": "struct IIdeamarketPosts.Post",
-          "name": "post",
-          "type": "tuple"
-        }
-      ],
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "bytes32",
-          "name": "role",
-          "type": "bytes32"
-        }
-      ],
-      "name": "getRoleAdmin",
-      "outputs": [
-        {
-          "internalType": "bytes32",
-          "name": "",
-          "type": "bytes32"
+          "internalType": "string",
+          "name": "content",
+          "type": "string"
         }
       ],
       "stateMutability": "view",
@@ -6749,48 +6777,6 @@
           "internalType": "uint256[]",
           "name": "",
           "type": "uint256[]"
-        }
-      ],
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "bytes32",
-          "name": "role",
-          "type": "bytes32"
-        },
-        {
-          "internalType": "address",
-          "name": "account",
-          "type": "address"
-        }
-      ],
-      "name": "grantRole",
-      "outputs": [],
-      "stateMutability": "nonpayable",
-      "type": "function"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "bytes32",
-          "name": "role",
-          "type": "bytes32"
-        },
-        {
-          "internalType": "address",
-          "name": "account",
-          "type": "address"
-        }
-      ],
-      "name": "hasRole",
-      "outputs": [
-        {
-          "internalType": "bool",
-          "name": "",
-          "type": "bool"
         }
       ],
       "stateMutability": "view",
@@ -6823,52 +6809,8 @@
     {
       "inputs": [
         {
-          "internalType": "uint256",
-          "name": "tokenID",
-          "type": "uint256"
-        }
-      ],
-      "name": "isURL",
-      "outputs": [
-        {
-          "internalType": "bool",
-          "name": "",
-          "type": "bool"
-        }
-      ],
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
-      "inputs": [
-        {
           "internalType": "string",
           "name": "content",
-          "type": "string"
-        },
-        {
-          "internalType": "string[]",
-          "name": "imageHashes",
-          "type": "string[]"
-        },
-        {
-          "internalType": "string[]",
-          "name": "categoryTags",
-          "type": "string[]"
-        },
-        {
-          "internalType": "string",
-          "name": "imageLink",
-          "type": "string"
-        },
-        {
-          "internalType": "bool",
-          "name": "urlBool",
-          "type": "bool"
-        },
-        {
-          "internalType": "string",
-          "name": "urlContent",
           "type": "string"
         },
         {
@@ -6879,7 +6821,7 @@
       ],
       "name": "mint",
       "outputs": [],
-      "stateMutability": "nonpayable",
+      "stateMutability": "payable",
       "type": "function"
     },
     {
@@ -6912,146 +6854,6 @@
         }
       ],
       "stateMutability": "view",
-      "type": "function"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "uint256",
-          "name": "",
-          "type": "uint256"
-        },
-        {
-          "internalType": "string",
-          "name": "",
-          "type": "string"
-        }
-      ],
-      "name": "postCategories",
-      "outputs": [
-        {
-          "internalType": "bool",
-          "name": "",
-          "type": "bool"
-        }
-      ],
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "uint256",
-          "name": "",
-          "type": "uint256"
-        }
-      ],
-      "name": "posts",
-      "outputs": [
-        {
-          "internalType": "address",
-          "name": "minter",
-          "type": "address"
-        },
-        {
-          "internalType": "uint256",
-          "name": "tokenID",
-          "type": "uint256"
-        },
-        {
-          "internalType": "string",
-          "name": "content",
-          "type": "string"
-        },
-        {
-          "internalType": "string",
-          "name": "imageLink",
-          "type": "string"
-        },
-        {
-          "internalType": "bool",
-          "name": "isURL",
-          "type": "bool"
-        },
-        {
-          "internalType": "string",
-          "name": "urlContent",
-          "type": "string"
-        },
-        {
-          "internalType": "uint256",
-          "name": "blockHeight",
-          "type": "uint256"
-        }
-      ],
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "string[]",
-          "name": "oldCategories",
-          "type": "string[]"
-        }
-      ],
-      "name": "removeCategories",
-      "outputs": [],
-      "stateMutability": "nonpayable",
-      "type": "function"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "bytes32",
-          "name": "role",
-          "type": "bytes32"
-        },
-        {
-          "internalType": "address",
-          "name": "account",
-          "type": "address"
-        }
-      ],
-      "name": "renounceRole",
-      "outputs": [],
-      "stateMutability": "nonpayable",
-      "type": "function"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "uint256",
-          "name": "tokenID",
-          "type": "uint256"
-        },
-        {
-          "internalType": "string[]",
-          "name": "newCategories",
-          "type": "string[]"
-        }
-      ],
-      "name": "resetCategoriesForPost",
-      "outputs": [],
-      "stateMutability": "nonpayable",
-      "type": "function"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "bytes32",
-          "name": "role",
-          "type": "bytes32"
-        },
-        {
-          "internalType": "address",
-          "name": "account",
-          "type": "address"
-        }
-      ],
-      "name": "revokeRole",
-      "outputs": [],
-      "stateMutability": "nonpayable",
       "type": "function"
     },
     {
@@ -7126,6 +6928,19 @@
     {
       "inputs": [
         {
+          "internalType": "address",
+          "name": "newOwner",
+          "type": "address"
+        }
+      ],
+      "name": "setOwner",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
           "internalType": "bytes4",
           "name": "interfaceId",
           "type": "bytes4"
@@ -7159,7 +6974,7 @@
       "inputs": [
         {
           "internalType": "uint256",
-          "name": "tokenID",
+          "name": "tokenId",
           "type": "uint256"
         }
       ],
@@ -7213,17 +7028,12 @@
     {
       "inputs": [
         {
-          "internalType": "uint256",
-          "name": "tokenID",
-          "type": "uint256"
-        },
-        {
           "internalType": "string",
-          "name": "imageLink",
+          "name": "baseUri",
           "type": "string"
         }
       ],
-      "name": "updateImage",
+      "name": "updateBaseURI",
       "outputs": [],
       "stateMutability": "nonpayable",
       "type": "function"
@@ -7231,35 +7041,19 @@
     {
       "inputs": [
         {
-          "internalType": "uint256",
-          "name": "tokenID",
-          "type": "uint256"
-        },
-        {
-          "internalType": "string[]",
-          "name": "imageHashes",
-          "type": "string[]"
+          "internalType": "string",
+          "name": "contractUri",
+          "type": "string"
         }
       ],
-      "name": "updateImageHashes",
+      "name": "updateContractURI",
       "outputs": [],
       "stateMutability": "nonpayable",
       "type": "function"
     },
     {
-      "inputs": [
-        {
-          "internalType": "uint256",
-          "name": "tokenID",
-          "type": "uint256"
-        },
-        {
-          "internalType": "string",
-          "name": "urlContent",
-          "type": "string"
-        }
-      ],
-      "name": "updateURLContent",
+      "inputs": [],
+      "name": "withdrawOwnerFees",
       "outputs": [],
       "stateMutability": "nonpayable",
       "type": "function"
