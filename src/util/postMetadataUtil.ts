@@ -9,7 +9,7 @@ export function mapPostMetadataResponse(
 
   return {
     description:
-      'Ideamarket Post that tracks public opinion without trusted third parties — a collectible belief!',
+      'Ideamarket Post that tracks public opinion without trusted third parties',
     image: '',
     // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
     name: `Ideamarket Post #${post.tokenID}`,
