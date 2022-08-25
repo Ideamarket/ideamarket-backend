@@ -136,7 +136,7 @@ const config = {
       userMarketName: 'User',
     },
     ids: {
-      userMarket: 1,
+      userMarket: process.env.V2_NETWORK === 'test-avm-l2-imo-market' ? 6 : 1,
     },
     market1: process.env.V2_MARKET1 ?? 'User',
   },
