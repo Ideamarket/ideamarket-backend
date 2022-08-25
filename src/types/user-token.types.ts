@@ -49,3 +49,11 @@ export type UserHoldingsQueryOptions = {
   orderBy: keyof UserTokenResponseWithHoldingAmount
   orderDirection: string
 }
+
+export type UserRelationsQueryOptions = {
+  skip: number
+  limit: number
+  orderBy: keyof UserTokenResponse | 'matchScore'
+  orderDirection: string
+  // search: string | null
+}

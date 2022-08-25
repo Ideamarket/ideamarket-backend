@@ -5,17 +5,24 @@ import escapeStringRegexp from 'escape-string-regexp'
 import type { UploadedFile } from 'express-fileupload'
 import request from 'graphql-request'
 import type { FilterQuery } from 'mongoose'
+import type { PostOpinionsQueryOptions } from 'types/post.types'
 
 import { AccountModel } from '../models/account.model'
 import { EmailVerificationModel } from '../models/emailVerification.model'
 import type { TriggerDocument } from '../models/trigger.model'
 import { TriggerModel, TriggerType } from '../models/trigger.model'
+import type {
+  IUserRelation,
+  MutualPostObject,
+} from '../models/user-relation.model'
+import { UserRelationModel } from '../models/user-relation.model'
 import { UserRole, UserTokenModel } from '../models/user-token.model'
 import type { IUserToken, UserTokenDocument } from '../models/user-token.model'
 import type { IdeaToken, IdeaTokens } from '../types/subgraph.types'
 import type {
   UserHoldersQueryOptions,
   UserHoldingsQueryOptions,
+  UserRelationsQueryOptions,
   UserTokensQueryOptions,
 } from '../types/user-token.types'
 import { compareFn } from '../util'
@@ -28,6 +35,7 @@ import {
 import { generateRandomNDigitNumber } from '../util/randomUtil'
 import {
   checkUsernameCanBeUpdatedOrNot,
+  getUserTokenPairs,
   mapUserTokenResponse,
   mapUserTokenResponseWithHoldingAmount,
   mapUserTokenResponseWithLatestTwitterUsername,
@@ -48,6 +56,11 @@ import {
 import { getUserOpinionsSummary } from '../web3/opinions/nft-opinions'
 import { EntityNotFoundError, InternalServerError } from './errors'
 import { calculateWeekChange } from './listing.service'
+import {
+  fetchPostOpinionsByTokenIdFromWeb2,
+  fetchPostOpinionsByWalletFromWeb2,
+  getIdeamarketPostsContractAddress,
+} from './post.service'
 
 const s3Bucket: string = config.get('userToken.s3Bucket')
 const cloudFrontDomain: string = config.get('userToken.cloudFrontDomain')
@@ -438,6 +451,270 @@ export async function syncUserTokenInWeb2(walletAddress: string) {
     throw new InternalServerError(
       'Error occurred while copying user tokens from web3 to web2'
     )
+  }
+}
+
+export async function fetchUserRelationsFromWeb2({
+  userTokenId,
+  username,
+  walletAddress,
+  options,
+}: {
+  userTokenId: string | null
+  username: string | null
+  walletAddress: string | null
+  options: UserRelationsQueryOptions
+}) {
+  try {
+    console.info('Fetching user token from the DB')
+    let userTokenDoc: UserTokenDocument | null = null
+
+    if (userTokenId) {
+      userTokenDoc = await UserTokenModel.findById(userTokenId)
+    } else if (username) {
+      userTokenDoc = await UserTokenModel.findOne({ username })
+    } else if (walletAddress) {
+      userTokenDoc = await UserTokenModel.findOne({ walletAddress })
+    } else {
+      userTokenDoc = null
+    }
+
+    if (!userTokenDoc) {
+      console.error('User token does not exist in the DB')
+      throw new EntityNotFoundError(null, 'UserToken does not exist')
+    }
+
+    const userRelations = (await UserRelationModel.find({
+      walletAddresses: { $all: [userTokenDoc.walletAddress] },
+    })) as any
+
+    const userRelationsWithUserTokens = []
+
+    for await (const userRelation of userRelations) {
+      const partnerWallet = userRelation.walletAddresses.find(
+        (wallet: string) => wallet !== walletAddress
+      )
+      const partnerUserToken = await UserTokenModel.findOne({
+        walletAddress: partnerWallet,
+      })
+      userRelationsWithUserTokens.push({
+        userRelation,
+        partnerUserToken: mapUserTokenResponse(partnerUserToken),
+      })
+    }
+
+    const { skip, limit, orderBy, orderDirection } = options
+
+    if (orderBy === 'matchScore') {
+      return userRelationsWithUserTokens
+        .sort((a: any, b: any) =>
+          compareFn(a.userRelation, b.userRelation, orderBy, orderDirection)
+        )
+        .slice(skip, skip + limit)
+    }
+
+    return userRelationsWithUserTokens
+      .sort((a: any, b: any) =>
+        compareFn(
+          a.partnerUserToken,
+          b.partnerUserToken,
+          orderBy,
+          orderDirection
+        )
+      )
+      .slice(skip, skip + limit)
+  } catch (error) {
+    console.error(
+      'Error occurred while fetching user relations from web2',
+      error
+    )
+    throw new InternalServerError('Failed to fetch user relations from web2')
+  }
+}
+
+export async function syncUserRelationsForWallet({
+  walletAddress,
+  ratedPostID,
+  rating,
+}: {
+  walletAddress: string
+  ratedPostID: number
+  rating: number
+}) {
+  try {
+    const options: PostOpinionsQueryOptions = {
+      latest: true,
+      skip: 0,
+      limit: 100_000,
+      orderBy: 'rating',
+      orderDirection: 'desc',
+      search: '',
+      filterTokens: [],
+    }
+
+    const contractAddress = getIdeamarketPostsContractAddress()
+
+    const opinionsOfPost = await fetchPostOpinionsByTokenIdFromWeb2({
+      contractAddress,
+      tokenID: Number(ratedPostID),
+      options,
+    })
+
+    // NOTE: filter out the input rater
+    const ratersOfPost = opinionsOfPost.postOpinions
+      .map((o) => o?.ratedBy)
+      .filter((ratedBy) => ratedBy !== walletAddress)
+
+    // If there was a new rating for this post, then every single UserRelation for this postID needs to be recalculated
+    for await (const rater of ratersOfPost) {
+      const userRelation = (await UserRelationModel.find({
+        walletAddresses: { $all: [walletAddress, rater] },
+      })) as any
+      const filteredMutualRatedPosts =
+        userRelation[0]?.mutualRatedPosts &&
+        userRelation[0].mutualRatedPosts.length > 0
+          ? userRelation[0].mutualRatedPosts.filter(
+              (post: MutualPostObject) => post.postID !== ratedPostID
+            )
+          : []
+      // Need rating of user that didn't have their rating change
+      const unchangedRating = opinionsOfPost.postOpinions.find(
+        (o) => o?.ratedBy === rater
+      )?.rating as number
+      // Calculate new mutual difference
+      const updatedMutualDiff = Math.abs(unchangedRating - rating)
+      // Add all past differences with new mutual difference
+      const sumOfUnchangedDiffs =
+        filteredMutualRatedPosts.length > 0
+          ? (filteredMutualRatedPosts.reduce(
+              (accumulator: number, object: MutualPostObject) => {
+                return accumulator + object.mutualDifference
+              },
+              0
+            ) as number)
+          : 0
+
+      const sumOfAllDiffs = sumOfUnchangedDiffs + updatedMutualDiff
+      const diffAvg =
+        sumOfAllDiffs / ((filteredMutualRatedPosts.length as number) + 1)
+      const score = 100 - diffAvg
+
+      // Update DB. 1) update matchScore. 2) update mutualRatedPosts
+      if (userRelation && userRelation?.length > 0) {
+        userRelation[0].matchScore = score
+        userRelation[0].mutualRatedPosts = [
+          ...filteredMutualRatedPosts,
+          { postID: Number(ratedPostID), mutualDifference: updatedMutualDiff },
+        ]
+
+        await userRelation[0].save()
+      } else {
+        const userRelationDoc: IUserRelation = {
+          walletAddresses: [walletAddress, rater as string],
+          matchScore: score,
+          mutualRatedPosts: [
+            {
+              postID: Number(ratedPostID),
+              mutualDifference: updatedMutualDiff,
+            },
+          ],
+        }
+
+        await UserRelationModel.create(userRelationDoc)
+      }
+    }
+  } catch (error) {
+    console.error('Error occurred while syncing user relations', error)
+    throw new InternalServerError('Error occurred while syncing user relations')
+  }
+}
+
+// eslint-disable-next-line sonarjs/cognitive-complexity
+export async function syncAllUserRelationsInDB() {
+  const allUserTokens = await UserTokenModel.find()
+  const allUserTokenPairs = getUserTokenPairs(allUserTokens)
+  const opinionOptions: PostOpinionsQueryOptions = {
+    latest: true,
+    skip: 0,
+    limit: 100_000,
+    orderBy: 'rating',
+    orderDirection: 'desc',
+    search: '',
+    filterTokens: [],
+  }
+  for await (const userTokenPair of allUserTokenPairs) {
+    const contractAddress = getIdeamarketPostsContractAddress()
+    // Get opinions for both wallets
+    const wallet1OpinionsObject = await fetchPostOpinionsByWalletFromWeb2({
+      contractAddress,
+      walletAddress: userTokenPair.walletAddresses[0],
+      options: opinionOptions,
+    })
+    const wallet1Opinions = wallet1OpinionsObject.postOpinions
+    const wallet2OpinionsObject = await fetchPostOpinionsByWalletFromWeb2({
+      contractAddress,
+      walletAddress: userTokenPair.walletAddresses[1],
+      options: opinionOptions,
+    })
+    const wallet2Opinions = wallet2OpinionsObject.postOpinions
+    // Get list of mutually rated posts for this user pair
+    const mutualRatedPosts = []
+    for (const wallet1Opinion of wallet1Opinions) {
+      for (const wallet2Opinion of wallet2Opinions) {
+        if (wallet1Opinion.tokenID === wallet2Opinion.tokenID) {
+          const updatedMutualDiff = Math.abs(
+            wallet1Opinion.rating - wallet2Opinion.rating
+          )
+          mutualRatedPosts.push({
+            postID: wallet1Opinion.tokenID,
+            mutualDifference: updatedMutualDiff,
+          })
+        }
+      }
+    }
+
+    // Only update DB if there are mutualRatedPosts
+    if (mutualRatedPosts.length > 0) {
+      const sumOfDiffs =
+        mutualRatedPosts.length > 0
+          ? mutualRatedPosts.reduce(
+              (accumulator: number, object: MutualPostObject) => {
+                return accumulator + object.mutualDifference
+              },
+              0
+            )
+          : 0
+
+      const diffAvg = sumOfDiffs / mutualRatedPosts.length
+      const score = 100 - diffAvg
+
+      const userRelation = (await UserRelationModel.find({
+        walletAddresses: {
+          $all: [
+            userTokenPair.walletAddresses[0],
+            userTokenPair.walletAddresses[1],
+          ],
+        },
+      })) as any
+      // Update DB. 1) update matchScore. 2) update mutualRatedPosts
+      if (userRelation && userRelation?.length > 0) {
+        userRelation[0].matchScore = score
+        userRelation[0].mutualRatedPosts = [...mutualRatedPosts]
+
+        await userRelation[0].save()
+      } else {
+        const userRelationDoc: IUserRelation = {
+          walletAddresses: [
+            userTokenPair.walletAddresses[0],
+            userTokenPair.walletAddresses[1],
+          ],
+          matchScore: score,
+          mutualRatedPosts: [...mutualRatedPosts],
+        }
+
+        await UserRelationModel.create(userRelationDoc)
+      }
+    }
   }
 }
 

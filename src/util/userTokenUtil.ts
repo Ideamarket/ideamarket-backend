@@ -191,3 +191,22 @@ export async function sendMailForEmailVerification({
     dynamicTemplateData: { code },
   })
 }
+
+// Get list of unique token pairs
+export function getUserTokenPairs(userTokens: UserTokenDocument[]) {
+  if (userTokens.length <= 0) {
+    return []
+  }
+  const pairs = []
+  for (let i = 0; i < userTokens.length; i++) {
+    for (let j = i + 1; j < userTokens.length; j++) {
+      pairs.push({
+        walletAddresses: [
+          userTokens[i].walletAddress,
+          userTokens[j].walletAddress,
+        ],
+      })
+    }
+  }
+  return pairs
+}

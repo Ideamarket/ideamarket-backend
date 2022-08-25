@@ -7,10 +7,13 @@ import {
   fetchAllUserTokens,
   fetchUserHolders,
   fetchUserHoldings,
+  fetchUserRelations,
   fetchUserToken,
   sendUserTokenEmailVerificationCode,
   signInUser,
   syncAccountsToUserTokens,
+  syncAllUserRelations,
+  syncUserRelations,
   syncUserTokens,
   updateUserToken,
   uploadUserTokenProfilePhoto,
@@ -30,8 +33,10 @@ import {
   fetchUserTokenValidation,
   sendUserTokenEmailVerificationCodeValidation,
   signInUserValidation,
+  syncUserRelationsValidation,
   syncAllUserTokensValidation,
   updateuserTokenValidation,
+  fetchUserRelationsValidation,
 } from '../validations/user-token.validation'
 
 export const userTokenRouter = express.Router()
@@ -122,4 +127,27 @@ userTokenRouter.patch(
   syncAllUserTokensValidation,
   validateRequest,
   syncUserTokens
+)
+
+// Fetch All User Relations
+userTokenRouter.get(
+  '/relations',
+  fetchUserRelationsValidation,
+  validateRequest,
+  optionalAuthenticateAndSetAccount,
+  fetchUserRelations
+)
+
+// Calculate and store UserRelations based on newest triggers caused by users rating
+userTokenRouter.patch(
+  '/relation/sync',
+  syncUserRelationsValidation,
+  validateRequest,
+  syncUserRelations
+)
+
+userTokenRouter.patch(
+  '/relation/sync-all',
+  validateRequest,
+  syncAllUserRelations
 )

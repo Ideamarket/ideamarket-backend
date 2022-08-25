@@ -9,9 +9,12 @@ import {
   fetchAllUserTokensFromWeb2,
   fetchUserHoldersFromWeb2,
   fetchUserHoldingsFromWeb2,
+  fetchUserRelationsFromWeb2,
   fetchUserTokenFromDB,
   sendEmailVerificationCode,
   signInUserAndReturnToken,
+  syncAllUserRelationsInDB,
+  syncUserRelationsForWallet,
   syncUserTokenInWeb2,
   syncUserTokensInWeb2,
   updateUserTokenWeb2ProfileInDB,
@@ -20,6 +23,7 @@ import {
 import type {
   UserHoldersQueryOptions,
   UserHoldingsQueryOptions,
+  UserRelationsQueryOptions,
   UserTokenResponse,
   UserTokenResponseWithHoldingAmount,
   UserTokensQueryOptions,
@@ -316,6 +320,46 @@ export async function fetchAllUserTokens(req: Request, res: Response) {
   }
 }
 
+export async function fetchUserRelations(req: Request, res: Response) {
+  try {
+    const decodedAccount = (req as any).decodedAccount as
+      | DECODED_ACCOUNT
+      | null
+      | undefined
+    const userTokenId = req.query.userTokenId
+      ? (req.query.userTokenId as string)
+      : null
+    const username = req.query.username ? (req.query.username as string) : null
+    const walletAddress = req.query.walletAddress
+      ? (req.query.walletAddress as string).toLowerCase()
+      : null
+    const skip = Number.parseInt(req.query.skip as string) || 0
+    const limit = Number.parseInt(req.query.limit as string) || 10
+    const orderBy = req.query.orderBy as keyof UserTokenResponse
+    const orderDirection =
+      (req.query.orderDirection as string | undefined) ?? 'desc'
+
+    const options: UserRelationsQueryOptions = {
+      skip,
+      limit,
+      orderBy,
+      orderDirection,
+    }
+
+    const relations = await fetchUserRelationsFromWeb2({
+      userTokenId: userTokenId ?? decodedAccount?.id ?? null,
+      username,
+      walletAddress,
+      options,
+    })
+
+    return handleSuccess(res, { relations })
+  } catch (error) {
+    console.error('Error occurred while fetching user relations', error)
+    return handleError(res, error, 'Unable to fetch the user relations')
+  }
+}
+
 export async function syncUserTokens(req: Request, res: Response) {
   try {
     const { walletAddress } = req.body
@@ -334,5 +378,31 @@ export async function syncUserTokens(req: Request, res: Response) {
   } catch (error) {
     console.error('Error occurred while syncing user tokens', error)
     return handleError(res, error, 'Unable to sync user tokens')
+  }
+}
+
+export async function syncUserRelations(req: Request, res: Response) {
+  try {
+    const { walletAddress, ratedPostID, rating } = req.body
+
+    await syncUserRelationsForWallet({ walletAddress, ratedPostID, rating })
+    return handleSuccess(res, {
+      message: `User relations has been updated for ${walletAddress as string}`,
+    })
+  } catch (error) {
+    console.error('Error occurred while syncing user relations', error)
+    return handleError(res, error, 'Unable to sync user relations')
+  }
+}
+
+export async function syncAllUserRelations(req: Request, res: Response) {
+  try {
+    await syncAllUserRelationsInDB()
+    return handleSuccess(res, {
+      message: `All user relations have been updated`,
+    })
+  } catch (error) {
+    console.error('Error occurred while syncing all user relations', error)
+    return handleError(res, error, 'Unable to sync all user relations')
   }
 }
