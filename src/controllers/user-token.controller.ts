@@ -385,7 +385,11 @@ export async function syncUserRelations(req: Request, res: Response) {
   try {
     const { walletAddress, ratedPostID, rating } = req.body
 
-    await syncUserRelationsForWallet({ walletAddress, ratedPostID, rating })
+    await syncUserRelationsForWallet({
+      walletAddress: walletAddress?.toLowerCase(),
+      ratedPostID,
+      rating,
+    })
     return handleSuccess(res, {
       message: `User relations has been updated for ${walletAddress as string}`,
     })
