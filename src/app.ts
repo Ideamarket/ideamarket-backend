@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-floating-promises */
 import config from 'config'
+// import timeout from 'connect-timeout'
 import cors from 'cors'
 import dotenv from 'dotenv'
 import express from 'express'
@@ -20,6 +21,7 @@ app.use(express.urlencoded({ extended: false }))
 app.use(fileUpload())
 app.use(setCorrelationId)
 app.use(requestLogger)
+// app.use(timeout(7_200_000)) // Use this for debugging. By default request will timeout after 5 minutes. This increases that timeout. 1 hour = 3,600,000 ms. 224 users took 46 minutes.
 
 // MongoDB
 connectMongoDB()
