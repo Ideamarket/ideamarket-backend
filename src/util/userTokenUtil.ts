@@ -193,7 +193,7 @@ export async function sendMailForEmailVerification({
 }
 
 // Get list of unique token pairs
-export function getUserTokenPairs(userTokens: UserTokenDocument[]) {
+export function getUserTokenPairs(userTokens: any[]) {
   if (userTokens.length <= 0) {
     return []
   }
@@ -201,10 +201,7 @@ export function getUserTokenPairs(userTokens: UserTokenDocument[]) {
   for (let i = 0; i < userTokens.length; i++) {
     for (let j = i + 1; j < userTokens.length; j++) {
       pairs.push({
-        walletAddresses: [
-          userTokens[i].walletAddress,
-          userTokens[j].walletAddress,
-        ],
+        userTokens: [userTokens[i], userTokens[j]],
       })
     }
   }

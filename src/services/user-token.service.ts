@@ -631,8 +631,7 @@ export async function syncUserRelationsForWallet({
 
 // eslint-disable-next-line sonarjs/cognitive-complexity
 export async function syncAllUserRelationsInDB() {
-  const allUserTokens = await UserTokenModel.find()
-  const allUserTokenPairs = getUserTokenPairs(allUserTokens)
+  const ideamarketPostsContractAddress = getIdeamarketPostsContractAddress()
   const opinionOptions: PostOpinionsQueryOptions = {
     latest: true,
     skip: 0,
@@ -642,21 +641,31 @@ export async function syncAllUserRelationsInDB() {
     search: '',
     filterTokens: [],
   }
+
+  const allUserTokens = await UserTokenModel.find()
+
+  const allUserTokensWithOpinions = await Promise.all(
+    allUserTokens.map(async (userToken: UserTokenDocument) => {
+      let userOpinionsResponse = null
+      if (userToken.totalRatingsCount > 0) {
+        // This is most time consuming statement, so only do it if user has ratings
+        userOpinionsResponse = await fetchPostOpinionsByWalletFromWeb2({
+          contractAddress: ideamarketPostsContractAddress,
+          walletAddress: userToken.walletAddress,
+          options: opinionOptions,
+        })
+      }
+      return {
+        ...userToken.toObject(), // This method gets document variable. Otherwise, data doesn't come though
+        userOpinions: userOpinionsResponse?.postOpinions ?? [],
+      }
+    })
+  )
+
+  const allUserTokenPairs = getUserTokenPairs(allUserTokensWithOpinions)
   for await (const userTokenPair of allUserTokenPairs) {
-    const contractAddress = getIdeamarketPostsContractAddress()
-    // Get opinions for both wallets
-    const wallet1OpinionsObject = await fetchPostOpinionsByWalletFromWeb2({
-      contractAddress,
-      walletAddress: userTokenPair.walletAddresses[0],
-      options: opinionOptions,
-    })
-    const wallet1Opinions = wallet1OpinionsObject.postOpinions
-    const wallet2OpinionsObject = await fetchPostOpinionsByWalletFromWeb2({
-      contractAddress,
-      walletAddress: userTokenPair.walletAddresses[1],
-      options: opinionOptions,
-    })
-    const wallet2Opinions = wallet2OpinionsObject.postOpinions
+    const wallet1Opinions = userTokenPair.userTokens[0]?.userOpinions
+    const wallet2Opinions = userTokenPair.userTokens[1]?.userOpinions
     // Get list of mutually rated posts for this user pair
     const mutualRatedPosts = []
     for (const wallet1Opinion of wallet1Opinions) {
@@ -691,8 +700,8 @@ export async function syncAllUserRelationsInDB() {
       const userRelation = (await UserRelationModel.find({
         walletAddresses: {
           $all: [
-            userTokenPair.walletAddresses[0],
-            userTokenPair.walletAddresses[1],
+            userTokenPair.userTokens[0]?.walletAddress,
+            userTokenPair.userTokens[1]?.walletAddress,
           ],
         },
       })) as any
@@ -705,8 +714,8 @@ export async function syncAllUserRelationsInDB() {
       } else {
         const userRelationDoc: IUserRelation = {
           walletAddresses: [
-            userTokenPair.walletAddresses[0],
-            userTokenPair.walletAddresses[1],
+            userTokenPair.userTokens[0]?.walletAddress,
+            userTokenPair.userTokens[1]?.walletAddress,
           ],
           matchScore: score,
           mutualRatedPosts: [...mutualRatedPosts],
