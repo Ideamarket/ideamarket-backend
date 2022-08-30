@@ -133,6 +133,7 @@ function mapCitations(
             tokenID: citationPost.tokenID,
             content: citationPost.content,
             compositeRating: citationPost.compositeRating,
+            averageRating: citationPost.averageRating,
             totalRatingsCount: citationPost.totalRatingsCount || 0,
             latestRatingsCount: citationPost.compositeRating || 0,
             minterToken: minter
