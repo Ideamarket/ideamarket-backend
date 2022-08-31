@@ -2,6 +2,7 @@ import express from 'express'
 
 import {
   fetchPostMetadata,
+  syncChainToPostMetadata,
   updatePostMetadata,
 } from '../controllers/post-metadata.controller'
 import { validateRequest } from '../middleware/validateRequest'
@@ -24,4 +25,10 @@ postMetadataRouter.patch(
   updatePostMetadataValidation,
   validateRequest,
   updatePostMetadata
+)
+
+postMetadataRouter.patch(
+  '/syncChainToDB',
+  validateRequest,
+  syncChainToPostMetadata
 )

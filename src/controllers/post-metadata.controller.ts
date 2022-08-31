@@ -4,6 +4,8 @@ import type { Request, Response } from 'express'
 import { handleError, handleSuccess } from '../lib/base'
 import {
   fetchPostMetadataFromWeb2,
+  syncAllChainToPostMetadata,
+  syncChainToPostMetadataByTokenID,
   updatePostMetadataInWeb2,
 } from '../services/post-metadata.service'
 
@@ -53,5 +55,35 @@ export async function updatePostMetadata(req: Request, res: Response) {
       error
     )
     return handleError(res, error, 'Unable to update ideamarket post')
+  }
+}
+
+export async function syncChainToPostMetadata(req: Request, res: Response) {
+  try {
+    const tokenID = req.body.tokenID ? Number.parseInt(req.body.tokenID) : null
+
+    if (tokenID) {
+      await syncChainToPostMetadataByTokenID({
+        tokenID,
+      })
+      return handleSuccess(res, {
+        message: `Ideamarket post with tokenID=${tokenID} has been synced from chain to postmetadatas table`,
+      })
+    }
+
+    await syncAllChainToPostMetadata()
+    return handleSuccess(res, {
+      message: `All unsynced Ideamarket posts have been synced from chain to postmetadatas table`,
+    })
+  } catch (error) {
+    console.error(
+      `Error occurred while syncing Ideamarket post with tokenID=${req.body.tokenID} from chain to DB`,
+      error
+    )
+    return handleError(
+      res,
+      error,
+      'Unable to sync ideamarket post from chain to DB'
+    )
   }
 }

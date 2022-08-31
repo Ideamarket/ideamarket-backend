@@ -25,7 +25,7 @@ export async function getIdeamarketPostByTokenID(tokenID: number) {
         tokenID,
         minter: dbPost?.minterAddress,
         content: dbPost?.content,
-        timestamp: dbPost?.createdAt,
+        timestamp: dbPost?.postedAt ? dbPost?.postedAt : dbPost?.createdAt,
         categories: dbPost?.categories,
       }
     : null
@@ -43,4 +43,18 @@ export async function getAllIdeamarketPosts() {
   }
 
   return allPosts
+}
+
+export async function getUnsyncedIdeamarketPostIDs() {
+  const allPostIDs = []
+  const tokenIDs = await getTokenIDsOfAllPosts()
+
+  for await (const tokenID of tokenIDs) {
+    const customPost = await getIdeamarketPostByTokenID(tokenID)
+    if (!customPost) {
+      allPostIDs.push(tokenID)
+    }
+  }
+
+  return allPostIDs
 }

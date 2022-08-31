@@ -5,7 +5,7 @@ export interface IPostMetadata {
   tokenID: number
   minterAddress: string
   content: string
-  // postedAt: Date | null
+  postedAt: Date | null
   categories: string[]
 }
 
@@ -17,7 +17,7 @@ export interface PostMetadataDocument extends mongoose.Document {
   tokenID: number
   minterAddress: string
   content: string
-  // postedAt: Date | null
+  postedAt: Date | null
   categories: string[]
 }
 
@@ -26,7 +26,7 @@ const PostMetadataSchema = new mongoose.Schema(
     tokenID: { type: Number, required: true, index: true },
     minterAddress: { type: String, required: true, index: true },
     content: { type: String, required: false },
-    // postedAt: { type: Date, required: false },
+    postedAt: { type: Date, required: false },
     categories: { type: [String], required: false },
   },
   { timestamps: true, versionKey: false }
