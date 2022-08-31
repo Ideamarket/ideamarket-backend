@@ -867,6 +867,12 @@ export async function syncPostInWeb2(tokenID: number) {
   }
 
   const post = await getIdeamarketPostByTokenID(tokenID)
+
+  if (!post) {
+    console.error('Post does not exist in metadata DB')
+    throw new InternalServerError('Post does not exist in metadata DB')
+  }
+
   await updatePostInWeb2({
     post: {
       tokenID: post.tokenID,

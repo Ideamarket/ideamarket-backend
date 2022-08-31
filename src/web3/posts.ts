@@ -20,13 +20,15 @@ export async function getIdeamarketPostByTokenID(tokenID: number) {
   // const ideamarketPostsContract = getIdeamarketPostsContract()
   // return ideamarketPostsContract.methods.getPost(tokenID).call()
   const dbPost = (await PostMetadataModel.findOne({ tokenID })) as any
-  return {
-    tokenID,
-    minter: dbPost?.minterAddress,
-    content: dbPost?.content,
-    timestamp: dbPost?.createdAt,
-    categories: dbPost?.categories,
-  }
+  return dbPost
+    ? {
+        tokenID,
+        minter: dbPost?.minterAddress,
+        content: dbPost?.content,
+        timestamp: dbPost?.createdAt,
+        categories: dbPost?.categories,
+      }
+    : null
 }
 
 export async function getAllIdeamarketPosts() {
@@ -35,7 +37,9 @@ export async function getAllIdeamarketPosts() {
 
   for await (const tokenID of tokenIDs) {
     const customPost = await getIdeamarketPostByTokenID(tokenID)
-    allPosts.push(customPost)
+    if (customPost) {
+      allPosts.push(customPost)
+    }
   }
 
   return allPosts
