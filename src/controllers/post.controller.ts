@@ -120,6 +120,7 @@ export async function fetchPostCitations(req: Request, res: Response) {
       contractAddress,
       tokenID,
       options,
+      addCitationsOfCitations: true,
     })
     return handleSuccess(res, { citations })
   } catch (error) {

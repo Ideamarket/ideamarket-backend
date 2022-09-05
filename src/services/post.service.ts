@@ -129,37 +129,9 @@ export async function fetchAllPostsFromWeb2({
     .limit(limit)
 
   return Promise.all(
-    posts.map(async (post) => {
-      const topCitations = await fetchPostCitationsFromWeb2({
-        contractAddress: null,
-        tokenID: post.tokenID,
-        options: {
-          latest: true,
-          skip: 0,
-          limit: 3,
-          orderBy: 'compositeRating', // TODO: order by new citation rating thing
-          orderDirection: 'desc',
-        },
-      })
-      post.topCitations = topCitations.forCitations
-
-      const topRatings = await fetchPostOpinionsByTokenIdFromWeb2({
-        contractAddress: null,
-        tokenID: post.tokenID,
-        options: {
-          latest: true,
-          skip: 0,
-          limit: 10,
-          orderBy: 'deposits',
-          orderDirection: 'desc',
-          search: '',
-          filterTokens: [],
-        },
-      })
-      post.topRatings = topRatings.postOpinions
-
-      return mapPostResponse(post)
-    })
+    posts.map((post: any) =>
+      fetchAdditionalPostDataAndMap({ post, addCitationsOfCitations: false })
+    )
   )
 }
 
@@ -214,10 +186,12 @@ export async function fetchPostCitationsFromWeb2({
   contractAddress: _contractAddress,
   tokenID,
   options,
+  addCitationsOfCitations,
 }: {
   contractAddress: string | null | undefined
   tokenID: number
   options: PostCitationsQueryOptions
+  addCitationsOfCitations: boolean
 }) {
   const contractAddress =
     _contractAddress ?? getIdeamarketPostsContractAddress()
@@ -245,32 +219,25 @@ export async function fetchPostCitationsFromWeb2({
   sortOptions[orderBy] = orderDirection
   sortOptions._id = -1
 
-  // For Filter Options
-  const forFilterOptions: FilterQuery<NFTOpinionDocument>[] = []
-  forFilterOptions.push(
+  const filterOptions: FilterQuery<NFTOpinionDocument>[] = []
+  filterOptions.push(
     { contractAddress },
-    { tokenID: { $in: citationTokenIds.forCitationsTokenIds } }
+    {
+      tokenID: {
+        $in: [
+          ...citationTokenIds.forCitationsTokenIds,
+          ...citationTokenIds.againstCitationsTokenIds,
+        ],
+      },
+    }
   )
-  // For Filter Query
-  let forFilterQuery = {}
-  if (forFilterOptions.length > 0) {
-    forFilterQuery = { $and: forFilterOptions }
+
+  let filterQuery = {}
+  if (filterOptions.length > 0) {
+    filterQuery = { $and: filterOptions }
   }
 
-  // Against Filter Options
-  const againstFilterOptions: FilterQuery<NFTOpinionDocument>[] = []
-  againstFilterOptions.push(
-    { contractAddress },
-    { tokenID: { $in: citationTokenIds.againstCitationsTokenIds } }
-  )
-  // Against Filter Query
-  let againstFilterQuery = {}
-  if (againstFilterOptions.length > 0) {
-    againstFilterQuery = { $and: againstFilterOptions }
-  }
-
-  // For Citations Posts
-  const forCitationsPosts = await PostModel.aggregate([
+  const citationPosts = await PostModel.aggregate([
     {
       $lookup: {
         from: 'usertokens',
@@ -280,34 +247,61 @@ export async function fetchPostCitationsFromWeb2({
       },
     },
     { $set: { userToken: { $arrayElemAt: ['$UserTokens', 0] } } },
-    { $match: forFilterQuery },
+    { $match: filterQuery },
   ])
     .sort(sortOptions)
     .skip(skip)
     .limit(limit)
-  const forCitations = forCitationsPosts.map((post) => mapPostResponse(post))
 
-  // Against Citations Posts
-  const againstCitationsPosts = await PostModel.aggregate([
-    {
-      $lookup: {
-        from: 'usertokens',
-        localField: 'minterAddress',
-        foreignField: 'walletAddress',
-        as: 'UserTokens',
-      },
-    },
-    { $set: { userToken: { $arrayElemAt: ['$UserTokens', 0] } } },
-    { $match: againstFilterQuery },
-  ])
-    .sort(sortOptions)
-    .skip(skip)
-    .limit(limit)
-  const againstCitations = againstCitationsPosts.map((post) =>
-    mapPostResponse(post)
+  return Promise.all(
+    citationPosts.map((post: any) =>
+      addCitationsOfCitations
+        ? fetchAdditionalPostDataAndMap({
+            post,
+            addCitationsOfCitations: false,
+          })
+        : mapPostResponse(post)
+    )
   )
+}
 
-  return { forCitations, againstCitations }
+async function fetchAdditionalPostDataAndMap({
+  post,
+  addCitationsOfCitations,
+}: {
+  post: any
+  addCitationsOfCitations: boolean
+}) {
+  const topCitations = await fetchPostCitationsFromWeb2({
+    contractAddress: null,
+    tokenID: post.tokenID,
+    options: {
+      latest: true,
+      skip: 0,
+      limit: 3,
+      orderBy: 'compositeRating', // TODO: order by new citation rating thing
+      orderDirection: 'desc',
+    },
+    addCitationsOfCitations,
+  })
+  post.topCitations = topCitations
+
+  const topRatings = await fetchPostOpinionsByTokenIdFromWeb2({
+    contractAddress: null,
+    tokenID: post.tokenID,
+    options: {
+      latest: true,
+      skip: 0,
+      limit: 10,
+      orderBy: 'deposits',
+      orderDirection: 'desc',
+      search: '',
+      filterTokens: [],
+    },
+  })
+  post.topRatings = topRatings.postOpinions
+
+  return mapPostResponse(post)
 }
 
 export async function fetchAllPostCitationsTokenIds({
