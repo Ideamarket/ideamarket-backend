@@ -59,6 +59,11 @@ export type CitationPost = {
   } | null
 }
 
+export type CitationTokenIds = {
+  forCitationsTokenIds: number[]
+  againstCitationsTokenIds: number[]
+} | null
+
 export type PostResponse = {
   id: string
   contractAddress: string
@@ -80,6 +85,7 @@ export type PostResponse = {
   minterToken: UserTokenResponse | null
   topCitations: PostResponse[]
   topRatings: any[]
+  isPostInFavorOfParent: boolean
 }
 
 export type PostOpinionsQueryOptions = {

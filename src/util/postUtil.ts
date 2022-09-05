@@ -9,15 +9,22 @@ import type {
   PostResponse,
   PostOpinionWithPostResponse,
   CitationResponse,
+  CitationTokenIds,
 } from '../types/post.types'
 import { mapUserTokenResponse } from './userTokenUtil'
 
 const cloudFrontDomain: string = config.get('userToken.cloudFrontDomain')
 
-export function mapPostResponse(post: any): PostResponse | null {
+export function mapPostResponse(
+  post: any,
+  citationTokenIds?: CitationTokenIds
+): PostResponse | null {
   if (!post) {
     return null
   }
+
+  const inFavor =
+    citationTokenIds?.forCitationsTokenIds.includes(post.tokenID) ?? true
 
   return {
     id: post._id.toString(),
@@ -40,6 +47,7 @@ export function mapPostResponse(post: any): PostResponse | null {
     minterToken: mapUserTokenResponse(post.userToken),
     topCitations: post.topCitations,
     topRatings: post.topRatings,
+    isPostInFavorOfParent: inFavor,
   }
 }
 

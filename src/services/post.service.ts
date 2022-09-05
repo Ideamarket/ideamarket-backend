@@ -20,6 +20,7 @@ import type { UserTokenDocument } from '../models/user-token.model'
 import { UserTokenModel } from '../models/user-token.model'
 import type { Web3NFTOpinionData } from '../types/nft-opinion.types'
 import type {
+  CitationTokenIds,
   PostCitationsQueryOptions,
   PostCitedByQueryOptions,
   PostOpinionsQueryOptions,
@@ -130,7 +131,11 @@ export async function fetchAllPostsFromWeb2({
 
   return Promise.all(
     posts.map((post: any) =>
-      fetchAdditionalPostDataAndMap({ post, addCitationsOfCitations: false })
+      fetchAdditionalPostDataAndMap({
+        post,
+        addCitationsOfCitations: false,
+        citationTokenIds: null,
+      })
     )
   )
 }
@@ -259,8 +264,9 @@ export async function fetchPostCitationsFromWeb2({
         ? fetchAdditionalPostDataAndMap({
             post,
             addCitationsOfCitations: false,
+            citationTokenIds,
           })
-        : mapPostResponse(post)
+        : mapPostResponse(post, citationTokenIds)
     )
   )
 }
@@ -268,9 +274,11 @@ export async function fetchPostCitationsFromWeb2({
 async function fetchAdditionalPostDataAndMap({
   post,
   addCitationsOfCitations,
+  citationTokenIds,
 }: {
   post: any
   addCitationsOfCitations: boolean
+  citationTokenIds: CitationTokenIds
 }) {
   const topCitations = await fetchPostCitationsFromWeb2({
     contractAddress: null,
@@ -301,7 +309,7 @@ async function fetchAdditionalPostDataAndMap({
   })
   post.topRatings = topRatings.postOpinions
 
-  return mapPostResponse(post)
+  return mapPostResponse(post, citationTokenIds)
 }
 
 export async function fetchAllPostCitationsTokenIds({
