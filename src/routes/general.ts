@@ -8,6 +8,7 @@ import {
   fetchUrlMetadata,
   fetchValidUrl,
 } from '../controllers/general.controller'
+import { cacheThisRoute } from '../middleware/cache'
 import { validateRequest } from '../middleware/validateRequest'
 import {
   fetchUrlMetadataValidation,
@@ -34,6 +35,7 @@ generalRouter.get('/apr', fetchLatestApr)
 
 generalRouter.get('/lp-apr', fetchLatestLPApr)
 
-generalRouter.get('/eth-price', fetchETHPrice)
+// Cache for this route expires in 1 hour. Then, ETH price is updated
+generalRouter.get('/eth-price', cacheThisRoute(3600), fetchETHPrice)
 
 export { generalRouter }
