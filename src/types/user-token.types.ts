@@ -53,7 +53,7 @@ export type UserHoldingsQueryOptions = {
 export type UserRelationsQueryOptions = {
   skip: number
   limit: number
-  orderBy: keyof UserTokenResponse | 'matchScore'
+  orderBy: keyof UserTokenResponse | 'matchScore' | 'mutualPostCount'
   orderDirection: string
   // search: string | null
 }

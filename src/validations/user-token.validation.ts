@@ -236,6 +236,7 @@ export const fetchUserRelationsValidation = [
       'latestRatingsCount',
       'holdingAmount',
       'matchScore',
+      'mutualPostCount',
     ])
     .withMessage('OrderBy cannot be empty and should be a valid string'),
 ]

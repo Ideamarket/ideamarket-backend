@@ -511,6 +511,17 @@ export async function fetchUserRelationsFromWeb2({
           compareFn(a.userRelation, b.userRelation, orderBy, orderDirection)
         )
         .slice(skip, skip + limit)
+      // eslint-disable-next-line sonarjs/elseif-without-else
+    } else if (orderBy === 'mutualPostCount') {
+      return userRelationsWithUserTokens
+        .sort((a: any, b: any) =>
+          orderDirection === 'asc'
+            ? a.userRelation.mutualRatedPosts.length -
+              b.userRelation.mutualRatedPosts.length
+            : b.userRelation.mutualRatedPosts.length -
+              a.userRelation.mutualRatedPosts.length
+        )
+        .slice(skip, skip + limit)
     }
 
     return userRelationsWithUserTokens
