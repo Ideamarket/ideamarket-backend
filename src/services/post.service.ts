@@ -287,7 +287,7 @@ async function fetchAdditionalPostDataAndMap({
       latest: true,
       skip: 0,
       limit: 3,
-      orderBy: 'compositeRating', // TODO: order by new citation rating thing
+      orderBy: 'marketInterest', // TODO: order by new citation rating thing
       orderDirection: 'desc',
     },
     addCitationsOfCitations,
