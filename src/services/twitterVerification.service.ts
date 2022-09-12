@@ -42,7 +42,7 @@ export async function initiateTwitterVerification(
   decodedAccount: DECODED_ACCOUNT
 ): Promise<TwitterVerificationInitiation> {
   const requestData = {
-    url: `https://api.twitter.com/oauth/request_token?oauth_callback=${twitterCallbackUrl}`,
+    url: `https://api.twitter.com/oauth/request_token?oauth_callback=${twitterCallbackUrl}&x_auth_access_type=read`,
     method: 'POST',
   }
 
