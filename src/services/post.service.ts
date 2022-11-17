@@ -34,6 +34,7 @@ import {
   mapPostOpinionWithPost,
   mapPostResponse,
 } from '../util/postUtil'
+import { ZERO_ADDRESS } from '../util/web3Util'
 import { web3 } from '../web3/contract'
 import { getDeployedAddresses } from '../web3/deployedAddresses'
 import { getOpinionsSummaryOfNFT } from '../web3/opinions/nft-opinions'
@@ -846,7 +847,7 @@ export async function syncAllPostsInWeb2() {
     await updatePostInWeb2({
       post: {
         tokenID: post.tokenID,
-        minter: post.minter.toLowerCase(),
+        minter: post.minter ? post.minter.toLowerCase() : ZERO_ADDRESS,
         content: post.content,
         timestamp: post.timestamp.toString(),
         categories: post.categories,
