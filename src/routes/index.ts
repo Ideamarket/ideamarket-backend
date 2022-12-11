@@ -13,6 +13,8 @@ import { postMetadataRouter } from './post-metadata'
 import { subgraphRouter } from './subgraph'
 import { switchRouter } from './switch'
 import { triggerRouter } from './trigger'
+import { twitterPostRouter } from './twitter-post'
+import { twitterUserTokenRouter } from './twitter-user-token'
 import { twitterVerificationRouter } from './twitterVerification'
 import { userTokenRouter } from './user-token'
 import { versionRouter } from './version'
@@ -38,5 +40,7 @@ routes.use('/version', versionRouter)
 routes.use('/votes', votesRouter)
 routes.use('/avatar', avatarRouter)
 routes.use('/post-metadata', postMetadataRouter)
+routes.use('/twitter-post', twitterPostRouter)
+routes.use('/twitter-user-token', twitterUserTokenRouter)
 
 export { routes }

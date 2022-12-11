@@ -1,7 +1,9 @@
 import config from 'config'
 import jwt from 'jsonwebtoken'
 
+import { TwitterUserTokenModel } from '../models/twitter-user-token.model'
 import { UserTokenModel } from '../models/user-token.model'
+import type { TwitterUserTokenResponse } from '../types/twitter-user-token.types'
 
 const jwtSecretKey: string = config.get('jwt.secretKey')
 const jwtExpiry: number = config.get('jwt.expiry')
@@ -96,6 +98,37 @@ export async function verifyAuthTokenAndReturnAccount(
   } catch (error) {
     console.error(
       'Error occurred while fetching account from auth token',
+      error
+    )
+    return null
+  }
+}
+
+/**
+ * Verifies the validity of the twitter auth token and returns the TwitterUserToken
+ */
+export async function verifyTwitterAuthTokenAndReturnAccount(
+  token: string
+): Promise<TwitterUserTokenResponse | null> {
+  try {
+    const accountId = decodeAuthToken(token)
+    if (!accountId) {
+      return null
+    }
+
+    const twitterUserToken = await TwitterUserTokenModel.findById(accountId)
+    if (!twitterUserToken) {
+      return null
+    }
+
+    return {
+      id: twitterUserToken._id,
+      twitterUsername: twitterUserToken.twitterUsername || null,
+      twitterUserId: twitterUserToken.twitterUserId || null,
+    }
+  } catch (error) {
+    console.error(
+      'Error occurred while fetching twitter user token from auth token',
       error
     )
     return null
