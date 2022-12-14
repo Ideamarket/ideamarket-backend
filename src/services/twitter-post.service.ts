@@ -1,8 +1,3 @@
- 
- 
- 
- 
- 
 import escapeStringRegexp from 'escape-string-regexp'
 import mongoose from 'mongoose'
 import type { FilterQuery } from 'mongoose'
@@ -812,7 +807,7 @@ export async function updateTwitterPostDB({
     // await CompositeRatingModel.create(compositeRatingDoc)
 
     // return updatedPost
-    return
+    return true
   } catch (error) {
     console.error('Error occurred while updating Twitter post', error)
     return await Promise.resolve(null)

@@ -44,8 +44,6 @@ const TwitterPostSchema = new mongoose.Schema(
   { timestamps: true, versionKey: false }
 )
 
-TwitterPostSchema.index({ contractAddress: 1, tokenID: 1 }, { unique: true })
-
 TwitterPostSchema.statics.build = (attr: ITwitterPost) => {
   return new TwitterPostModel(attr)
 }

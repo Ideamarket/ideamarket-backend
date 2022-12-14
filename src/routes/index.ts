@@ -13,6 +13,7 @@ import { postMetadataRouter } from './post-metadata'
 import { subgraphRouter } from './subgraph'
 import { switchRouter } from './switch'
 import { triggerRouter } from './trigger'
+import { twitterOpinionRouter } from './twitter-opinion'
 import { twitterPostRouter } from './twitter-post'
 import { twitterUserTokenRouter } from './twitter-user-token'
 import { twitterVerificationRouter } from './twitterVerification'
@@ -42,5 +43,6 @@ routes.use('/avatar', avatarRouter)
 routes.use('/post-metadata', postMetadataRouter)
 routes.use('/twitter-post', twitterPostRouter)
 routes.use('/twitter-user-token', twitterUserTokenRouter)
+routes.use('/twitter-opinion', twitterOpinionRouter)
 
 export { routes }

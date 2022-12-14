@@ -93,8 +93,9 @@ export async function fetchTwitterPost(req: Request, res: Response) {
 
 export async function updateTwitterPost(req: Request, res: Response) {
   try {
+    const { decodedAccount } = req as any
     const postID = (req.body.postID as string) || null
-    const twitterUsername = (req.body.twitterUsername as string) || null
+    const twitterUsername = (decodedAccount.twitterUsername as string) || null
     const content = (req.body.content as string) || null
     const categories =
       (req.body.categories as string | undefined)?.split(',') ?? []
