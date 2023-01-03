@@ -7,6 +7,7 @@ export type TwitterUserTokenResponse = {
   id: string
   twitterUserId: string | null
   twitterUsername: string | null
+  twitterProfilePicURL: string | null
 }
 
 export type TwitterUserTokensQueryOptions = {

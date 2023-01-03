@@ -17,7 +17,8 @@ export async function createTwitterOpinion(req: Request, res: Response) {
     const ratedBy = decodedAccount.twitterUsername as string
     const ratedPostID = req.body.ratedPostID as string
     const rating = Number.parseInt(req.body.rating as string)
-    const citations = [] as any // TODO
+    // citations are objects that look like this: { postID: number, inFavor: boolean }
+    const citations = req.body.citations ? JSON.parse(req.body.citations) : []
 
     const opinion = await createTwitterOpinionDB({
       ratedPostID,

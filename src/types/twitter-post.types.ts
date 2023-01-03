@@ -1,15 +1,6 @@
-import type { UserTokenResponse } from './user-token.types'
+import type mongoose from 'mongoose'
 
-export type Web3IdeamarketPost = {
-  tokenID: number
-  minter: string
-  content: string
-  timestamp: string
-  categories: string[]
-  imageLink: string
-  isURL: boolean
-  urlContent: string
-}
+import type { TwitterUserTokenResponse } from './twitter-user-token.types'
 
 export type TwitterPostQueryOptions = {
   skip: number
@@ -39,29 +30,9 @@ export type TwitterPostCitedByQueryOptions = {
   orderDirection: string
 }
 
-export type TwitterCitationResponse = {
-  citation: TwitterCitationPost | null
-  inFavor: boolean
-}
-
-export type TwitterCitationPost = {
-  postId: string
-  tokenID: number
-  content: string
-  compositeRating: number
-  totalRatingsCount: number
-  latestRatingsCount: number
-  minterToken: {
-    id: string
-    walletAddress: string
-    username: string | null
-    profilePhoto: string | null
-  } | null
-}
-
-export type TwitterCitationTokenIds = {
-  forCitationsTokenIds: number[]
-  againstCitationsTokenIds: number[]
+export type TwitterCitationPostIds = {
+  forCitationsPostIds: mongoose.Types.ObjectId[]
+  againstCitationsPostIds: mongoose.Types.ObjectId[]
 } | null
 
 export type TwitterPostRequest = {
@@ -73,70 +44,16 @@ export type TwitterPostRequest = {
 
 export type TwitterPostResponse = {
   postID: string
-  twitterUsername: string
   content: string
   postedAt: Date | null
-  categories: string[]
+  // categories: string[]
   averageRating: number
-  compositeRating: number
-  marketInterest: number
+  // compositeRating: number
+  // marketInterest: number
   totalRatingsCount: number
   latestRatingsCount: number
-  minterToken: UserTokenResponse | null
+  userToken: TwitterUserTokenResponse | null
   topCitations: TwitterPostResponse[]
   topRatings: any[]
   isPostInFavorOfParent: boolean
-}
-
-export type TwitterPostOpinionsQueryOptions = {
-  latest: boolean
-  skip: number
-  limit: number
-  orderBy: keyof TwitterPostOpinionWithPostResponse
-  orderDirection: string
-  search: string | null
-  filterTokens: number[]
-}
-
-export type TwitterPostOpinionsResponse = {
-  contractAddress: string
-  tokenID: number
-  opinions: TwitterPostOpinion[]
-}
-
-export type TwitterPostOpinion = {
-  contractAddress: string
-  tokenID: number
-  ratedBy: string
-  ratedAt: Date
-  rating: number
-  comment: string | null
-  citations: TwitterCitationResponse[]
-  userToken: UserTokenResponse | null
-}
-
-export type TwitterPostOpinionWithPostResponse = {
-  contractAddress: string
-  tokenID: number
-  twitterUsername: string | null
-  content: string | null
-  postedAt: Date | null
-  categories: string[]
-  imageLink: string | null
-  isURL: boolean | null
-  urlContent: string | null
-  ratedBy: string
-  ratedAt: Date
-  rating: number
-  comment: string | null
-  citations: TwitterCitationResponse[]
-  averageRating: number
-  compositeRating: number
-  marketInterest: number
-  totalRatingsCount: number
-  latestRatingsCount: number
-  totalCommentsCount: number
-  latestCommentsCount: number
-  deposits?: number
-  minterToken: UserTokenResponse | null
 }

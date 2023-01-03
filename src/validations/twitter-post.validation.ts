@@ -36,7 +36,6 @@ export const fetchPostCitationsValidation = [
     .isString()
     .isIn([
       'averageRating',
-      'compositeRating',
       'marketInterest',
       'postedAt',
       'totalRatingsCount',

@@ -33,7 +33,7 @@ const TwitterOpinionSchema = new mongoose.Schema(
       type: [
         {
           _id: false,
-          ratedPostID: { type: String, required: true },
+          postID: { type: String, required: true },
           inFavor: { type: Boolean, required: true },
         },
       ],

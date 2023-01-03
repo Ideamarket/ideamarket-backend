@@ -6,7 +6,7 @@ import {
   fetchAllTwitterPosts,
   // fetchCitedByPosts,
   fetchTwitterPost,
-  // fetchPostCitations,
+  fetchPostCitations,
   // fetchPostCompositeRatings,
   updateTwitterPost,
 } from '../controllers/twitter-post.controller'
@@ -18,7 +18,7 @@ import {
   // fetchPostOpinionsByWalletValidation,
   fetchTwitterPostValidation,
   // fetchPostCompositeRatingsValidation,
-  // fetchPostCitationsValidation,
+  fetchPostCitationsValidation,
   // fetchCitedByPostsValidation,
 } from '../validations/twitter-post.validation'
 
@@ -46,37 +46,16 @@ twitterPostRouter.patch(
   updateTwitterPost
 )
 
-// twitterPostRouter.get(
-//   '/citations',
-//   fecthPostCitationsValidation,
-//   validateRequest,
-//   fetchPostCitations
-// )
+twitterPostRouter.get(
+  '/citations',
+  fetchPostCitationsValidation,
+  validateRequest,
+  fetchPostCitations
+)
 
 // twitterPostRouter.get(
 //   '/citedBy',
 //   fecthCitedByPostsValidation,
 //   validateRequest,
 //   fetchCitedByPosts
-// )
-
-// twitterPostRouter.get(
-//   '/opinions/token',
-//   fecthPostOpinionsByTokenIdValidation,
-//   validateRequest,
-//   fecthPostOpinionsByTokenId
-// )
-
-// twitterPostRouter.get(
-//   '/opinions/wallet',
-//   fecthPostOpinionsByWalletValidation,
-//   validateRequest,
-//   fecthPostOpinionsByWallet
-// )
-
-// twitterPostRouter.get(
-//   '/compositeRating',
-//   fetchPostCompositeRatingsValidation,
-//   validateRequest,
-//   fetchPostCompositeRatings
 // )

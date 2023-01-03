@@ -3,6 +3,7 @@ import type { Request, Response } from 'express'
 import { handleError, handleSuccess } from '../lib/base'
 import {
   fetchAllTwitterPostsFromWeb2,
+  fetchPostCitationsFromWeb2,
   // fetchPostCitationsFromWeb2,
   // fetchCitedByPostsService,
   // fetchPostCompositeRatingsFromWeb2,
@@ -12,7 +13,7 @@ import {
   updateTwitterPostDB,
 } from '../services/twitter-post.service'
 import type {
-  // TwitterPostCitationsQueryOptions,
+  TwitterPostCitationsQueryOptions,
   // TwitterPostCitedByQueryOptions,
   // TwitterPostOpinionsQueryOptions,
   // TwitterPostOpinionWithPostResponse,
@@ -108,13 +109,11 @@ export async function updateTwitterPost(req: Request, res: Response) {
       categories,
     } as TwitterPostRequest
 
-    await updateTwitterPostDB({
+    const updatedPost = await updateTwitterPostDB({
       twitterPost,
     })
     return handleSuccess(res, {
-      message: `Ideamarket post with postID=${
-        postID as string
-      } has been updated`,
+      post: updatedPost,
     })
   } catch (error) {
     console.error(
@@ -127,41 +126,37 @@ export async function updateTwitterPost(req: Request, res: Response) {
   }
 }
 
-// export async function fetchPostCitations(req: Request, res: Response) {
-//   try {
-//     const contractAddress = req.query.contractAddress
-//       ? (req.query.contractAddress as string)
-//       : null
-//     const tokenID = Number.parseInt(req.query.tokenID as string)
-//     const latest = req.query.latest
-//       ? (req.query.latest as string) === 'true'
-//       : true
-//     const skip = Number.parseInt(req.query.skip as string) || 0
-//     const limit = Number.parseInt(req.query.limit as string) || 10
-//     const orderBy = req.query.orderBy as keyof TwitterPostResponse
-//     const orderDirection =
-//       (req.query.orderDirection as string | undefined) ?? 'desc'
+export async function fetchPostCitations(req: Request, res: Response) {
+  try {
+    const postID = req.query.postID as string
+    const latest = req.query.latest
+      ? (req.query.latest as string) === 'true'
+      : true
+    const skip = Number.parseInt(req.query.skip as string) || 0
+    const limit = Number.parseInt(req.query.limit as string) || 10
+    const orderBy = req.query.orderBy as keyof TwitterPostResponse
+    const orderDirection =
+      (req.query.orderDirection as string | undefined) ?? 'desc'
 
-//     const options: TwitterPostCitationsQueryOptions = {
-//       latest,
-//       skip,
-//       limit,
-//       orderBy,
-//       orderDirection,
-//     }
+    const options: TwitterPostCitationsQueryOptions = {
+      latest,
+      skip,
+      limit,
+      orderBy,
+      orderDirection,
+    }
 
-//     const citations = await fetchPostCitationsFromWeb2({
-//       contractAddress,
-//       tokenID,
-//       options,
-//       addCitationsOfCitations: true,
-//     })
-//     return handleSuccess(res, { citations })
-//   } catch (error) {
-//     console.error('Error occurred while fetching all the citations', error)
-//     return handleError(res, error, 'Unable to fetch the citations')
-//   }
-// }
+    const citations = await fetchPostCitationsFromWeb2({
+      postID,
+      options,
+      addCitationsOfCitations: true,
+    })
+    return handleSuccess(res, { citations })
+  } catch (error) {
+    console.error('Error occurred while fetching all the citations', error)
+    return handleError(res, error, 'Unable to fetch the citations')
+  }
+}
 
 // export async function fetchCitedByPosts(req: Request, res: Response) {
 //   try {

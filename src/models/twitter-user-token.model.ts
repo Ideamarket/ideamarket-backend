@@ -8,6 +8,7 @@ export interface ITwitterUserToken {
   accessTokenSecret?: string
   twitterUserId?: string
   twitterUsername?: string
+  twitterProfilePicURL?: string
   // totalRatingsCount: number
   // latestRatingsCount: number
 }
@@ -24,6 +25,7 @@ interface TwitterUserTokenDocument extends mongoose.Document {
   accessTokenSecret: string
   twitterUserId: string
   twitterUsername: string
+  twitterProfilePicURL: string
   // totalRatingsCount: number
   // latestRatingsCount: number
 }
@@ -36,6 +38,7 @@ const TwitterUserTokenSchema = new mongoose.Schema(
     accessTokenSecret: { type: String, required: false },
     twitterUserId: { type: String, required: false },
     twitterUsername: { type: String, required: false },
+    twitterProfilePicURL: { type: String, required: false },
     // totalRatingsCount: { type: Number, default: 0, required: true },
     // latestRatingsCount: { type: Number, default: 0, required: true },
   },

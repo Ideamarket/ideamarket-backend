@@ -12,5 +12,6 @@ export function mapTwitterUserTokenResponse(
     id: twitterUserTokenDoc._id.toString(),
     twitterUserId: twitterUserTokenDoc.twitterUserId,
     twitterUsername: twitterUserTokenDoc.twitterUsername,
+    twitterProfilePicURL: twitterUserTokenDoc.twitterProfilePicURL,
   }
 }

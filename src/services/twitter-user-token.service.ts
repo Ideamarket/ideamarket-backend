@@ -2,6 +2,7 @@ import config from 'config'
 import escapeStringRegexp from 'escape-string-regexp'
 import type { FilterQuery } from 'mongoose'
 import request from 'request'
+import TwitterClient from 'twitter-api-sdk'
 import util from 'util'
 
 import { TwitterUserTokenModel } from '../models/twitter-user-token.model'
@@ -25,6 +26,8 @@ const requestPromise = util.promisify(request)
 
 const clientHostUrl = config.get<string>('client.hostUrl')
 const twitterCallbackUrl = `${clientHostUrl}`
+
+const twitterBearerToken = config.get<string>('auth.twitter.bearerToken')
 
 export async function initiateTwitterLoginDB(): Promise<TwitterLoginInitiation> {
   const requestData = {
@@ -133,6 +136,23 @@ export async function completeTwitterLoginDB({
     throw new InternalServerError('Failed to fetch access token')
   }
 
+  // If this user had previous userToken, delete it
+  const previousTwitterUserTokenDoc = await TwitterUserTokenModel.findOne({
+    twitterUserId,
+  })
+  if (previousTwitterUserTokenDoc) {
+    await TwitterUserTokenModel.deleteMany({ twitterUserId })
+  }
+
+  const twitterClient = new TwitterClient(twitterBearerToken)
+  const twitterUserResponse = await twitterClient.users.findUserByUsername(
+    twitterUsername as string,
+    {
+      'user.fields': ['profile_image_url'],
+    }
+  )
+  const twitterProfilePicURL = twitterUserResponse.data?.profile_image_url
+
   const updatedTwitterUserTokenDoc =
     await TwitterUserTokenModel.findOneAndUpdate(
       { _id: twitterUserTokenDoc._id },
@@ -142,6 +162,7 @@ export async function completeTwitterLoginDB({
           accessTokenSecret,
           twitterUserId,
           twitterUsername,
+          twitterProfilePicURL,
         },
       },
       { new: true }
@@ -174,7 +195,9 @@ export async function fetchTwitterUserTokenFromDB({
   if (twitterUserTokenId) {
     userTokenDoc = await TwitterUserTokenModel.findById(twitterUserTokenId)
   } else if (twitterUsername) {
-    userTokenDoc = await TwitterUserTokenModel.findOne({ twitterUsername })
+    userTokenDoc = await TwitterUserTokenModel.findOne({
+      twitterUsername: { $regex: new RegExp(twitterUsername, 'iu') },
+    }) // This regexp queries for twitterUsername and disregards case
   } else {
     userTokenDoc = null
   }

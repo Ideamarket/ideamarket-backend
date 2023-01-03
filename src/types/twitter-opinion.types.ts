@@ -1,3 +1,6 @@
+import type { TwitterPostResponse } from './twitter-post.types'
+import type { TwitterUserTokenResponse } from './twitter-user-token.types'
+
 export type TwitterOpinionQueryOptions = {
   latest: boolean
   skip: number
@@ -22,10 +25,18 @@ export type TwitterOpinionResponse = {
   ratedBy: string
   ratedAt: Date
   rating: number
-  citations: TwitterOpinionResponse[]
+  citations: TwitterCitationResponse[]
+  userToken: TwitterUserTokenResponse | null
+
+  content?: string
 }
 
 export type TwitterCitation = {
-  ratedPostID: number
+  postID: string
+  inFavor: boolean
+}
+
+export type TwitterCitationResponse = {
+  citation: TwitterPostResponse | null
   inFavor: boolean
 }

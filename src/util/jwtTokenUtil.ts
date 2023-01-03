@@ -125,6 +125,7 @@ export async function verifyTwitterAuthTokenAndReturnAccount(
       id: twitterUserToken._id,
       twitterUsername: twitterUserToken.twitterUsername || null,
       twitterUserId: twitterUserToken.twitterUserId || null,
+      twitterProfilePicURL: twitterUserToken.twitterProfilePicURL || null,
     }
   } catch (error) {
     console.error(
