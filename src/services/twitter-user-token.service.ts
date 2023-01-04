@@ -24,7 +24,7 @@ import { InternalServerError } from './errors'
 
 const requestPromise = util.promisify(request)
 
-const clientHostUrl = config.get<string>('client.hostUrl')
+const clientHostUrl = config.get<string>('client.twitterHostUrl')
 const twitterCallbackUrl = `${clientHostUrl}`
 
 const twitterBearerToken = config.get<string>('auth.twitter.bearerToken')

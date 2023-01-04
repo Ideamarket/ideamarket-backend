@@ -7,6 +7,8 @@ const DAY_SECONDS = 24 * HOUR_SECONDS
 const config = {
   client: {
     hostUrl: process.env.CLIENT_HOST_URL ?? 'http://localhost:3000',
+    twitterHostUrl:
+      process.env.TWITTER_CLIENT_HOST_URL ?? 'http://localhost:3000',
   },
   server: {
     hostUrl: process.env.SERVER_HOST_URL ?? 'http://localhost:3300',
