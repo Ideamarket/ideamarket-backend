@@ -45,17 +45,20 @@ export function mapCitations(
   citationPostsMap: Record<string, TwitterPostDocument | null>,
   citationMintersMap?: Record<string, TwitterUserTokenDocument | null> | null
 ): TwitterCitationResponse[] {
-  return citations.map((citation) => {
-    const citationPost = citationPostsMap[citation.postID] as any
-    const user =
-      citationPost && citationMintersMap
-        ? citationMintersMap[citationPost.twitterUsername]
-        : null
-    citationPost.userToken = user
+  // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+  return citations && citations.length > 0
+    ? citations.map((citation) => {
+        const citationPost = citationPostsMap[citation.postID] as any
+        const user =
+          citationPost && citationMintersMap
+            ? citationMintersMap[citationPost.twitterUsername]
+            : null
+        citationPost.userToken = user
 
-    return {
-      citation: mapTwitterPostResponse(citationPost),
-      inFavor: citation.inFavor,
-    }
-  })
+        return {
+          citation: mapTwitterPostResponse(citationPost),
+          inFavor: citation.inFavor,
+        }
+      })
+    : []
 }

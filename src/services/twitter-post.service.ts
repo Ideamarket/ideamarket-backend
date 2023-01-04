@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unnecessary-condition */
 import escapeStringRegexp from 'escape-string-regexp'
 import mongoose from 'mongoose'
 import type { FilterQuery } from 'mongoose'
@@ -373,7 +374,9 @@ export async function fetchAllPostCitationsPostIds({
   const againstCitationsSet = new Set<mongoose.Types.ObjectId>()
 
   for (const opinion of opinions) {
-    for (const citation of opinion.citations) {
+    const citations =
+      opinion.citations && opinion.citations.length > 0 ? opinion.citations : []
+    for (const citation of citations) {
       if (citation.inFavor) {
         forCitationsSet.add(new mongoose.Types.ObjectId(citation.postID))
       } else {
@@ -411,7 +414,9 @@ export async function fetchLatestPostCitationsPostIds({
   const againstCitationsSet = new Set<mongoose.Types.ObjectId>()
 
   for (const opinion of opinions) {
-    for (const citation of opinion.citations) {
+    const citations =
+      opinion.citations && opinion.citations.length > 0 ? opinion.citations : []
+    for (const citation of citations) {
       if (citation.inFavor) {
         forCitationsSet.add(new mongoose.Types.ObjectId(citation.postID))
       } else {

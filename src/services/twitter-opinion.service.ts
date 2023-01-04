@@ -162,7 +162,10 @@ export async function fetchAllTwitterOpinionsFromWeb2({
   const citationPostsMap: Record<string, TwitterPostDocument | null> = {}
   const citationMintersMap: Record<string, TwitterUserTokenDocument | null> = {}
   for await (const postOpinion of opinions) {
-    const citations = postOpinion.citations as TwitterCitation[]
+    const citations =
+      postOpinion.citations && postOpinion.citations.length > 0
+        ? postOpinion.citations
+        : []
     for await (const citation of citations) {
       // Adding citation posts
       const { postID } = citation
