@@ -74,26 +74,23 @@ export async function fetchAllTwitterPostsFromWeb2({
   // Filter Query
   let filterQuery = {}
   if (filterOptions.length > 0) {
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     filterQuery = { $and: filterOptions }
   }
 
   // tODO: add in userToken and username
-  const posts = await TwitterPostModel
-    // .aggregate([
-    //   {
-    //     $lookup: {
-    //       from: 'usertokens',
-    //       localField: 'twitterUsername',
-    //       foreignField: 'walletAddress',
-    //       as: 'UserTokens',
-    //     },
+  const posts = await TwitterPostModel.aggregate([
+    // {
+    //   $lookup: {
+    //     from: 'usertokens',
+    //     localField: 'twitterUsername',
+    //     foreignField: 'walletAddress',
+    //     as: 'UserTokens',
     //   },
-    //   { $set: { userToken: { $arrayElemAt: ['$UserTokens', 0] } } },
-    //   { $set: { username: '$userToken.username' } },
-    //   { $match: filterQuery },
-    // ])
-    .find()
+    // },
+    // { $set: { userToken: { $arrayElemAt: ['$UserTokens', 0] } } },
+    // { $set: { username: '$userToken.username' } },
+    { $match: filterQuery },
+  ])
     .sort(sortOptions)
     .skip(skip)
     .limit(limit)
