@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unnecessary-condition */
 /* eslint-disable sonarjs/no-duplicate-string */
 /* eslint-disable no-await-in-loop */
 import config from 'config'
@@ -917,10 +918,13 @@ async function updateUserTokenInWeb2(web3UserToken: IdeaToken) {
     const walletAddress = web3UserToken.name.toLowerCase()
     const userOpinionsSummary = await getUserOpinionsSummary(walletAddress)
 
-    const holders = web3UserToken.balances.map((balance) => ({
-      wallet: balance.holder,
-      amount: balance.amount,
-    }))
+    const holders =
+      web3UserToken.balances && web3UserToken.balances.length > 0
+        ? web3UserToken.balances.map((balance) => ({
+            wallet: balance.holder,
+            amount: balance.amount,
+          }))
+        : []
     const holderWallets = holders.map((holder) => holder.wallet)
     const holderWalletTokens = await UserTokenModel.find({
       walletAddress: { $in: holderWallets },
